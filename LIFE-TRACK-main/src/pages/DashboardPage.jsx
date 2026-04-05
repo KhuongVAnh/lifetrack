@@ -9,6 +9,30 @@ import {
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { StatSparkline } from "../components/StatSparkline";
 
+const bloodPressureSeries = [
+  { label: "T2", value: "128/82", numeric: 128 },
+  { label: "T3", value: "126/80", numeric: 126 },
+  { label: "T4", value: "124/79", numeric: 124 },
+  { label: "T5", value: "129/81", numeric: 129 },
+  { label: "T6", value: "122/78", numeric: 122 },
+];
+
+const glucoseSeries = [
+  { label: "T2", value: "6.2", numeric: 62 },
+  { label: "T3", value: "6.0", numeric: 60 },
+  { label: "T4", value: "5.9", numeric: 59 },
+  { label: "T5", value: "6.1", numeric: 61 },
+  { label: "T6", value: "5.8", numeric: 58 },
+];
+
+const heartRateSeries = [
+  { label: "T2", value: "74", numeric: 74 },
+  { label: "T3", value: "76", numeric: 76 },
+  { label: "T4", value: "72", numeric: 72 },
+  { label: "T5", value: "78", numeric: 78 },
+  { label: "T6", value: "73", numeric: 73 },
+];
+
 export function DashboardPage() {
   const upcomingDoctor = getDoctorById(appointments.upcoming.doctorId);
 
@@ -91,7 +115,7 @@ export function DashboardPage() {
           </section>
 
           <section className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <h2 className="flex items-center gap-2 text-xl font-bold text-sky-900">
                 <span className="material-symbols-outlined text-primary">analytics</span>
                 Xu hướng chỉ số sinh tồn
@@ -100,60 +124,39 @@ export function DashboardPage() {
                 Xem hồ sơ
               </Link>
             </div>
+
             <div className="grid gap-6 md:grid-cols-3">
               <div className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-outline">Huyết áp</p>
-                <div className="mb-4 flex items-end justify-between">
-                  <span className="text-3xl font-black text-primary">122/78</span>
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <span className="text-3xl font-black leading-none text-primary">122/78</span>
                   <span className="rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
                     Ổn định
                   </span>
                 </div>
-                <StatSparkline colorClass="bg-primary" series={familyMembers[0] ? [
-                  { label: "T2", value: "128/82", numeric: 128 },
-                  { label: "T3", value: "126/80", numeric: 126 },
-                  { label: "T4", value: "124/79", numeric: 124 },
-                  { label: "T5", value: "129/81", numeric: 129 },
-                  { label: "T6", value: "122/78", numeric: 122 },
-                ] : []} />
+                <StatSparkline colorClass="bg-primary" series={bloodPressureSeries} />
               </div>
+
               <div className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-outline">Đường huyết</p>
-                <div className="mb-4 flex items-end justify-between">
-                  <span className="text-3xl font-black text-primary">5.8</span>
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <span className="text-3xl font-black leading-none text-primary">5.8</span>
                   <span className="rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
                     Tốt
                   </span>
                 </div>
-                <StatSparkline
-                  colorClass="bg-secondary"
-                  series={[
-                    { label: "T2", value: "6.2", numeric: 62 },
-                    { label: "T3", value: "6.0", numeric: 60 },
-                    { label: "T4", value: "5.9", numeric: 59 },
-                    { label: "T5", value: "6.1", numeric: 61 },
-                    { label: "T6", value: "5.8", numeric: 58 },
-                  ]}
-                />
+                <StatSparkline colorClass="bg-secondary" series={glucoseSeries} />
               </div>
+
               <div className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-outline">Nhịp tim</p>
-                <div className="mb-4 flex items-end justify-between">
-                  <span className="text-3xl font-black text-primary">73 bpm</span>
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <span className="text-3xl font-black leading-none text-primary">73 bpm</span>
                   <span className="rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
                     Cân bằng
                   </span>
                 </div>
-                <StatSparkline
-                  colorClass="bg-tertiary"
-                  series={[
-                    { label: "T2", value: "74", numeric: 74 },
-                    { label: "T3", value: "76", numeric: 76 },
-                    { label: "T4", value: "72", numeric: 72 },
-                    { label: "T5", value: "78", numeric: 78 },
-                    { label: "T6", value: "73", numeric: 73 },
-                  ]}
-                />
+                <StatSparkline colorClass="bg-tertiary" series={heartRateSeries} />
               </div>
             </div>
           </section>
