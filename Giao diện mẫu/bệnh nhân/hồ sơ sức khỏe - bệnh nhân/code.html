@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d7dadc",
+                    "on-error": "#ffffff",
+                    "on-surface": "#181c1e",
+                    "error": "#ba1a1a",
+                    "primary": "#004976",
+                    "tertiary-fixed-dim": "#55d7ed",
+                    "surface-tint": "#02639c",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#00629b",
+                    "secondary-fixed-dim": "#88d982",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary-fixed-variant": "#005312",
+                    "tertiary": "#004e59",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#6be9ff",
+                    "on-secondary-fixed": "#002204",
+                    "on-primary-container": "#badbff",
+                    "surface-container": "#ebeef0",
+                    "outline-variant": "#c0c7d1",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed": "#9eefff",
+                    "on-background": "#181c1e",
+                    "inverse-primary": "#98cbff",
+                    "on-secondary": "#ffffff",
+                    "outline": "#717881",
+                    "on-tertiary-fixed-variant": "#004e59",
+                    "primary-fixed-dim": "#98cbff",
+                    "on-tertiary-fixed": "#001f24",
+                    "surface": "#f7fafc",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface-bright": "#f7fafc",
+                    "secondary-container": "#a0f399",
+                    "inverse-on-surface": "#eef1f3",
+                    "tertiary-container": "#006875",
+                    "secondary-fixed": "#a3f69c",
+                    "primary-fixed": "#cee5ff",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#001d33",
+                    "surface-variant": "#e0e3e5",
+                    "secondary": "#1b6d24",
+                    "on-surface-variant": "#414750",
+                    "background": "#f7fafc",
+                    "on-primary-fixed-variant": "#004a77",
+                    "surface-container-high": "#e5e9eb",
+                    "surface-container-low": "#f1f4f6",
+                    "on-secondary-container": "#217128"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Public Sans"],
+                    "body": ["Public Sans"],
+                    "label": ["Public Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="text-2xl font-bold text-sky-900 tracking-tight">LIFETRACK</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-sky-50 transition-colors scale-95 active:duration-150">
+<span class="material-symbols-outlined text-slate-500">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="Bác sĩ Minh" class="w-full h-full object-cover" data-alt="professional portrait of a middle-aged male doctor with a warm smile in a modern clinic setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSkz33gufX68TLuS2rUDv8AVCqnUTx4I1HLAoXf9-l3xIyfeilQcn09b2-lh3JvsAsWR_OB1uiNCrqFs35p1RebuawZjulBEt3tgYJ5CRohe6SxLKrB5utjv1GS4SihJt-7aaWZTn1F8CE0qRlSjjGa_Go8Gsgf_HGNWNWnw3xlB2CFavrZ8_4lAWqCJmbDVYQDX2VBFB9GDHZX88BOkv_lTUvUsjSrqYBbOy0rS08GIw5ueZAxrsx-5erG-FU5co8ADAeYXP8M-o"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full hidden md:flex flex-col p-4 pt-20 w-72 bg-slate-50 border-r border-slate-200">
+<div class="mb-8 px-4">
+<h2 class="text-sky-900 font-black text-xl">Hồ sơ sức khỏe</h2>
+<p class="text-slate-500 text-sm">Gia đình của bạn</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-medium">Trang chủ</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-sky-100 text-sky-900 rounded-lg font-semibold transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="font-semibold">Hồ sơ sức khỏe</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-medium">Lịch hẹn</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-medium">Cộng đồng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-medium">Cài đặt</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-slate-200 pt-4 space-y-2">
+<button class="w-full bg-error text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">emergency</span>
+                GỌI CẤP CỨU
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-medium">Hỗ trợ</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-72 pt-20 pb-24 px-6 md:px-10 max-w-7xl mx-auto">
+<!-- Page Title & Primary Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<div>
+<h1 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Hồ sơ sức khỏe (Gia đình)</h1>
+<p class="text-on-surface-variant text-lg">Quản lý và theo dõi sức khỏe của những người thân yêu.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 bg-surface-container-high text-primary px-6 py-4 rounded-xl font-bold hover:bg-surface-container-highest transition-colors active:scale-95">
+<span class="material-symbols-outlined">person_add</span>
+                    Thêm thành viên
+                </button>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity active:scale-95">
+<span class="material-symbols-outlined">sync</span>
+                    Cập nhật chỉ số
+                </button>
+</div>
+</div>
+<!-- Family Members Bento Slider -->
+<div class="mb-12">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-bold text-on-surface">Thành viên gia đình</h3>
+<span class="text-primary font-medium cursor-pointer hover:underline text-sm">Xem tất cả</span>
+</div>
+<div class="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
+<!-- Member 1: Active -->
+<div class="flex-none w-80 bg-primary rounded-3xl p-6 text-on-primary shadow-xl ring-4 ring-primary-container/30 relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+<div class="flex items-center gap-4 mb-8 relative">
+<div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/20">
+<img alt="Nguyễn Văn A" class="w-full h-full object-cover" data-alt="portrait of an elderly Vietnamese man with grey hair and gentle features wearing a white shirt" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI-bxFLL6J2mM-Mb0rqutcxedCf8OWN5EPE1dKHzBNuHndfHUFLeaSndyfmCmTlK6e4T1iwgCUdn2CfLQqh5Ov4qg4t8hVsbtYi7fHZ-o4PMzZzUk3TNkLjUD9zUxhmTcBL2myg6cL95CoaOv1k3JsmQHIguTjINvZwN4lOtWdUj4wUEDSo_vI1J_9ipLiKMeI8ZLRQdfOoO28zY9yCQSc5BbyJpxzH2xWj0abjfr5YN12wgFxSIRIs_hW_g28JhWqi4B-iKs9NiM"/>
+</div>
+<div>
+<p class="text-sm opacity-80">Bố</p>
+<h4 class="text-xl font-bold">Nguyễn Văn A</h4>
+</div>
+</div>
+<div class="flex justify-between items-center relative">
+<span class="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">Đang xem</span>
+<button class="text-on-primary font-bold flex items-center gap-1 hover:underline">
+                            Xem chi tiết <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Member 2 -->
+<div class="flex-none w-80 bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/30 hover:border-primary/50 transition-all group">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-16 h-16 rounded-2xl overflow-hidden bg-surface-container">
+<img alt="Trần Thị B" class="w-full h-full object-cover" data-alt="portrait of a middle-aged Vietnamese woman with black hair and a kind expression in a domestic environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJq1_1dHRZYRyoc6IBsRMrXWqQ14EmSRuG_z9h_FeInJh2ufx3n4yZI_HF4bhSKR-EWKqvhJKeP1lISCVDWX9O7J9PIeawZF8tNPdZ0mNlpS6t1oWcY990S_MjBotglPkCcvUldCfGkbNAqZMp09LjvCG69Cc-_-RRMh7IvpJfopyWm96IHGopPt88Jd96xAvoFneZCk_stX0Omlu0HrQu4qK9Y49Xu7YW6KqC3tXrHX5mSLNfu1C4oKdWasrGD0sHOc0meuMtK-4"/>
+</div>
+<div>
+<p class="text-sm text-on-surface-variant">Mẹ</p>
+<h4 class="text-xl font-bold text-on-surface">Trần Thị B</h4>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-xs font-medium">Ổn định</span>
+<button class="text-primary font-bold flex items-center gap-1 hover:text-primary-container">
+                            Xem chi tiết <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Member 3 -->
+<div class="flex-none w-80 bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/30 hover:border-primary/50 transition-all group">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-16 h-16 rounded-2xl overflow-hidden bg-surface-container">
+<img alt="Anh Tuấn" class="w-full h-full object-cover" data-alt="portrait of a young Vietnamese man in his twenties with modern hairstyle and energetic look" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZq9R0H6wTLFkvvA2qO_a9osYpkVe-N5WMoGqNg3iPr7IRaItCn850anQ6JYm_rWd6CZlL2pJVYx8pzLm1Ijojswzz1ortBwSBKcxrHGTV-LPV117QvdVkEz_88-LzJ_t0VQ6hMZ8CgXqJoXyCMljIl8nq7b9QMyUnhdh2G8iQYBK2S7bIfHejy-IQ1nRROZlGaRk_v8k9_6oAN9tGb04qJdEt-2x8s1e7Iw2eLkh7g1aMPas9sdNnJ_fBR6uPwsx4K7vebEQYESI"/>
+</div>
+<div>
+<p class="text-sm text-on-surface-variant">Con</p>
+<h4 class="text-xl font-bold text-on-surface">Anh Tuấn</h4>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-xs font-medium">Sức khỏe tốt</span>
+<button class="text-primary font-bold flex items-center gap-1 hover:text-primary-container">
+                            Xem chi tiết <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid: Health Analytics & History -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Health Metrics Overview (Col Span 2) -->
+<div class="lg:col-span-2 space-y-8">
+<div class="bg-surface-container-lowest rounded-[2rem] p-8">
+<div class="flex justify-between items-center mb-8">
+<h3 class="text-2xl font-bold text-on-surface">Chỉ số sức khỏe: Bố</h3>
+<div class="flex gap-2">
+<span class="px-4 py-2 bg-surface-container-high rounded-full text-sm font-semibold">Tuần này</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">more_horiz</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Blood Pressure -->
+<div class="bg-surface-container-low rounded-2xl p-5 border-l-4 border-error">
+<p class="text-on-surface-variant font-medium mb-1">Huyết áp</p>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="text-3xl font-black text-on-surface">132/85</span>
+<span class="text-sm text-on-surface-variant font-medium">mmHg</span>
+</div>
+<div class="h-12 w-full bg-surface-container-high rounded-lg overflow-hidden relative">
+<div class="absolute inset-0 flex items-end px-1 gap-1">
+<div class="flex-1 bg-error/30 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-error/40 h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-error/30 h-[50%] rounded-t-sm"></div>
+<div class="flex-1 bg-error h-[80%] rounded-t-sm"></div>
+<div class="flex-1 bg-error/50 h-[55%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Blood Sugar -->
+<div class="bg-surface-container-low rounded-2xl p-5 border-l-4 border-secondary">
+<p class="text-on-surface-variant font-medium mb-1">Đường huyết</p>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="text-3xl font-black text-on-surface">105</span>
+<span class="text-sm text-on-surface-variant font-medium">mg/dL</span>
+</div>
+<div class="h-12 w-full bg-surface-container-high rounded-lg overflow-hidden relative">
+<div class="absolute inset-0 flex items-end px-1 gap-1">
+<div class="flex-1 bg-secondary/30 h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/40 h-[50%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary h-[45%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/50 h-[55%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/30 h-[40%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- BMI -->
+<div class="bg-surface-container-low rounded-2xl p-5 border-l-4 border-primary">
+<p class="text-on-surface-variant font-medium mb-1">Chỉ số BMI</p>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="text-3xl font-black text-on-surface">24.5</span>
+<span class="text-sm text-on-surface-variant font-medium">kg/m²</span>
+</div>
+<div class="h-12 w-full bg-surface-container-high rounded-lg overflow-hidden relative">
+<div class="absolute inset-0 flex items-end px-1 gap-1">
+<div class="flex-1 bg-primary/30 h-[30%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary/40 h-[35%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary/50 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[45%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary/60 h-[43%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Trend Chart Placeholder -->
+<div class="mt-10 p-6 bg-surface rounded-2xl border border-outline-variant/20">
+<div class="flex items-center justify-between mb-6">
+<h4 class="font-bold text-lg">Xu hướng sức khỏe 6 tháng qua</h4>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 text-xs font-semibold"><span class="w-3 h-3 rounded-full bg-error"></span> Huyết áp</div>
+<div class="flex items-center gap-2 text-xs font-semibold"><span class="w-3 h-3 rounded-full bg-secondary"></span> Đường huyết</div>
+</div>
+</div>
+<div class="h-64 flex items-end justify-between gap-2 px-2">
+<!-- Visualizing a soft spline curve with stylized bars/lines -->
+<div class="relative w-full h-full flex items-end justify-between">
+<div class="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant/30"></div>
+<div class="h-[60%] w-2 bg-primary/20 rounded-full"></div>
+<div class="h-[65%] w-2 bg-primary/20 rounded-full"></div>
+<div class="h-[75%] w-2 bg-primary rounded-full"></div>
+<div class="h-[68%] w-2 bg-primary/20 rounded-full"></div>
+<div class="h-[80%] w-2 bg-primary/20 rounded-full"></div>
+<div class="h-[72%] w-2 bg-primary/20 rounded-full"></div>
+<div class="h-[85%] w-2 bg-primary/20 rounded-full"></div>
+</div>
+</div>
+<div class="flex justify-between mt-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest px-2">
+<span>Tháng 1</span><span>Tháng 2</span><span>Tháng 3</span><span>Tháng 4</span><span>Tháng 5</span><span>Tháng 6</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary History & Medical Context -->
+<div class="lg:col-span-1 space-y-6">
+<div class="bg-surface-container-low rounded-[2rem] p-8 h-full">
+<h3 class="text-2xl font-bold text-on-surface mb-8">Bệnh sử tóm tắt</h3>
+<!-- Allergies Section -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<h4 class="font-bold text-on-surface">Dị ứng</h4>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="bg-error-container text-on-error-container px-4 py-2 rounded-xl text-sm font-bold">Hải sản (Tôm, Cua)</span>
+<span class="bg-error-container text-on-error-container px-4 py-2 rounded-xl text-sm font-bold">Phấn hoa</span>
+</div>
+</div>
+<!-- Chronic Diseases -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">chronic</span>
+<h4 class="font-bold text-on-surface">Bệnh mãn tính</h4>
+</div>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 text-on-surface-variant">
+<div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></div>
+<span>Cao huyết áp vô căn (Chẩn đoán 2018)</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant">
+<div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></div>
+<span>Tiền tiểu đường (Đang theo dõi)</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant">
+<div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></div>
+<span>Thoái hóa khớp gối nhẹ</span>
+</li>
+</ul>
+</div>
+<!-- Surgery History -->
+<div>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">fluid_med</span>
+<h4 class="font-bold text-on-surface">Lịch sử phẫu thuật</h4>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-highest/50 rounded-2xl">
+<p class="font-bold text-on-surface text-sm">Mổ nội soi sỏi mật</p>
+<p class="text-xs text-on-surface-variant mt-1">Bệnh viện Chợ Rẫy • Tháng 10/2021</p>
+</div>
+<div class="p-4 bg-surface-container-highest/50 rounded-2xl">
+<p class="font-bold text-on-surface text-sm">Mổ đục thủy tinh thể (Mắt trái)</p>
+<p class="text-xs text-on-surface-variant mt-1">Bệnh viện Mắt TP.HCM • Tháng 03/2019</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-10 py-4 text-primary font-bold border-2 border-primary/20 rounded-2xl hover:bg-primary/5 transition-colors">
+                        Xem bệnh án chi tiết
+                    </button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-20 py-12 border-t border-slate-200 flex flex-col items-center justify-center space-y-4">
+<p class="text-slate-500 font-public-sans text-sm">© 2024 LIFETRACK. Sự An Tâm Tĩnh Lặng.</p>
+<div class="flex gap-6">
+<a class="text-slate-500 hover:text-sky-900 transition-colors text-sm" href="#">Điều khoản sử dụng</a>
+<a class="text-slate-500 hover:text-sky-900 transition-colors text-sm" href="#">Chính sách bảo mật</a>
+<a class="text-slate-500 hover:text-sky-900 transition-colors text-sm" href="#">Trung tâm hỗ trợ</a>
+</div>
+</footer>
+</main>
+<!-- Floating Action Button (Mobile Only Overlay) -->
+<div class="fixed bottom-6 right-6 md:hidden">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<!-- Navigation Shell (Bottom Bar for Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-2 z-50">
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold">Trang chủ</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-sky-900" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="text-[10px] font-bold">Hồ sơ</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-bold">Lịch hẹn</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] font-bold">Cộng đồng</span>
+</a>
+</nav>
+</body></html>

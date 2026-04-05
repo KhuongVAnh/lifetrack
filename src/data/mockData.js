@@ -1,0 +1,1362 @@
+export const appUser = {
+  id: "nguyen-van-a",
+  name: "Nguyễn Văn A",
+  subtitle: "Tài khoản bệnh nhân",
+  roleLabel: "Bệnh nhân chính",
+  membership: "Family Care",
+  avatar:
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
+};
+
+export const familyMembers = [
+  {
+    id: "nguyen-van-a",
+    relation: "Bố",
+    name: "Nguyễn Văn A",
+    status: "Đang theo dõi",
+    statusTone: "primary",
+    shortStatus: "ổn định",
+    age: 68,
+    bloodType: "O+",
+    bmi: 23.1,
+    metricFocus: "Huyết áp",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    id: "tran-thi-b",
+    relation: "Mẹ",
+    name: "Trần Thị B",
+    status: "Theo dõi định kỳ",
+    statusTone: "secondary",
+    shortStatus: "sức khỏe tốt",
+    age: 63,
+    bloodType: "A+",
+    bmi: 21.8,
+    metricFocus: "Đường huyết",
+    avatar:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    id: "nguyen-anh-tuan",
+    relation: "Con",
+    name: "Nguyễn Anh Tuấn",
+    status: "Hoạt động",
+    statusTone: "secondary",
+    shortStatus: "sức khỏe tốt",
+    age: 28,
+    bloodType: "B+",
+    bmi: 22.5,
+    metricFocus: "Nhịp tim",
+    avatar:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    id: "nguyen-be-linh",
+    relation: "Con gái",
+    name: "Nguyễn Bé Linh",
+    status: "Nhắc lịch tiêm",
+    statusTone: "tertiary",
+    shortStatus: "đang lớn tốt",
+    age: 9,
+    bloodType: "AB+",
+    bmi: 18.2,
+    metricFocus: "Tiêm chủng",
+    avatar:
+      "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=400&q=80",
+  },
+];
+
+const metricSeries = {
+  bloodPressure: [
+    { label: "T2", value: "128/82", numeric: 128 },
+    { label: "T3", value: "126/80", numeric: 126 },
+    { label: "T4", value: "124/79", numeric: 124 },
+    { label: "T5", value: "129/81", numeric: 129 },
+    { label: "T6", value: "122/78", numeric: 122 },
+  ],
+  glucose: [
+    { label: "T2", value: "6.2", numeric: 62 },
+    { label: "T3", value: "6.0", numeric: 60 },
+    { label: "T4", value: "5.9", numeric: 59 },
+    { label: "T5", value: "6.1", numeric: 61 },
+    { label: "T6", value: "5.8", numeric: 58 },
+  ],
+  heartRate: [
+    { label: "T2", value: "74", numeric: 74 },
+    { label: "T3", value: "76", numeric: 76 },
+    { label: "T4", value: "72", numeric: 72 },
+    { label: "T5", value: "78", numeric: 78 },
+    { label: "T6", value: "73", numeric: 73 },
+  ],
+};
+
+export const patientProfiles = {
+  "nguyen-van-a": {
+    memberId: "nguyen-van-a",
+    relation: "Bố",
+    name: "Nguyễn Văn A",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80",
+    healthId: "#LT-001245",
+    age: 68,
+    bloodType: "O+",
+    bmi: 23.1,
+    status: "Bình thường",
+    statusTone: "secondary",
+    headline: "Hồ sơ sức khỏe cá nhân",
+    alerts: [
+      { label: "Tiền sử bệnh lý", value: "Cao huyết áp" },
+      { label: "Dị ứng thuốc", value: "Penicillin" },
+    ],
+    keyStats: [
+      { label: "Huyết áp", value: "122/78", trend: "Ổn định 2 tuần" },
+      { label: "Đường huyết", value: "5.8", trend: "Giảm nhẹ" },
+      { label: "BMI", value: "23.1", trend: "Trong ngưỡng" },
+    ],
+    chart: metricSeries.bloodPressure,
+    historySummary: [
+      "Cao huyết áp vô căn (Chẩn đoán 2018)",
+      "Thoái hóa khớp gối nhẹ (Theo dõi 2023)",
+      "Khám tim mạch định kỳ mỗi 3 tháng",
+    ],
+    visits: [
+      {
+        id: "visit-001",
+        date: "02/04/2026",
+        doctorName: "BS. CKII Lê Minh Tâm",
+        specialty: "Tim mạch",
+        diagnosis: "Tăng huyết áp ổn định",
+        note: "Huyết áp ổn định, tiếp tục duy trì chế độ ăn giảm muối.",
+      },
+      {
+        id: "visit-002",
+        date: "14/03/2026",
+        doctorName: "BS. Nguyễn Văn Minh",
+        specialty: "Nội tổng quát",
+        diagnosis: "Khám định kỳ",
+        note: "Nhịp tim đều, không có dấu hiệu bất thường.",
+      },
+      {
+        id: "visit-003",
+        date: "05/01/2026",
+        doctorName: "ThS. BS Phạm Minh Ngọc",
+        specialty: "Dinh dưỡng",
+        diagnosis: "Tư vấn ăn uống",
+        note: "Tăng khẩu phần rau xanh và giảm đồ chiên rán.",
+      },
+    ],
+    prescriptions: [
+      {
+        name: "Amlodipine 5mg",
+        usage: "1 viên sáng sau ăn",
+        tag: "Huyết áp",
+        remaining: "12 ngày",
+      },
+      {
+        name: "Omega 3",
+        usage: "1 viên tối",
+        tag: "Bổ sung",
+        remaining: "20 ngày",
+      },
+    ],
+    labResults: [
+      {
+        name: "Công thức máu tổng quát",
+        date: "28/03/2026",
+        summary: "Các chỉ số trong giới hạn bình thường",
+      },
+      {
+        name: "Điện tâm đồ",
+        date: "02/04/2026",
+        summary: "Nhịp xoang đều, chưa phát hiện bất thường",
+      },
+    ],
+  },
+  "tran-thi-b": {
+    memberId: "tran-thi-b",
+    relation: "Mẹ",
+    name: "Trần Thị B",
+    avatar:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80",
+    healthId: "#LT-001246",
+    age: 63,
+    bloodType: "A+",
+    bmi: 21.8,
+    status: "Sức khỏe tốt",
+    statusTone: "secondary",
+    headline: "Hồ sơ sức khỏe cá nhân",
+    alerts: [
+      { label: "Lưu ý", value: "Theo dõi đường huyết khi đói" },
+      { label: "Dị ứng", value: "Không ghi nhận" },
+    ],
+    keyStats: [
+      { label: "Đường huyết", value: "5.9", trend: "Ổn định" },
+      { label: "Huyết áp", value: "118/76", trend: "Bình thường" },
+      { label: "BMI", value: "21.8", trend: "Tốt" },
+    ],
+    chart: metricSeries.glucose,
+    historySummary: [
+      "Rối loạn mỡ máu nhẹ (2024)",
+      "Chưa ghi nhận biến chứng đái tháo đường",
+      "Khám nội tiết 6 tháng/lần",
+    ],
+    visits: [
+      {
+        id: "visit-101",
+        date: "26/03/2026",
+        doctorName: "ThS. BS Nguyễn Thùy Chi",
+        specialty: "Nội tiết",
+        diagnosis: "Khám theo dõi đường huyết",
+        note: "Duy trì thực đơn hiện tại, tăng đi bộ 30 phút mỗi ngày.",
+      },
+      {
+        id: "visit-102",
+        date: "12/02/2026",
+        doctorName: "BS. Trần Ngọc Lan",
+        specialty: "Lão khoa",
+        diagnosis: "Khám định kỳ",
+        note: "Giấc ngủ cải thiện, cân nặng ổn định.",
+      },
+    ],
+    prescriptions: [
+      {
+        name: "Metformin 500mg",
+        usage: "1 viên sau bữa tối",
+        tag: "Đường huyết",
+        remaining: "9 ngày",
+      },
+    ],
+    labResults: [
+      {
+        name: "HbA1c",
+        date: "20/03/2026",
+        summary: "6.1%, kiểm soát tốt",
+      },
+    ],
+  },
+  "nguyen-anh-tuan": {
+    memberId: "nguyen-anh-tuan",
+    relation: "Con",
+    name: "Nguyễn Anh Tuấn",
+    avatar:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=500&q=80",
+    healthId: "#LT-001247",
+    age: 28,
+    bloodType: "B+",
+    bmi: 22.5,
+    status: "Hoạt động",
+    statusTone: "secondary",
+    headline: "Hồ sơ sức khỏe cá nhân",
+    alerts: [
+      { label: "Cảnh báo", value: "Thiếu ngủ kéo dài" },
+      { label: "Dị ứng", value: "Bụi phấn" },
+    ],
+    keyStats: [
+      { label: "Nhịp tim", value: "73", trend: "Tốt" },
+      { label: "SPO2", value: "98%", trend: "Ổn định" },
+      { label: "BMI", value: "22.5", trend: "Chuẩn" },
+    ],
+    chart: metricSeries.heartRate,
+    historySummary: [
+      "Viêm mũi dị ứng theo mùa",
+      "Đau dạ dày nhẹ do stress (2025)",
+      "Tập gym 4 buổi/tuần",
+    ],
+    visits: [
+      {
+        id: "visit-201",
+        date: "30/03/2026",
+        doctorName: "BS. Nguyễn Văn Minh",
+        specialty: "Nội tổng quát",
+        diagnosis: "Đánh giá sức khỏe tổng quát",
+        note: "Khuyến nghị ngủ sớm và giảm caffeine sau 16h.",
+      },
+      {
+        id: "visit-202",
+        date: "18/01/2026",
+        doctorName: "BS. Lâm Đức Huy",
+        specialty: "Tai mũi họng",
+        diagnosis: "Viêm mũi dị ứng",
+        note: "Tiếp tục dùng xịt mũi và vệ sinh phòng ngủ.",
+      },
+    ],
+    prescriptions: [
+      {
+        name: "Cetirizine 10mg",
+        usage: "1 viên buổi tối khi có triệu chứng",
+        tag: "Dị ứng",
+        remaining: "Theo nhu cầu",
+      },
+    ],
+    labResults: [
+      {
+        name: "Tổng phân tích cơ thể",
+        date: "30/03/2026",
+        summary: "Khối cơ tốt, mỡ nội tạng trong ngưỡng an toàn",
+      },
+    ],
+  },
+  "nguyen-be-linh": {
+    memberId: "nguyen-be-linh",
+    relation: "Con gái",
+    name: "Nguyễn Bé Linh",
+    avatar:
+      "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=500&q=80",
+    healthId: "#LT-001248",
+    age: 9,
+    bloodType: "AB+",
+    bmi: 18.2,
+    status: "Đúng lịch phát triển",
+    statusTone: "secondary",
+    headline: "Hồ sơ sức khỏe cá nhân",
+    alerts: [
+      { label: "Lưu ý", value: "Nhắc lịch tiêm nhắc lại cúm mùa" },
+      { label: "Dị ứng", value: "Hải sản nhẹ" },
+    ],
+    keyStats: [
+      { label: "Chiều cao", value: "134cm", trend: "Tăng 2cm/6 tháng" },
+      { label: "Cân nặng", value: "29kg", trend: "Ổn định" },
+      { label: "BMI", value: "18.2", trend: "Phù hợp lứa tuổi" },
+    ],
+    chart: [
+      { label: "T1", value: "128cm", numeric: 58 },
+      { label: "T2", value: "129cm", numeric: 60 },
+      { label: "T3", value: "131cm", numeric: 64 },
+      { label: "T4", value: "132cm", numeric: 67 },
+      { label: "T5", value: "134cm", numeric: 72 },
+    ],
+    historySummary: [
+      "Theo dõi viêm da cơ địa nhẹ",
+      "Tiêm chủng đầy đủ đến 8 tuổi",
+      "Khám nhi định kỳ mỗi 6 tháng",
+    ],
+    visits: [
+      {
+        id: "visit-301",
+        date: "22/03/2026",
+        doctorName: "BS. Trần Thị Phương Lan",
+        specialty: "Nhi khoa",
+        diagnosis: "Khám phát triển định kỳ",
+        note: "Chiều cao và cân nặng phát triển đúng chuẩn, nhắc tiêm cúm.",
+      },
+    ],
+    prescriptions: [
+      {
+        name: "Kem dưỡng ẩm da",
+        usage: "Thoa 2 lần/ngày",
+        tag: "Da liễu",
+        remaining: "Còn 1 tuýp",
+      },
+    ],
+    labResults: [
+      {
+        name: "Sổ tiêm chủng điện tử",
+        date: "20/03/2026",
+        summary: "Đủ mũi cơ bản, chờ nhắc lại cúm mùa",
+      },
+    ],
+  },
+};
+
+export const appointments = {
+  upcoming: {
+    id: "appt-upcoming-01",
+    date: "2026-04-12",
+    displayDate: "12/04/2026",
+    displayTime: "09:00 AM",
+    roomLabel: "Vào phòng khám",
+    reason: "Tái khám tim mạch cho bố",
+    doctorId: "le-minh-tam",
+  },
+  specialties: [
+    { id: "noi-khoa", label: "Nội khoa", icon: "stethoscope", color: "primary" },
+    { id: "nhi-khoa", label: "Nhi khoa", icon: "child_care", color: "secondary" },
+    { id: "san-phu", label: "Sản phụ", icon: "pregnant_woman", color: "tertiary" },
+    { id: "da-lieu", label: "Da liễu", icon: "dermatology", color: "error" },
+  ],
+  suggestedDoctorIds: [
+    "nguyen-van-minh",
+    "tran-thi-phuong-lan",
+    "pham-minh-ngoc",
+    "le-minh-tam",
+  ],
+  slotDays: [
+    { id: "2026-04-12", label: "CN", day: "12" },
+    { id: "2026-04-13", label: "T2", day: "13" },
+    { id: "2026-04-14", label: "T3", day: "14" },
+    { id: "2026-04-15", label: "T4", day: "15" },
+  ],
+  timeSlots: [
+    { id: "08:00", label: "08:00 - 08:30", available: true },
+    { id: "09:00", label: "09:00 - 09:30", available: true },
+    { id: "10:00", label: "10:00 - 10:30", available: true },
+    { id: "11:00", label: "11:00 - 11:30", available: false },
+    { id: "14:00", label: "14:00 - 14:30", available: true },
+    { id: "15:00", label: "15:00 - 15:30", available: true },
+  ],
+};
+
+export const doctorPackages = [
+  {
+    id: "starter",
+    name: "Cơ bản",
+    eyebrow: "Gói khởi đầu",
+    price: "500k",
+    period: "/tháng",
+    icon: "health_and_safety",
+    highlighted: false,
+    benefits: ["Tư vấn trực tuyến 24/7", "Không gồm thăm khám tại nhà"],
+    cta: "Chọn gói này",
+  },
+  {
+    id: "personal",
+    name: "Cá nhân",
+    eyebrow: "Toàn diện",
+    price: "1.2tr",
+    period: "/tháng",
+    icon: "person_celebrate",
+    highlighted: true,
+    badge: "Phổ biến nhất",
+    benefits: [
+      "Tất cả quyền lợi gói Cơ bản",
+      "Thăm khám tại nhà 1 lần/tháng",
+      "Xét nghiệm máu tổng quát theo quý",
+    ],
+    cta: "Nâng cấp ngay",
+  },
+  {
+    id: "family",
+    name: "Gia đình",
+    eyebrow: "Gắn kết",
+    price: "2.5tr",
+    period: "/tháng",
+    icon: "family_restroom",
+    highlighted: false,
+    benefits: ["Dành cho 4 thành viên", "Ưu tiên hỗ trợ cấp cứu 24/7", "Hồ sơ số hóa cho cả nhà"],
+    cta: "Chọn gói này",
+  },
+];
+
+export const doctorProfiles = [
+  {
+    id: "nguyen-van-minh",
+    slug: "nguyen-van-minh",
+    name: "BS. CKII Nguyễn Văn Minh",
+    title: "Bác sĩ Gia đình & Chuyên gia Tim mạch",
+    specialty: "Tim mạch",
+    experienceYears: 20,
+    location: "Thành phố Hồ Chí Minh, Việt Nam",
+    hospital: "Bệnh viện Đại học Y Dược TP.HCM",
+    trustCount: "500+",
+    rating: 4.9,
+    reviewCount: 124,
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Lưu loát" },
+      { name: "Tiếng Pháp", level: "Giao tiếp" },
+    ],
+    skills: [
+      "Siêu âm tim",
+      "Điều trị tăng huyết áp",
+      "Tư vấn dinh dưỡng",
+      "Quản lý tiểu đường",
+      "Y học gia đình",
+      "Khám bệnh từ xa",
+    ],
+    verifiedItems: [
+      "Đã xác minh bằng cấp chuyên môn",
+      "Chứng chỉ hành nghề quốc tế",
+      "Thành viên Hiệp hội Tim mạch VN",
+    ],
+    about:
+      "Với hơn 20 năm kinh nghiệm trong lĩnh vực y khoa, tôi tập trung vào chăm sóc liên tục cho gia đình, đặc biệt là người lớn tuổi có bệnh nền tim mạch và chuyển hóa.",
+    experiences: [
+      {
+        title: "Trưởng khoa Nội tổng quát",
+        org: "Bệnh viện Đại học Y Dược TP.HCM",
+        time: "Tháng 6, 2015 — Hiện tại",
+        icon: "local_hospital",
+      },
+      {
+        title: "Bác sĩ chuyên khoa Tim mạch",
+        org: "Bệnh viện Chợ Rẫy",
+        time: "Tháng 1, 2008 — Tháng 5, 2015",
+        icon: "medical_services",
+      },
+      {
+        title: "Bác sĩ Chuyên khoa II - Nội tim mạch",
+        org: "Đại học Y Dược TP.HCM",
+        time: "2005 — 2007",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-001",
+        author: "Lê Anh Tuấn",
+        avatar:
+          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "2 ngày trước",
+        content:
+          "Bác sĩ Minh tư vấn rất kỹ, giải thích dễ hiểu và theo dõi sát sau khám.",
+      },
+      {
+        id: "review-002",
+        author: "Nguyễn Thị Thu Hà",
+        avatar:
+          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "1 tuần trước",
+        content: "Phác đồ điều trị hiệu quả, gia đình tôi yên tâm hơn rất nhiều.",
+      },
+    ],
+    avatar:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1580281657521-47ec3c1c9a53?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "le-minh-tam",
+    slug: "le-minh-tam",
+    name: "BS. CKII Lê Minh Tâm",
+    title: "Chuyên khoa Tim mạch",
+    specialty: "Tim mạch",
+    experienceYears: 15,
+    location: "Hà Nội, Việt Nam",
+    hospital: "Bệnh viện Tim Hà Nội",
+    trustCount: "320+",
+    rating: 4.8,
+    reviewCount: 96,
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Tốt" },
+    ],
+    skills: ["Điện tim", "Siêu âm tim", "Tăng huyết áp", "Bệnh mạch vành"],
+    verifiedItems: ["Hành nghề 15 năm", "Tư vấn theo dõi từ xa", "Đã xác minh hồ sơ"],
+    about: "Tư vấn chuyên sâu các bệnh lý tim mạch mãn tính và tái khám định kỳ tại nhà.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "nguyen-thuy-chi",
+    slug: "nguyen-thuy-chi",
+    name: "ThS. BS Nguyễn Thùy Chi",
+    title: "Chuyên khoa Nội tiết",
+    specialty: "Nội tiết",
+    experienceYears: 8,
+    location: "Hồ Chí Minh, Việt Nam",
+    hospital: "Bệnh viện Nguyễn Tri Phương",
+    trustCount: "210+",
+    rating: 4.7,
+    reviewCount: 85,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Đái tháo đường", "Tuyến giáp", "Nội tiết nữ"],
+    verifiedItems: ["Đã xác minh hồ sơ"],
+    about: "Theo dõi đường huyết, nội tiết nữ và tư vấn dinh dưỡng cá nhân hóa.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "pham-minh-ngoc",
+    slug: "pham-minh-ngoc",
+    name: "ThS. BS Phạm Minh Ngọc",
+    title: "Chuyên khoa Dinh dưỡng & Lão khoa",
+    specialty: "Dinh dưỡng",
+    experienceYears: 12,
+    location: "TP.HCM, Việt Nam",
+    hospital: "Bệnh viện Chợ Rẫy",
+    trustCount: "190+",
+    rating: 4.7,
+    reviewCount: 85,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Dinh dưỡng lão khoa", "Ăn uống hậu phẫu", "Phục hồi thể trạng"],
+    verifiedItems: ["Đã xác minh hồ sơ"],
+    about: "Tối ưu dinh dưỡng cho người cao tuổi có bệnh nền và sau phẫu thuật.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "tran-thi-phuong-lan",
+    slug: "tran-thi-phuong-lan",
+    name: "BS. Trần Thị Phương Lan",
+    title: "Chuyên khoa Nhi khoa",
+    specialty: "Nhi khoa",
+    experienceYears: 8,
+    location: "Hà Nội, Việt Nam",
+    hospital: "Bệnh viện Nhi Trung Ương",
+    trustCount: "270+",
+    rating: 4.8,
+    reviewCount: 85,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Dinh dưỡng trẻ em", "Hô hấp", "Theo dõi phát triển"],
+    verifiedItems: ["Đã xác minh hồ sơ"],
+    about: "Theo dõi phát triển và bệnh lý hô hấp, tiêu hóa thường gặp ở trẻ em.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "tran-quoc-anh",
+    slug: "tran-quoc-anh",
+    name: "PGS. TS Trần Quốc Anh",
+    title: "Chuyên khoa Thần kinh & Phục hồi chức năng",
+    specialty: "Thần kinh",
+    experienceYears: 25,
+    location: "Hà Nội, Việt Nam",
+    hospital: "BV Bạch Mai",
+    trustCount: "410+",
+    rating: 4.9,
+    reviewCount: 128,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Phục hồi sau đột quỵ", "Thoái hóa thần kinh", "Lão khoa"],
+    verifiedItems: ["Top chuyên gia", "Đã xác minh hồ sơ"],
+    about: "Chuyên gia đầu ngành về các bệnh lý thần kinh ở người cao tuổi.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1612277795421-9bc7706a4a41?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "lam-duc-huy",
+    slug: "lam-duc-huy",
+    name: "BS. Lâm Đức Huy",
+    title: "Chuyên khoa Tai Mũi Họng",
+    specialty: "Tai mũi họng",
+    experienceYears: 10,
+    location: "Đà Nẵng, Việt Nam",
+    hospital: "Bệnh viện C Đà Nẵng",
+    trustCount: "160+",
+    rating: 4.6,
+    reviewCount: 72,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Viêm mũi dị ứng", "Nội soi tai mũi họng"],
+    verifiedItems: ["Đã xác minh hồ sơ"],
+    about: "Theo dõi bệnh lý hô hấp trên và dị ứng theo mùa.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "vu-thanh-mai",
+    slug: "vu-thanh-mai",
+    name: "BS. Vũ Thanh Mai",
+    title: "Chuyên khoa Da liễu",
+    specialty: "Da liễu",
+    experienceYears: 9,
+    location: "TP.HCM, Việt Nam",
+    hospital: "BV Da Liễu TP.HCM",
+    trustCount: "145+",
+    rating: 4.7,
+    reviewCount: 64,
+    languages: [{ name: "Tiếng Việt", level: "Bản ngữ" }],
+    skills: ["Da cơ địa", "Dị ứng da", "Tư vấn chăm sóc da trẻ em"],
+    verifiedItems: ["Đã xác minh hồ sơ"],
+    about: "Tư vấn điều trị viêm da cơ địa và chăm sóc da lâu dài.",
+    experiences: [],
+    reviews: [],
+    avatar:
+      "https://images.unsplash.com/photo-1594824475317-d838b00a8c7b?auto=format&fit=crop&w=600&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",
+  },
+];
+
+const doctorProfileDeepContent = {
+  "nguyen-van-minh": {
+    about:
+      "Với hơn 20 năm kinh nghiệm trong nội khoa và tim mạch, bác sĩ Minh theo đuổi mô hình bác sĩ gia đình lấy người bệnh làm trung tâm. Thế mạnh của bác sĩ là kết nối dữ liệu khám, xét nghiệm và thói quen sinh hoạt của cả gia đình để đưa ra kế hoạch theo dõi dài hạn, đặc biệt cho người lớn tuổi có bệnh nền tim mạch, chuyển hóa và nguy cơ đột quỵ.",
+    focusAreas: [
+      "Theo dõi tăng huyết áp và nguy cơ tim mạch",
+      "Điều phối chăm sóc người lớn tuổi có nhiều bệnh nền",
+      "Tối ưu thuốc dài hạn và phòng biến chứng",
+      "Đọc xu hướng chỉ số tại nhà để điều chỉnh sớm",
+    ],
+    careApproach: [
+      "Giải thích rõ từng chỉ số và nguyên nhân thay đổi để gia đình dễ theo dõi.",
+      "Ưu tiên kế hoạch điều trị bền vững, giảm tái nhập viện và giảm thuốc không cần thiết.",
+      "Theo dõi sau khám qua nhắn tin khi bệnh nhân thay đổi thuốc hoặc xuất hiện triệu chứng mới.",
+    ],
+  },
+  "le-minh-tam": {
+    about:
+      "Bác sĩ Lê Minh Tâm chuyên điều trị tăng huyết áp, suy tim nhẹ và bệnh mạch vành ở nhóm bệnh nhân trung niên, cao tuổi. Bác sĩ nổi bật ở khả năng theo dõi sát các chỉ số huyết áp tại nhà, đánh giá nguy cơ nhập viện và cá nhân hóa kế hoạch tái khám cho từng gia đình có người bệnh tim mạch mạn tính.",
+    focusAreas: [
+      "Tái khám tim mạch định kỳ tại nhà",
+      "Đánh giá đau ngực, hồi hộp, khó thở gắng sức",
+      "Theo dõi bệnh mạch vành và suy tim giai đoạn sớm",
+      "Tối ưu lịch dùng thuốc huyết áp và chống đông",
+    ],
+    careApproach: [
+      "Ưu tiên can thiệp sớm khi chỉ số huyết áp dao động nhiều ngày liên tiếp.",
+      "Kết hợp theo dõi triệu chứng, ECG và thói quen vận động trước khi điều chỉnh thuốc.",
+      "Làm việc rất chặt với người chăm sóc chính để tránh bỏ sót dấu hiệu nặng.",
+    ],
+    experiences: [
+      {
+        title: "Phó khoa Khám bệnh Tim mạch",
+        org: "Bệnh viện Tim Hà Nội",
+        time: "2018 — Hiện tại",
+        icon: "local_hospital",
+      },
+      {
+        title: "Bác sĩ điều trị Tim mạch can thiệp",
+        org: "Viện Tim mạch Quốc gia",
+        time: "2013 — 2018",
+        icon: "favorite",
+      },
+      {
+        title: "CKII Tim mạch",
+        org: "Đại học Y Hà Nội",
+        time: "2010 — 2012",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-lmt-001",
+        author: "Phạm Văn Hùng",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "3 ngày trước",
+        content: "Bác sĩ Tâm theo dõi huyết áp của bố tôi rất kỹ, chỉnh thuốc theo từng giai đoạn nên chỉ số ổn định hơn rõ rệt.",
+      },
+      {
+        id: "review-lmt-002",
+        author: "Lê Kim Dung",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "2 tuần trước",
+        content: "Điểm tôi thích là bác sĩ giải thích rất rõ vì sao cần đổi giờ uống thuốc và theo dõi triệu chứng nào ở nhà.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Tốt" },
+      { name: "Tiếng Nhật", level: "Giao tiếp chuyên môn" },
+    ],
+    skills: ["Điện tim", "Siêu âm tim", "Tăng huyết áp", "Bệnh mạch vành", "Suy tim", "Theo dõi từ xa"],
+    verifiedItems: [
+      "Chứng chỉ đọc ECG nâng cao",
+      "15 năm điều trị bệnh tim mạch mạn tính",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+  "nguyen-thuy-chi": {
+    about:
+      "Bác sĩ Nguyễn Thùy Chi tập trung vào nội tiết chuyển hóa, đặc biệt là đái tháo đường type 2, rối loạn tuyến giáp và hội chứng chuyển hóa ở phụ nữ trung niên. Hồ sơ theo dõi của bác sĩ luôn đi kèm kế hoạch ăn uống, vận động và lịch xét nghiệm định kỳ, phù hợp với bệnh nhân cần quản lý dài hạn chứ không chỉ xử lý triệu chứng ngắn hạn.",
+    focusAreas: [
+      "Quản lý đường huyết dài hạn",
+      "Rối loạn tuyến giáp và mệt mỏi kéo dài",
+      "Nội tiết nữ tiền mãn kinh",
+      "Điều chỉnh chế độ ăn theo chỉ số HbA1c",
+    ],
+    careApproach: [
+      "Ưu tiên giải pháp bệnh nhân có thể duy trì trong đời sống thật, không áp dụng phác đồ quá cứng.",
+      "Theo dõi kết quả xét nghiệm theo chuỗi để phát hiện nguy cơ biến chứng sớm.",
+      "Kết hợp chặt giữa thuốc, ăn uống và nhịp sinh hoạt hàng ngày.",
+    ],
+    experiences: [
+      {
+        title: "Bác sĩ phụ trách phòng khám Nội tiết",
+        org: "Bệnh viện Nguyễn Tri Phương",
+        time: "2021 — Hiện tại",
+        icon: "monitor_heart",
+      },
+      {
+        title: "Bác sĩ Nội tiết chuyển hóa",
+        org: "Bệnh viện Nhân dân Gia Định",
+        time: "2017 — 2021",
+        icon: "medical_services",
+      },
+      {
+        title: "Thạc sĩ Nội tiết",
+        org: "Đại học Y Dược TP.HCM",
+        time: "2015 — 2017",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-ntc-001",
+        author: "Đỗ Mai Anh",
+        avatar: "https://images.unsplash.com/photo-1546961329-78bef0414d7c?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "4 ngày trước",
+        content: "Bác sĩ Chi không chỉ kê thuốc mà còn điều chỉnh thực đơn rất sát với sinh hoạt của mẹ tôi nên dễ theo hơn.",
+      },
+      {
+        id: "review-ntc-002",
+        author: "Nguyễn Hoàng Nam",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        rating: 4,
+        date: "10 ngày trước",
+        content: "Đi khám cảm giác rất rõ ràng, từng mốc xét nghiệm và mục tiêu đường huyết đều được bác sĩ chốt cụ thể.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Đọc tài liệu tốt" },
+    ],
+    skills: ["Đái tháo đường", "Tuyến giáp", "Nội tiết nữ", "HbA1c", "Dinh dưỡng chuyển hóa"],
+    verifiedItems: [
+      "Thạc sĩ Nội tiết",
+      "Chứng nhận quản lý đái tháo đường",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+  "pham-minh-ngoc": {
+    about:
+      "Bác sĩ Phạm Minh Ngọc chuyên xây dựng chiến lược dinh dưỡng cho người lớn tuổi, bệnh nhân sau phẫu thuật và người cần phục hồi thể trạng sau đợt bệnh nặng. Điểm mạnh của bác sĩ là biến khuyến nghị dinh dưỡng thành kế hoạch ăn uống cụ thể theo khẩu vị, khả năng nhai nuốt, bệnh nền và ngân sách của từng gia đình.",
+    focusAreas: [
+      "Dinh dưỡng cho người cao tuổi có bệnh nền",
+      "Tăng cân và phục hồi thể trạng sau nằm viện",
+      "Thực đơn mềm dễ tiêu sau phẫu thuật",
+      "Phòng suy dinh dưỡng kín đáo ở người già",
+    ],
+    careApproach: [
+      "Thiết kế thực đơn sát bữa ăn thực tế, không dùng lời khuyên chung chung.",
+      "Theo dõi cân nặng, khẩu phần và mức độ dung nạp theo từng tuần.",
+      "Ưu tiên mục tiêu nhỏ nhưng đo được để gia đình thấy tiến triển rõ ràng.",
+    ],
+    experiences: [
+      {
+        title: "Bác sĩ Dinh dưỡng lâm sàng",
+        org: "Bệnh viện Chợ Rẫy",
+        time: "2019 — Hiện tại",
+        icon: "nutrition",
+      },
+      {
+        title: "Thành viên đơn vị Lão khoa",
+        org: "Bệnh viện Thống Nhất",
+        time: "2014 — 2019",
+        icon: "elderly",
+      },
+      {
+        title: "Thạc sĩ Dinh dưỡng người bệnh",
+        org: "Đại học Y Phạm Ngọc Thạch",
+        time: "2012 — 2014",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-pmn-001",
+        author: "Trương Hải Yến",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "6 ngày trước",
+        content: "Sau mổ, bố tôi ăn rất kém nhưng bác sĩ Ngọc lên thực đơn theo từng tuần nên hồi phục tốt hơn hẳn.",
+      },
+      {
+        id: "review-pmn-002",
+        author: "Phạm Văn Duy",
+        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "2 tuần trước",
+        content: "Tư vấn rất chi tiết từ món ăn thay thế, khẩu phần đến cách theo dõi cân nặng cho người già.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Lưu loát" },
+    ],
+    skills: [
+      "Dinh dưỡng lão khoa",
+      "Ăn uống hậu phẫu",
+      "Phục hồi thể trạng",
+      "Suy dinh dưỡng",
+      "Theo dõi cân nặng",
+    ],
+    verifiedItems: [
+      "Thạc sĩ Dinh dưỡng lâm sàng",
+      "12 năm kinh nghiệm bệnh viện tuyến cuối",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+  "tran-thi-phuong-lan": {
+    about:
+      "Bác sĩ Trần Thị Phương Lan theo dõi phát triển thể chất, bệnh hô hấp, tiêu hóa và dinh dưỡng ở trẻ nhỏ. Hồ sơ tư vấn của bác sĩ luôn gắn với mốc phát triển theo tuổi, lịch tiêm chủng, thời gian ngủ và thói quen ăn uống, phù hợp với phụ huynh cần một bác sĩ theo dõi liên tục thay vì chỉ khám từng đợt bệnh.",
+    focusAreas: [
+      "Theo dõi phát triển theo lứa tuổi",
+      "Hen, viêm mũi và bệnh hô hấp tái đi tái lại",
+      "Biếng ăn, chậm tăng cân, rối loạn giấc ngủ",
+      "Tư vấn tiêm chủng và chăm sóc trẻ tại nhà",
+    ],
+    careApproach: [
+      "Giải thích cho phụ huynh theo ngôn ngữ đơn giản, dễ áp dụng tại nhà.",
+      "Ưu tiên theo dõi tăng trưởng và hành vi ăn ngủ thay vì chỉ nhìn một lần khám.",
+      "Đưa checklist rõ ràng để phụ huynh biết khi nào cần tái khám hoặc cấp cứu.",
+    ],
+    experiences: [
+      {
+        title: "Bác sĩ Nhi tổng quát",
+        org: "Bệnh viện Nhi Trung Ương",
+        time: "2020 — Hiện tại",
+        icon: "child_care",
+      },
+      {
+        title: "Bác sĩ điều trị Hô hấp Nhi",
+        org: "Bệnh viện Xanh Pôn",
+        time: "2016 — 2020",
+        icon: "respiratory_rate",
+      },
+      {
+        title: "Bác sĩ nội trú Nhi khoa",
+        org: "Đại học Y Hà Nội",
+        time: "2013 — 2016",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-ttpl-001",
+        author: "Mẹ Minh An",
+        avatar: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "1 tuần trước",
+        content: "Bác sĩ Lan rất nhẹ nhàng với trẻ và hướng dẫn phụ huynh cực kỳ cụ thể, đặc biệt về ăn uống sau ốm.",
+      },
+      {
+        id: "review-ttpl-002",
+        author: "Bố Bảo Nam",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "3 tuần trước",
+        content: "Con tôi hay tái viêm hô hấp, bác sĩ lập hẳn kế hoạch theo dõi ở nhà nên số lần phải nhập viện giảm nhiều.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Tốt" },
+    ],
+    skills: ["Dinh dưỡng trẻ em", "Hô hấp", "Theo dõi phát triển", "Tiêm chủng", "Giấc ngủ trẻ nhỏ"],
+    verifiedItems: [
+      "Bác sĩ nội trú Nhi khoa",
+      "8 năm điều trị trẻ em tại bệnh viện tuyến trung ương",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+  "tran-quoc-anh": {
+    about:
+      "PGS. TS Trần Quốc Anh là chuyên gia thần kinh - phục hồi chức năng nhiều năm làm việc với bệnh nhân sau đột quỵ, suy giảm nhận thức và rối loạn vận động ở người lớn tuổi. Hồ sơ điều trị của bác sĩ chú trọng khôi phục khả năng tự chăm sóc, giảm phụ thuộc vào người nhà và xây dựng chương trình phục hồi dài hạn có thể duy trì tại nhà.",
+    focusAreas: [
+      "Phục hồi sau đột quỵ",
+      "Suy giảm trí nhớ và sa sút trí tuệ giai đoạn sớm",
+      "Rối loạn thăng bằng, yếu nửa người",
+      "Phối hợp tập vận động với chăm sóc tại nhà",
+    ],
+    careApproach: [
+      "Đặt mục tiêu phục hồi rõ theo từng mốc 2 tuần, 1 tháng và 3 tháng.",
+      "Kết hợp người chăm sóc vào kế hoạch phục hồi để tăng khả năng duy trì lâu dài.",
+      "Ưu tiên những bài tập và hướng dẫn gia đình có thể áp dụng ngay tại nhà.",
+    ],
+    experiences: [
+      {
+        title: "PGS phụ trách đơn vị Phục hồi sau đột quỵ",
+        org: "Bệnh viện Bạch Mai",
+        time: "2016 — Hiện tại",
+        icon: "neurology",
+      },
+      {
+        title: "Chuyên gia Thần kinh lão khoa",
+        org: "Bệnh viện Lão khoa Trung ương",
+        time: "2008 — 2016",
+        icon: "psychology",
+      },
+      {
+        title: "Tiến sĩ Thần kinh học",
+        org: "Đại học Y Hà Nội",
+        time: "2003 — 2008",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-tqa-001",
+        author: "Nguyễn Thị Hòa",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "5 ngày trước",
+        content: "Bác sĩ Quốc Anh đặt mục tiêu phục hồi rất rõ ràng, gia đình tôi biết phải tập gì mỗi ngày cho ông.",
+      },
+      {
+        id: "review-tqa-002",
+        author: "Phan Đức Long",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "2 tuần trước",
+        content: "Sau đột quỵ, bố tôi cải thiện vận động tốt nhờ chương trình phục hồi có video và lịch theo dõi cụ thể.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Lưu loát chuyên môn" },
+    ],
+    skills: ["Phục hồi sau đột quỵ", "Thoái hóa thần kinh", "Lão khoa", "Đánh giá trí nhớ", "Vật lý trị liệu thần kinh"],
+    verifiedItems: [
+      "Phó giáo sư, Tiến sĩ Thần kinh học",
+      "25 năm kinh nghiệm điều trị và phục hồi",
+      "Top chuyên gia đã xác minh hồ sơ",
+    ],
+  },
+  "lam-duc-huy": {
+    about:
+      "Bác sĩ Lâm Đức Huy chuyên các bệnh tai mũi họng kéo dài, đặc biệt là viêm mũi dị ứng, viêm xoang tái phát và rối loạn giấc ngủ liên quan tắc nghẽn đường thở trên. Bác sĩ phù hợp với bệnh nhân cần theo dõi triệu chứng theo mùa, kết hợp điều trị thuốc với thay đổi môi trường sống trong gia đình.",
+    focusAreas: [
+      "Viêm mũi dị ứng theo mùa",
+      "Viêm xoang và nghẹt mũi kéo dài",
+      "Đau họng, khàn tiếng tái phát",
+      "Theo dõi trẻ và người lớn có cơ địa dị ứng",
+    ],
+    careApproach: [
+      "Tập trung nhận diện yếu tố kích phát trong nhà thay vì chỉ dùng thuốc cắt triệu chứng.",
+      "Ưu tiên phác đồ gọn, dễ tuân thủ cho bệnh nhân tái phát nhiều lần.",
+      "Hướng dẫn rất kỹ cách rửa mũi, dùng xịt và theo dõi phản ứng dị ứng.",
+    ],
+    experiences: [
+      {
+        title: "Bác sĩ phòng khám Tai Mũi Họng",
+        org: "Bệnh viện C Đà Nẵng",
+        time: "2019 — Hiện tại",
+        icon: "hearing",
+      },
+      {
+        title: "Bác sĩ điều trị dị ứng hô hấp trên",
+        org: "Bệnh viện Đà Nẵng",
+        time: "2015 — 2019",
+        icon: "air",
+      },
+      {
+        title: "Chứng chỉ Nội soi Tai Mũi Họng",
+        org: "Đại học Y Dược Huế",
+        time: "2013 — 2014",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-ldh-001",
+        author: "Anh Tuấn",
+        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "1 tuần trước",
+        content: "Bác sĩ Huy giải thích rất rõ cơ chế dị ứng theo mùa và chỉ cho tôi cách xử lý phòng ngủ cực kỳ hữu ích.",
+      },
+      {
+        id: "review-ldh-002",
+        author: "Đào Ngọc Mai",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 4,
+        date: "18 ngày trước",
+        content: "Tôi bị viêm xoang kéo dài, sau khi đổi thói quen vệ sinh mũi và điều trị theo bác sĩ thì đỡ hẳn.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Tốt" },
+    ],
+    skills: ["Viêm mũi dị ứng", "Nội soi tai mũi họng", "Viêm xoang", "Dị ứng theo mùa", "Giấc ngủ liên quan hô hấp"],
+    verifiedItems: [
+      "Chứng chỉ nội soi Tai Mũi Họng",
+      "10 năm kinh nghiệm điều trị ngoại trú",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+  "vu-thanh-mai": {
+    about:
+      "Bác sĩ Vũ Thanh Mai theo dõi da cơ địa, dị ứng da và các vấn đề da liễu mạn tính ở cả trẻ em lẫn người lớn. Bác sĩ chú trọng kế hoạch chăm sóc da hằng ngày, nhận diện yếu tố kích ứng trong môi trường sống và hướng dẫn gia đình cách xử lý đợt bùng phát tại nhà để giảm tái phát.",
+    focusAreas: [
+      "Viêm da cơ địa ở trẻ em",
+      "Dị ứng da và mề đay tái phát",
+      "Da khô, bong tróc kéo dài",
+      "Chăm sóc da duy trì sau đợt bùng phát",
+    ],
+    careApproach: [
+      "Ưu tiên phục hồi hàng rào da trước, sau đó mới tối ưu thuốc bôi.",
+      "Giải thích rất rõ routine chăm sóc da theo sáng - tối để dễ duy trì.",
+      "Theo dõi các yếu tố kích ứng như sữa tắm, quần áo, thời tiết và thực phẩm.",
+    ],
+    experiences: [
+      {
+        title: "Bác sĩ Da liễu nhi và dị ứng da",
+        org: "BV Da Liễu TP.HCM",
+        time: "2020 — Hiện tại",
+        icon: "dermatology",
+      },
+      {
+        title: "Bác sĩ phòng khám Da cơ địa",
+        org: "Bệnh viện Nhi Đồng 2",
+        time: "2016 — 2020",
+        icon: "child_care",
+      },
+      {
+        title: "Chứng chỉ Da liễu ứng dụng",
+        org: "Đại học Y Dược TP.HCM",
+        time: "2014 — 2015",
+        icon: "school",
+      },
+    ],
+    reviews: [
+      {
+        id: "review-vtm-001",
+        author: "Mẹ Bắp",
+        avatar: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=120&q=80",
+        rating: 5,
+        date: "5 ngày trước",
+        content: "Bác sĩ Mai hướng dẫn routine dưỡng da cho bé rất cụ thể, chỉ sau 2 tuần vùng chàm đã dịu rõ rệt.",
+      },
+      {
+        id: "review-vtm-002",
+        author: "Lê Khánh Vy",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        rating: 4,
+        date: "11 ngày trước",
+        content: "Điểm mạnh là bác sĩ không chỉ kê thuốc mà còn chỉ ra từng tác nhân làm da tôi bùng phát.",
+      },
+    ],
+    languages: [
+      { name: "Tiếng Việt", level: "Bản ngữ" },
+      { name: "Tiếng Anh", level: "Đọc tài liệu tốt" },
+    ],
+    skills: ["Da cơ địa", "Dị ứng da", "Tư vấn chăm sóc da trẻ em", "Routine phục hồi da", "Mề đay tái phát"],
+    verifiedItems: [
+      "Chứng chỉ Da liễu ứng dụng",
+      "9 năm điều trị da liễu mạn tính",
+      "Đã xác minh hồ sơ hành nghề",
+    ],
+  },
+};
+
+doctorProfiles.forEach((doctor) => {
+  Object.assign(doctor, doctorProfileDeepContent[doctor.id] ?? {});
+});
+
+export const hiredDoctorIds = ["le-minh-tam", "nguyen-thuy-chi"];
+
+export const recommendedDoctorIds = [
+  "tran-quoc-anh",
+  "pham-minh-ngoc",
+  "tran-thi-phuong-lan",
+  "vu-thanh-mai",
+  "nguyen-van-minh",
+  "lam-duc-huy",
+];
+
+export const communityArticles = [
+  {
+    id: "mediterranean-diet",
+    title: 'Chế độ ăn Địa Trung Hải: "Chìa khóa vàng" cho sức khỏe tim mạch người cao tuổi',
+    category: "DINH DƯỠNG",
+    readTime: "8 phút đọc",
+    excerpt:
+      "Chế độ ăn giàu rau xanh, ngũ cốc nguyên hạt và chất béo lành mạnh giúp giảm đáng kể nguy cơ tim mạch ở người cao tuổi.",
+    author: "BS. Nguyễn Thị Lan",
+    specialty: "Chuyên khoa Tim mạch",
+    image:
+      "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "yoga-sleep",
+    title: "5 bài tập Yoga nhẹ nhàng giúp cải thiện giấc ngủ",
+    category: "VẬN ĐỘNG",
+    readTime: "5 phút đọc",
+    excerpt: "Các bài tập kéo giãn chậm trước khi ngủ giúp thư giãn hệ thần kinh và giảm khó ngủ.",
+    author: "ThS.BS Trần Hoàng",
+    specialty: "Phục hồi chức năng",
+    image:
+      "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "blood-pressure-cold-weather",
+    title: "Lưu ý khi sử dụng thuốc huyết áp vào mùa lạnh",
+    category: "CẢNH BÁO",
+    readTime: "4 phút đọc",
+    excerpt: "Thời tiết lạnh làm thay đổi huyết áp và nguy cơ quên thuốc tăng lên nếu lịch sinh hoạt bị xáo trộn.",
+    author: "BSCKII. Lê Văn Nam",
+    specialty: "Tim mạch",
+    image:
+      "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "senior-hydration",
+    title: "Người lớn tuổi cần uống nước thế nào để tránh mất nước kín đáo?",
+    category: "LÃO KHOA",
+    readTime: "6 phút đọc",
+    excerpt: "Mất nước nhẹ kéo dài ở người lớn tuổi có thể làm tăng mệt mỏi, táo bón và chóng mặt.",
+    author: "BS. Phạm Minh Ngọc",
+    specialty: "Lão khoa",
+    image:
+      "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "child-fever-checklist",
+    title: "Checklist xử lý sốt ở trẻ tại nhà trước khi đưa đi khám",
+    category: "NHI KHOA",
+    readTime: "7 phút đọc",
+    excerpt: "Khi trẻ sốt, điều quan trọng là nhận diện dấu hiệu nguy hiểm và bù nước đủ ngay từ đầu.",
+    author: "BS. Trần Thị Phương Lan",
+    specialty: "Nhi khoa",
+    image:
+      "https://images.unsplash.com/photo-1504439468489-c8920d796a29?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "digital-health-records",
+    title: "Hồ sơ sức khỏe số giúp gia đình theo dõi bệnh nền hiệu quả hơn ra sao?",
+    category: "LIFETRACK",
+    readTime: "5 phút đọc",
+    excerpt: "Lưu trữ tập trung lịch sử khám, thuốc và kết quả xét nghiệm giúp quyết định điều trị nhanh và chính xác hơn.",
+    author: "Đội ngũ LifeTrack",
+    specialty: "Sản phẩm",
+    image:
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
+  },
+];
+
+export const communityQuestions = [
+  {
+    id: "chest-pain",
+    title: "Tôi thường xuyên bị đau thắt ngực khi leo cầu thang",
+    body:
+      "Tôi năm nay 55 tuổi. Gần đây mỗi khi leo lên tầng 2 thì cảm thấy ngực thắt lại và hơi khó thở, nghỉ 5 phút thì hết.",
+    tag: "#TimMach",
+    tag2: "#SucKhoeNguoiCaoTuoi",
+    author: "Bệnh nhân Ẩn danh",
+    postedAt: "2 giờ trước",
+    answerDoctor: "BS. Nguyễn Thành Nam",
+    answer:
+      'Đây có thể là dấu hiệu của cơn đau thắt ngực ổn định. Bác nên đi khám tim mạch sớm để làm ECG và siêu âm tim, đồng thời tránh gắng sức đột ngột.',
+    likes: 128,
+    comments: 45,
+    anonymous: true,
+  },
+  {
+    id: "child-appetite",
+    title: "Chế độ ăn cho trẻ biếng ăn sau khi ốm dậy?",
+    body:
+      "Bé gái 4 tuổi vừa khỏi cúm, ăn uống kém hơn bình thường. Tôi nên chia bữa như thế nào để bé phục hồi tốt hơn?",
+    tag: "#NhiKhoa",
+    tag2: "#DinhDuong",
+    author: "Mẹ Minh An",
+    postedAt: "5 giờ trước",
+    answerDoctor: "BS. Trần Thị Phương Lan",
+    answer:
+      "Nên chia nhỏ 5-6 bữa, ưu tiên món mềm dễ tiêu, tăng đạm nạc và sữa chua, tránh ép ăn quá mức.",
+    likes: 84,
+    comments: 21,
+    anonymous: false,
+  },
+  {
+    id: "skin-rash",
+    title: "Bé bị mẩn đỏ quanh khuỷu tay, có cần đi da liễu ngay không?",
+    body: "Mảng đỏ khô xuất hiện 3 ngày nay, bé ngứa về đêm nhưng chưa sốt.",
+    tag: "#DaLieu",
+    tag2: "#NhiKhoa",
+    author: "Mẹ Bắp",
+    postedAt: "8 giờ trước",
+    answerDoctor: "BS. Vũ Thanh Mai",
+    answer: "Nếu bé ngứa nhiều hoặc lan rộng, nên khám da liễu để loại trừ viêm da cơ địa bùng phát.",
+    likes: 53,
+    comments: 16,
+    anonymous: false,
+  },
+  {
+    id: "insomnia",
+    title: "Mẹ tôi khó ngủ liên tục 2 tuần, có nên đổi thuốc huyết áp?",
+    body: "Mẹ 63 tuổi đang dùng thuốc huyết áp buổi tối, gần đây thức giấc nhiều lần và mệt vào sáng hôm sau.",
+    tag: "#NoiTiet",
+    tag2: "#TimMach",
+    author: "Tấn",
+    postedAt: "1 ngày trước",
+    answerDoctor: "BS. CKII Nguyễn Văn Minh",
+    answer: "Không nên tự đổi thuốc. Cần đánh giá lại thời điểm dùng thuốc, caffeine, stress và huyết áp ban đêm.",
+    likes: 76,
+    comments: 28,
+    anonymous: false,
+  },
+  {
+    id: "allergy-season",
+    title: "Dị ứng theo mùa có nên uống thuốc kháng histamin liên tục?",
+    body: "Tôi bị hắt hơi và nghẹt mũi gần như mỗi sáng, tình trạng kéo dài hơn 2 tuần.",
+    tag: "#TaiMuiHong",
+    tag2: "#DiUng",
+    author: "Anh Tuấn",
+    postedAt: "2 ngày trước",
+    answerDoctor: "BS. Lâm Đức Huy",
+    answer: "Nên khám nếu triệu chứng kéo dài. Thuốc kháng histamin có thể dùng ngắn hạn nhưng cần đánh giá nguyên nhân.",
+    likes: 44,
+    comments: 12,
+    anonymous: false,
+  },
+  {
+    id: "senior-dizziness",
+    title: "Người lớn tuổi chóng mặt khi đứng dậy đột ngột, có nguy hiểm không?",
+    body: "Ba tôi 68 tuổi thỉnh thoảng đứng lên là hơi choáng trong vài giây rồi hết.",
+    tag: "#LaoKhoa",
+    tag2: "#TimMach",
+    author: "Lan",
+    postedAt: "2 ngày trước",
+    answerDoctor: "BS. Lê Minh Tâm",
+    answer: "Có thể liên quan tụt huyết áp tư thế, mất nước hoặc tác dụng thuốc. Nên đo huyết áp và khám sớm.",
+    likes: 67,
+    comments: 19,
+    anonymous: false,
+  },
+];
+
+export const settingsProfile = {
+  fullName: "Nguyễn Văn Minh",
+  phone: "0987 654 321",
+  email: "minh.nguyen@lifetrack.vn",
+  address: "123 Đường Láng, Đống Đa, Hà Nội",
+};
+
+export const notificationPreferences = [
+  {
+    id: "push",
+    title: "Thông báo đẩy (Push)",
+    description: "Nhận cập nhật tức thì trên thiết bị",
+    enabled: true,
+  },
+  {
+    id: "appointment",
+    title: "Nhắc lịch hẹn",
+    description: "Thông báo trước giờ khám và tái khám",
+    enabled: true,
+  },
+  {
+    id: "community",
+    title: "Hoạt động cộng đồng",
+    description: "Khi câu hỏi của bạn có câu trả lời mới",
+    enabled: false,
+  },
+];
+
+export function getDoctorById(doctorId) {
+  return doctorProfiles.find((doctor) => doctor.id === doctorId);
+}
+
+export function getFamilyMemberById(memberId) {
+  return familyMembers.find((member) => member.id === memberId);
+}

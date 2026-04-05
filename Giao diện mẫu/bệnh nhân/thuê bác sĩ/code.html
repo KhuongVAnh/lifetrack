@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LIFETRACK - Thuê Bác sĩ Gia đình</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#004976",
+                        "on-primary-fixed": "#001d33",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-surface": "#2d3133",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#88d982",
+                        "secondary-fixed": "#a3f69c",
+                        "surface-tint": "#02639c",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#badbff",
+                        "on-tertiary-container": "#6be9ff",
+                        "surface-bright": "#f7fafc",
+                        "secondary": "#1b6d24",
+                        "on-secondary-fixed-variant": "#005312",
+                        "on-secondary-container": "#217128",
+                        "surface": "#f7fafc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#002204",
+                        "on-surface": "#181c1e",
+                        "error": "#ba1a1a",
+                        "primary-container": "#00629b",
+                        "inverse-on-surface": "#eef1f3",
+                        "tertiary-fixed-dim": "#55d7ed",
+                        "tertiary-container": "#006875",
+                        "surface-dim": "#d7dadc",
+                        "surface-container-low": "#f1f4f6",
+                        "background": "#f7fafc",
+                        "primary-fixed-dim": "#98cbff",
+                        "primary-fixed": "#cee5ff",
+                        "on-background": "#181c1e",
+                        "outline": "#717881",
+                        "tertiary-fixed": "#9eefff",
+                        "surface-container": "#ebeef0",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004e59",
+                        "on-tertiary-fixed": "#001f24",
+                        "tertiary": "#004e59",
+                        "surface-container-high": "#e5e9eb",
+                        "inverse-primary": "#98cbff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface-variant": "#414750",
+                        "secondary-container": "#a0f399",
+                        "on-primary-fixed-variant": "#004a77",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c0c7d1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Public Sans"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar (Authority: JSON & Design System) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r-0 flex flex-col p-4 gap-2 z-40">
+<div class="mb-10 mt-4 px-4">
+<h1 class="text-lg font-black text-sky-800 tracking-tight">LIFETRACK</h1>
+<p class="text-xs text-slate-500 font-medium">Sự An Tâm Tĩnh Lặng</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-600 px-4 py-3 hover:bg-slate-200 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-public-sans leading-relaxed text-sm">Trang chủ</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 px-4 py-3 hover:bg-slate-200 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-public-sans leading-relaxed text-sm">Hồ sơ sức khỏe</span>
+</a>
+<!-- Active Tab: Thuê bác sĩ (Logic mapping) -->
+<a class="flex items-center gap-3 bg-sky-50 text-sky-900 rounded-lg px-4 py-3 font-semibold shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span class="font-public-sans leading-relaxed text-sm">Lịch hẹn</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 px-4 py-3 hover:bg-slate-200 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-public-sans leading-relaxed text-sm">Cộng đồng</span>
+</a>
+<a class="flex items-center gap-3 text-slate-600 px-4 py-3 hover:bg-slate-200 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-public-sans leading-relaxed text-sm">Cài đặt</span>
+</a>
+</nav>
+<div class="mt-auto p-2">
+<button class="w-full bg-error text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-error/20 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+<span class="text-xs tracking-wider">GỌI CẤP CỨU</span>
+</button>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-white/80 backdrop-blur-md flex justify-between items-center px-8 z-30">
+<h2 class="text-xl font-bold text-sky-900">An Tâm Tĩnh Lặng</h2>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-slate-500 p-2 hover:bg-slate-100 rounded-full cursor-pointer" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</div>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+<div class="text-right">
+<p class="text-sm font-bold text-slate-800">Bác sĩ Gia đình</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">Premium Member</p>
+</div>
+<img alt="Ảnh đại diện bác sĩ" class="w-10 h-10 rounded-full object-cover border-2 border-sky-100" data-alt="professional portrait of a confident male doctor in his 40s wearing a white lab coat with a friendly expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqaXwqfw9PYeID-eg8ao1PkICiEyh2dyVq4ROf20Oma-jRG7GfpGTeuV2hEbI1xG11zQ-ouxKEF1dZirHDDSq_Jrtc3z4xIqOreT-t5iKAc4KzIsWdhquHcVmiwD1Wfb5AxS3hHXrAmx8D_oZkF9C6uXEBRNZSgkgESbFxSej6Wb_eYqibaLQTqYtPMX5GYhxn-r2bkYt_Yljp07W_ty1ahzxfob1W2pe3hbGjikuBJPjLYt9d8wFXSwoiVF3bVkS4TcxnYUK5o6HJ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-20 pb-12 px-8 min-h-screen bg-background">
+<!-- Section 1: Nâng cấp gói thuê (Bento Grid Style) -->
+<section class="mb-12">
+<div class="mb-6">
+<h3 class="text-2xl font-extrabold text-primary tracking-tight">Gói Chăm Sóc Sức Khỏe</h3>
+<p class="text-on-surface-variant mt-1">Lựa chọn giải pháp tối ưu cho sự an tâm tuyệt đối của bạn.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Cơ bản -->
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-col transition-all hover:translate-y-[-4px] hover:shadow-xl group">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-xs font-bold text-slate-500 tracking-widest uppercase">Gói khởi đầu</span>
+<h4 class="text-2xl font-bold text-primary mt-1">Cơ bản</h4>
+</div>
+<span class="material-symbols-outlined text-primary-fixed-dim text-3xl" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-black text-on-surface">500k</span>
+<span class="text-on-surface-variant">/tháng</span>
+</div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Tư vấn trực tuyến 24/7
+                        </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant opacity-60 line-through">
+<span class="material-symbols-outlined text-slate-300 text-lg" data-icon="cancel">cancel</span>
+                            Thăm khám tại nhà định kỳ
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary hover:text-white transition-all">Chọn gói này</button>
+</div>
+<!-- Cá nhân (Featured) -->
+<div class="bg-primary p-8 rounded-xl flex flex-col text-white transition-all hover:translate-y-[-4px] hover:shadow-2xl shadow-primary-container/20 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-black px-3 py-1 rounded-full uppercase">Phổ biến nhất</span>
+</div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-xs font-bold text-primary-fixed-dim tracking-widest uppercase">Toàn diện</span>
+<h4 class="text-2xl font-bold mt-1">Cá nhân</h4>
+</div>
+<span class="material-symbols-outlined text-secondary-fixed text-3xl" data-icon="person_celebrate">person_celebrate</span>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-black">1.2tr</span>
+<span class="text-primary-fixed-dim">/tháng</span>
+</div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Tất cả quyền lợi Gói Cơ bản
+                        </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Thăm khám tại nhà (1 lần/tháng)
+                        </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-secondary-fixed text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Xét nghiệm máu tổng quát quý
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-lg bg-white text-primary font-bold shadow-lg hover:bg-slate-100 transition-all">Nâng cấp ngay</button>
+</div>
+<!-- Gia đình -->
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-col transition-all hover:translate-y-[-4px] hover:shadow-xl">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-xs font-bold text-slate-500 tracking-widest uppercase">Gắn kết</span>
+<h4 class="text-2xl font-bold text-primary mt-1">Gia đình</h4>
+</div>
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="family_restroom">family_restroom</span>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-black text-on-surface">2.5tr</span>
+<span class="text-on-surface-variant">/tháng</span>
+</div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Dành cho 4 thành viên
+                        </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Ưu tiên hỗ trợ cấp cứu 24/7
+                        </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Hồ sơ y tế số hóa cho cả nhà
+                        </li>
+</ul>
+<button class="w-full py-3 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary hover:text-white transition-all">Chọn gói này</button>
+</div>
+</div>
+</section>
+<!-- Section 2: Bác sĩ của bạn -->
+<section class="mb-12">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h3 class="text-2xl font-extrabold text-primary tracking-tight">Bác sĩ Đang Thuê</h3>
+<p class="text-on-surface-variant mt-1">Đội ngũ y tế trực tiếp chăm sóc bạn.</p>
+</div>
+<button class="text-sm font-bold text-primary hover:underline flex items-center gap-1">
+                    Xem lịch trình <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+<div class="flex flex-col md:flex-row items-center gap-6">
+<img alt="BS. Lê Minh Tâm" class="w-24 h-24 rounded-2xl object-cover shadow-md" data-alt="close up professional portrait of a smiling female doctor with stethoscope in a clean modern clinic setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZBeKUi_ACgZpXvOg9TUQG8w90Y6N62keLPz-uQyFkoAI7QsQEBt2Kz_fkqXoHCbKrwmXrX_JTXCoUU2mVyYgjFmDY-Z3wcTfqK5mu8_0RkqitFHRwVXu48_YZn0HNNaMqtBx_8afoluzw0Hls3S4IWJhpoML9AJc6Zt8Z8JhEpMh6yLtZXSt5OSfSF82Ko0bx8pxwHWx4dVF8RZaF9sQ7UMBAiymz0k01iURoE3U_z4pdIyzBvW2jyNKu71k_sLUakXv0QOe3b-hr"/>
+<div class="flex-grow text-center md:text-left">
+<div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+<h4 class="text-xl font-bold text-on-surface">BS. Lê Minh Tâm</h4>
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-2 py-0.5 rounded uppercase w-fit mx-auto md:mx-0">Chuyên khoa Nội</span>
+</div>
+<div class="flex items-center justify-center md:justify-start gap-1 mb-4">
+<span class="material-symbols-outlined text-amber-400 text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-amber-400 text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-amber-400 text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-amber-400 text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-amber-400 text-sm" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface-variant ml-1">5.0 (128 đánh giá)</span>
+</div>
+<p class="text-sm text-on-surface-variant max-w-lg italic">"Sức khỏe của bạn là niềm hạnh phúc của tôi. Luôn sẵn sàng đồng hành cùng gia đình bạn."</p>
+</div>
+<div class="flex flex-col gap-3 min-w-[160px]">
+<button class="flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-bold hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-lg" data-icon="chat">chat</span>
+                            Nhắn tin
+                        </button>
+<button class="flex items-center justify-center gap-2 bg-surface-container-high text-on-surface py-3 rounded-lg font-bold hover:bg-surface-container-highest transition-all active:scale-95">
+<span class="material-symbols-outlined text-lg" data-icon="rate_review">rate_review</span>
+                            Đánh giá
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Gợi ý thuê thêm bác sĩ (Editorial Layout) -->
+<section>
+<div class="mb-8">
+<h3 class="text-2xl font-extrabold text-primary tracking-tight">Gợi ý Chuyên Gia</h3>
+<p class="text-on-surface-variant mt-1">Mở rộng đội ngũ y tế của bạn với các chuyên gia hàng đầu.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Doctor 1 -->
+<div class="flex gap-6 p-6 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors group">
+<div class="relative flex-shrink-0">
+<img alt="BS. Nguyễn Thùy Linh" class="w-32 h-40 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="portrait of an asian female doctor in her 30s wearing glasses and a medical coat looking professional and trustworthy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEjUwEkV98hOhKdHaNuCtUPxH0a2u3vQB2dmrbx_KnXsfnu9aDg-213Tuiizp0TZGUoR-5ycBt_KOcV-c_N0UgXd9S5k6R9lfd1VBt8FM3bKWdQOQbL7Ga-BmwPa_kNk1AvC716PcYv7r7oFhSvYafGitTri2nEjLsOWi0HSKc2X2zCKSD_R1G66UlPy2wBZcp6A810mbquVuC6CEPsjJhNsFWZoC5x66Oj4RY8aRYUHJvFuG3QD5qKm003QHQWiMfSi-rs5O3bqZz"/>
+<div class="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-md shadow-sm">
+<span class="text-[10px] font-black text-primary">12 NĂM KN</span>
+</div>
+</div>
+<div class="flex flex-col justify-between py-1">
+<div>
+<h5 class="text-lg font-bold text-on-surface">BS. Nguyễn Thùy Linh</h5>
+<p class="text-sm text-secondary font-medium mb-2">Chuyên khoa Dinh dưỡng</p>
+<div class="flex items-center gap-4 text-xs text-on-surface-variant font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs" data-icon="payments">payments</span> 800k /tháng</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs text-amber-500" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span> 4.9</span>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant line-clamp-2 mt-2 leading-relaxed">Chuyên gia tư vấn chế độ ăn uống cho người tiểu đường và cao huyết áp tại các bệnh viện lớn.</p>
+<button class="mt-4 w-fit px-6 py-2 bg-primary-container text-on-primary-container rounded-full text-xs font-bold hover:brightness-110 transition-all">Xem chi tiết</button>
+</div>
+</div>
+<!-- Doctor 2 -->
+<div class="flex gap-6 p-6 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors group">
+<div class="relative flex-shrink-0">
+<img alt="BS. Trần Hoàng Nam" class="w-32 h-40 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="middle aged male doctor with salt and pepper hair wearing a blue scrub suit smiling warmly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgLuKOIobxhxeLMUZnXVU8x69Pk5LWAxEMc3j7zsp13sg8mXF7wf9yMkx4mobxyFoFslLr10l4l0OIu2YKH0OtLZ09Yn4uNKNGraPuuywJTlrouylq_sVjK_aDELFUrKnvFDOz28aROK4y9mlJKxImiZP57B4nIZDd9SNMsEhBqLElgg7nI-QP6WL9wSvFQhTeMVFRy8oW8n9zCFYZZWklqcVNZDtS0XB-DSHjMJDtV6zOJZVFp9bYh4IqHGRT2dRcJYOKWqF43npC"/>
+<div class="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-md shadow-sm">
+<span class="text-[10px] font-black text-primary">15 NĂM KN</span>
+</div>
+</div>
+<div class="flex flex-col justify-between py-1">
+<div>
+<h5 class="text-lg font-bold text-on-surface">BS. Trần Hoàng Nam</h5>
+<p class="text-sm text-secondary font-medium mb-2">Chuyên khoa Tim mạch</p>
+<div class="flex items-center gap-4 text-xs text-on-surface-variant font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs" data-icon="payments">payments</span> 1.5tr /tháng</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs text-amber-500" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span> 4.8</span>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant line-clamp-2 mt-2 leading-relaxed">Kinh nghiệm xử lý các ca cấp cứu tim mạch phức tạp. Tư vấn phòng ngừa đột quỵ cho người cao tuổi.</p>
+<button class="mt-4 w-fit px-6 py-2 bg-primary-container text-on-primary-container rounded-full text-xs font-bold hover:brightness-110 transition-all">Xem chi tiết</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#181c1e",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#1b6d24",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#02639c",
+                    "on-tertiary-container": "#6be9ff",
+                    "on-primary-fixed-variant": "#004a77",
+                    "on-surface": "#181c1e",
+                    "surface-container-low": "#f1f4f6",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#002204",
+                    "on-surface-variant": "#414750",
+                    "on-secondary-fixed-variant": "#005312",
+                    "tertiary-fixed": "#9eefff",
+                    "primary": "#004976",
+                    "surface-container-high": "#e5e9eb",
+                    "inverse-surface": "#2d3133",
+                    "surface-container-highest": "#e0e3e5",
+                    "tertiary-container": "#006875",
+                    "background": "#f7fafc",
+                    "tertiary": "#004e59",
+                    "surface-variant": "#e0e3e5",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#004e59",
+                    "surface-bright": "#f7fafc",
+                    "on-primary-fixed": "#001d33",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#badbff",
+                    "inverse-on-surface": "#eef1f3",
+                    "inverse-primary": "#98cbff",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed-dim": "#55d7ed",
+                    "outline-variant": "#c0c7d1",
+                    "surface-dim": "#d7dadc",
+                    "primary-fixed": "#cee5ff",
+                    "outline": "#717881",
+                    "on-secondary-container": "#217128",
+                    "surface-container": "#ebeef0",
+                    "secondary-container": "#a0f399",
+                    "secondary-fixed-dim": "#88d982",
+                    "on-error": "#ffffff",
+                    "surface": "#f7fafc",
+                    "primary-container": "#00629b",
+                    "on-tertiary-fixed": "#001f24",
+                    "primary-fixed-dim": "#98cbff",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#a3f69c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Public Sans"],
+                    "body": ["Public Sans"],
+                    "label": ["Public Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-between items-center px-6 py-3 w-full max-w-full">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-sky-900 dark:text-sky-100">LIFETRACK</span>
+<div class="hidden md:flex gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-200 transition-colors font-medium" href="#">Tổng quan</a>
+<a class="text-sky-700 dark:text-sky-300 font-semibold transition-colors" href="#">Thuê bác sĩ</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-200 transition-colors font-medium" href="#">Gói dịch vụ</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-200 transition-colors font-medium" href="#">Hồ sơ y tế</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="p-2 cursor-pointer active:scale-95 duration-200 text-slate-500">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<div class="p-2 cursor-pointer active:scale-95 duration-200 text-slate-500">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+<img alt="Bác sĩ Minh" class="w-8 h-8 rounded-full bg-primary-fixed border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMhdOlkWAdF5eAW-PbwwjWhJwwj6vurwYtZg1Ul1TZ54BOeDcdlfwSyPkTt1vobj2KRZBavfQ6_UpKGX3VGZ1yGHQDzsHdCA_1bCseWhlkv3vYsy6UDslwrw_AEVujWvWSwXeefZe60vMpKq9z4iiEHeogKdglc0q8oqANNUFpPMNtRI5IbCvAITfcDQHz11p2hnfQMb3bCNmsAfAQEXLcHEgTxJg-Q2V9rdM9KWi1FXCTyBDMIaR_iKs4X4qGciMlv0vSotlaaJ2N"/>
+</div>
+</header>
+<!-- SideNavBar (Hidden on Mobile) -->
+<aside class="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-slate-50 dark:bg-slate-950 flex-col py-6 pt-20 border-r-0">
+<nav class="flex-1 px-2 space-y-1">
+<div class="text-slate-600 dark:text-slate-400 mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer active:translate-x-1 duration-150">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-medium text-sm">Tổng quan</span>
+</div>
+<div class="bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer active:translate-x-1 duration-150">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+<span class="font-semibold text-sm">Thuê bác sĩ</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer active:translate-x-1 duration-150">
+<span class="material-symbols-outlined" data-icon="card_membership">card_membership</span>
+<span class="font-medium text-sm">Gói dịch vụ</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer active:translate-x-1 duration-150">
+<span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+<span class="font-medium text-sm">Hồ sơ y tế</span>
+</div>
+</nav>
+<div class="px-4 py-4">
+<button class="w-full py-3 px-4 bg-primary text-white rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-transform">Nâng cấp gói</button>
+</div>
+<div class="mt-auto px-2 space-y-1">
+<div class="text-slate-600 dark:text-slate-400 mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-medium text-sm">Trợ giúp</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 mx-2 my-1 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-medium text-sm">Đăng xuất</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 pt-20 pb-12 px-4 md:px-8 max-w-6xl mx-auto">
+<!-- Header Banner Section -->
+<div class="relative bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm mb-6">
+<div class="h-48 md:h-64 bg-gradient-to-r from-primary to-primary-container relative">
+<img alt="Background" class="w-full h-full object-cover mix-blend-overlay opacity-50" data-alt="high-end modern medical clinic interior with soft blue lighting and professional atmosphere blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXja-7T8i4fR2HapeUCIijXDmxbotp8kKROJZQgW4WkNM3ByzlJyw1EfuyN7AI1V_BqIW1G82u_rRbitz5gKWMA37jRjOUXhNxTXBBBFdL7Tm4wc5RHxSjgtYZTNm7XM8IM0rQTjZtbqd-l4OkfaVlDrE9yPy7o1i-NNZHowL-fO9ClzA7VMEibGRvq5Uob3Juhm2-nJEIbMy4ZKJJPYkNNyJvnw1vc0YrwZIb3QgFX1iDhIdhH5YoA4E5iaK6EFcfOtVxofrK4aSC"/>
+</div>
+<div class="px-6 pb-6 -mt-16 md:-mt-20 relative flex flex-col md:flex-row items-end md:items-center gap-6">
+<div class="relative group">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-2xl border-4 border-surface-container-lowest bg-surface overflow-hidden shadow-xl">
+<img alt="Bác sĩ Nguyễn Văn Minh" class="w-full h-full object-cover" data-alt="professional portrait of a kind middle-aged male doctor with glasses and white coat smiling warmly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAwxmbQ7_IwiMxkxm2wsg499ogyplu_A5M36d6aO_KYo_yJxnORTov7uu-goVWinvvrHBH75f45O5h1KEwSc9Kg80Oi3VlBl7tQH2AKzoKVhjI1G_2H_nBaZsVzyjZTtUEEZ4_o6EAyF89OHXBuri_NfdTLv7YlNvPWZ51DlnnZo38AVM7qrjS3RjDmdAuwDUbH773iVXparTns-gyzohXiijxwqCQeMMhh80tzKdLYh3nyai3ffy5W4lGUi3f775NHN8LHg5Fojmt"/>
+</div>
+</div>
+<div class="flex-1 pt-16 md:pt-20">
+<div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+<div>
+<h1 class="text-3xl font-extrabold text-on-surface tracking-tight">BS. CKII Nguyễn Văn Minh</h1>
+<p class="text-lg text-primary font-medium">Bác sĩ Gia đình &amp; Chuyên gia Tim mạch</p>
+<div class="flex items-center gap-2 mt-2 text-slate-500 text-sm">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span>Thành phố Hồ Chí Minh, Việt Nam</span>
+<span class="mx-2">•</span>
+<span class="text-secondary font-bold">500+ Bệnh nhân tin dùng</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary text-white px-8 py-3 rounded-xl font-bold text-base shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all">Thuê bác sĩ này</button>
+<button class="bg-surface-container-high text-on-surface px-4 py-3 rounded-xl font-semibold active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left Column: About & Skills -->
+<div class="lg:col-span-2 space-y-6">
+<!-- About Section -->
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-transparent">
+<h2 class="text-xl font-bold mb-4 text-on-surface">Giới thiệu</h2>
+<p class="text-on-surface-variant leading-relaxed text-lg">
+                        Với hơn 20 năm kinh nghiệm trong lĩnh vực y khoa, tôi tận tâm mang đến giải pháp chăm sóc sức khỏe toàn diện cho các gia đình. Triết lý của tôi là kết hợp y học hiện đại với sự thấu cảm, không chỉ điều trị bệnh mà còn chăm sóc con người. Chuyên môn sâu về chẩn đoán sớm các bệnh lý tim mạch và quản lý sức khỏe mãn tính cho người cao tuổi.
+                    </p>
+</section>
+<!-- Experience Section -->
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+<h2 class="text-xl font-bold mb-6 text-on-surface">Kinh nghiệm &amp; Học vấn</h2>
+<div class="space-y-8">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="local_hospital">local_hospital</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Trưởng khoa Nội tổng quát</h3>
+<p class="text-on-surface-variant">Bệnh viện Đại học Y Dược TP.HCM</p>
+<p class="text-sm text-slate-500 mt-1">Tháng 6, 2015 — Hiện tại • 8 năm</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="medical_services">medical_services</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Bác sĩ chuyên khoa Tim mạch</h3>
+<p class="text-on-surface-variant">Bệnh viện Chợ Rẫy</p>
+<p class="text-sm text-slate-500 mt-1">Tháng 1, 2008 — Tháng 5, 2015 • 7 năm</p>
+</div>
+</div>
+<div class="pt-4 border-t border-surface-container-low"></div>
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary" data-icon="school">school</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Bác sĩ Chuyên khoa II - Nội tim mạch</h3>
+<p class="text-on-surface-variant">Đại học Y Dược TP.HCM</p>
+<p class="text-sm text-slate-500 mt-1">2005 — 2007</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Reviews Section -->
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold text-on-surface">Đánh giá từ bệnh nhân</h2>
+<div class="flex items-center gap-1 text-secondary font-bold">
+<span class="material-symbols-outlined" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.9 (124 đánh giá)</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="p-5 bg-surface-container-low rounded-xl">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="Lê Anh" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-mmI9Ks2eTOueZFWfSXvqlIeuYATpmMmkMvt6puFdqCJSDmhqihdcFgJUFSIZPWzTI9J7E_Ms8MJRcatOB0roCOv9eie1nLf5ZgiX2TmQxnS6hiYPdaegHwv6mhT26qzfEGZvQsTJTJ1fAqhLGucNKt0aYjROKNj9lXf0YR3_wURMZHWUapTRxXW1T9kLqghC8adHeDpNUFakmEogz07DH796t9AbXXhNbH0uvo15D6GheP7VrcOPYvzP-Movr8UmBAL6tAXLgmcN"/>
+<div>
+<p class="font-bold text-sm">Lê Anh Tuấn</p>
+<div class="flex text-amber-500">
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</div>
+<span class="text-xs text-slate-500">2 ngày trước</span>
+</div>
+<p class="text-on-surface-variant text-sm italic">"Bác sĩ Minh tư vấn cực kỳ kỹ lưỡng và điềm đạm. Ông giải thích các chỉ số huyết áp của mẹ tôi rất dễ hiểu, giúp gia đình bớt lo lắng hẳn."</p>
+</div>
+<div class="p-5 bg-surface-container-low rounded-xl">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<img alt="Thu Hà" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEnSXfYQXrgaiK_-JOJkQvdVxofPtSC2kPoKWCUYKCUhQEuTSwp_ZnMMMSQaaElGIIGERDNcOuqbyoWGvo0DgCeEvIK7uoY03ji0t5ZLEtSuRCE6iKfooCVGNZd2O7NVYtQu8y_rGWCnQvjYM2NWup3pWUqim0xIZvJAoFAFPwEyy9YeYe7-NV3FMsNhEyYckNURca9diKCGfgkHZfROJ8h7DECyAp0Fqyhb84V8ykYn5iEHFHDVWhamU-soVxdWBfWmBTGhFkPrHI"/>
+<div>
+<p class="font-bold text-sm">Nguyễn Thị Thu Hà</p>
+<div class="flex text-amber-500">
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</div>
+<span class="text-xs text-slate-500">1 tuần trước</span>
+</div>
+<p class="text-on-surface-variant text-sm italic">"Phác đồ điều trị của bác sĩ rất hiệu quả. Sau 1 tháng, chỉ số đường huyết của tôi đã ổn định. Rất tin tưởng!"</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Skills & Quick Actions -->
+<div class="space-y-6">
+<!-- CTA Card -->
+<section class="bg-primary-container text-white p-8 rounded-2xl shadow-xl shadow-primary/20">
+<h2 class="text-2xl font-bold mb-2">Chăm sóc ngay</h2>
+<p class="opacity-90 mb-6 text-sm">Đặt lịch tư vấn trực tuyến hoặc đăng ký bác sĩ gia đình dài hạn ngay hôm nay.</p>
+<button class="w-full bg-white text-primary py-4 rounded-xl font-extrabold text-lg shadow-sm active:scale-95 transition-all mb-4">Đặt lịch tư vấn thử</button>
+<button class="w-full bg-primary-fixed/20 text-white border border-white/30 py-4 rounded-xl font-bold text-lg active:scale-95 transition-all">Nhắn tin cho Bác sĩ</button>
+</section>
+<!-- Skills & Strengths -->
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+<h2 class="text-xl font-bold mb-6 text-on-surface">Kỹ năng &amp; Thế mạnh</h2>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Siêu âm tim</span>
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Điều trị tăng huyết áp</span>
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Tư vấn dinh dưỡng</span>
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Quản lý tiểu đường</span>
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Y học gia đình</span>
+<span class="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold">Khám bệnh từ xa</span>
+</div>
+<div class="mt-8 space-y-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
+<span class="text-sm font-medium">Đã xác minh bằng cấp chuyên môn</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
+<span class="text-sm font-medium">Chứng chỉ hành nghề quốc tế</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
+<span class="text-sm font-medium">Thành viên Hiệp hội Tim mạch VN</span>
+</div>
+</div>
+</section>
+<!-- Language & Other -->
+<section class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+<h2 class="text-xl font-bold mb-4 text-on-surface">Ngôn ngữ</h2>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="font-medium text-on-surface-variant">Tiếng Việt</span>
+<span class="text-sm text-secondary font-bold">Bản ngữ</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-medium text-on-surface-variant">Tiếng Anh</span>
+<span class="text-sm text-secondary font-bold">Lưu loát</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-medium text-on-surface-variant">Tiếng Pháp</span>
+<span class="text-sm text-slate-500 font-bold">Giao tiếp</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md flex justify-around items-center py-3 border-t-0 z-50">
+<div class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-medium">Tổng quan</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-sky-700">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+<span class="text-[10px] font-bold">Bác sĩ</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined" data-icon="card_membership">card_membership</span>
+<span class="text-[10px] font-medium">Gói cước</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined" data-icon="assignment_ind">assignment_ind</span>
+<span class="text-[10px] font-medium">Hồ sơ</span>
+</div>
+</nav>
+</body></html>
