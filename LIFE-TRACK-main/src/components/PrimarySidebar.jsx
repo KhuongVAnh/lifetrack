@@ -52,10 +52,10 @@ export function PrimarySidebar() {
           <span className="material-symbols-outlined">help</span>
           Trợ giúp
         </a>
-        <a className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-500 hover:bg-slate-200/70" href="#logout">
+        <Link className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-500 hover:bg-slate-200/70" to="/login">
           <span className="material-symbols-outlined">logout</span>
           Đăng xuất
-        </a>
+        </Link>
       </div>
     </aside>
   );

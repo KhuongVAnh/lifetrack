@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { notificationPreferences, settingsProfile } from "../data/mockData";
 
 export function SettingsPage() {
@@ -33,10 +34,10 @@ export function SettingsPage() {
 
           <div className="rounded-xl bg-error-container/30 p-6">
             <h4 className="mb-4 text-sm font-bold uppercase tracking-widest text-error">Khu vực nguy hiểm</h4>
-            <button className="flex items-center gap-3 font-semibold text-error hover:underline" type="button">
+            <Link to="/login" className="flex items-center gap-3 font-semibold text-error hover:underline">
               <span className="material-symbols-outlined">logout</span>
               <span>Đăng xuất tài khoản</span>
-            </button>
+            </Link>
           </div>
         </div>
 

@@ -1,4 +1,11 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
+import { LoginPage } from "./pages/LoginPage";
+import { DoctorDashboardPage } from "./pages/DoctorDashboardPage";
+import { DoctorLivePage } from "./pages/DoctorLivePage";
+import { DoctorPatientsPage } from "./pages/DoctorPatientsPage";
+import { DoctorAppointmentsPage } from "./pages/DoctorAppointmentsPage";
+import { DoctorMessagesPage } from "./pages/DoctorMessagesPage";
+import { DoctorPortalShell } from "./shells/DoctorPortalShell";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { CommunityKnowledgePage } from "./pages/CommunityKnowledgePage";
 import { CommunityQuestionsPage } from "./pages/CommunityQuestionsPage";
@@ -16,7 +23,41 @@ import { PatientShell } from "./shells/PatientShell";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate replace to="/patient/dashboard" />,
+    element: <Navigate replace to="/login" />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/doctor",
+    element: <DoctorPortalShell />,
+    children: [
+      {
+        path: "dashboard",
+        element: <DoctorDashboardPage />,
+      },
+      {
+        path: "live",
+        element: <DoctorLivePage />,
+      },
+      {
+        path: "patients",
+        element: <DoctorPatientsPage />,
+      },
+      {
+        path: "appointments",
+        element: <DoctorAppointmentsPage />,
+      },
+      {
+        path: "messages",
+        element: <DoctorMessagesPage />,
+      },
+      {
+        path: "*",
+        element: <Navigate replace to="/doctor/dashboard" />
+      }
+    ]
   },
   {
     path: "/patient",

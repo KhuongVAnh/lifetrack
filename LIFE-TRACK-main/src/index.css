@@ -40,3 +40,22 @@ button {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
+
+.ecg-grid {
+  background-image:
+      linear-gradient(to right, rgba(0, 73, 118, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 73, 118, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.ecg-line {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: draw 10s linear infinite;
+}
+
+@keyframes draw {
+  to {
+      stroke-dashoffset: 0;
+  }
+}
