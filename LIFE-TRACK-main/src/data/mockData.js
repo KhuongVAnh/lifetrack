@@ -631,7 +631,7 @@ export const doctorProfiles = [
     experiences: [],
     reviews: [],
     avatar:
-      "https://images.unsplash.com/photo-1612277795421-9bc7706a4a41?auto=format&fit=crop&w=600&q=80",
+      "https://randomuser.me/api/portraits/men/52.jpg",
     cover:
       "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1200&q=80",
   },
@@ -677,7 +677,7 @@ export const doctorProfiles = [
     experiences: [],
     reviews: [],
     avatar:
-      "https://images.unsplash.com/photo-1594824475317-d838b00a8c7b?auto=format&fit=crop&w=600&q=80",
+      "https://randomuser.me/api/portraits/women/44.jpg",
     cover:
       "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",
   },
