@@ -12,7 +12,6 @@ export function CommunityShell() {
       <div className="min-h-screen md:ml-72">
         <header className="glass-header sticky top-0 z-50 flex items-center justify-between border-b border-outline-variant/20 bg-white/80 px-6 py-3">
           <div className="flex items-center gap-8">
-            <h1 className="text-xl font-bold text-primary">LIFETRACK</h1>
             <div className="hidden items-center rounded-xl bg-surface-container-high px-4 py-2 md:flex md:w-96">
               <span className="material-symbols-outlined text-outline">search</span>
               <input

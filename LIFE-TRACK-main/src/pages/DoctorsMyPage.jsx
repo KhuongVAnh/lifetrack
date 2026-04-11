@@ -46,9 +46,14 @@ export function DoctorsMyPage() {
                   >
                     Xem hồ sơ
                   </Link>
-                  <button className="flex-1 rounded-lg bg-primary py-2.5 text-xs font-bold text-white transition-all hover:bg-sky-800">
-                    Nhắn tin
-                  </button>
+                </div>
+                <div className="mt-2">
+                  <Link
+                    className="block rounded-lg bg-primary py-2.5 text-center text-xs font-bold text-white transition-all hover:bg-sky-800"
+                    to={`/patient/doctors/${doctor.id}/consult`}
+                  >
+                    Tư vấn với bác sĩ
+                  </Link>
                 </div>
               </div>
             </div>

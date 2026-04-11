@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { RatingStars } from "../components/RatingStars";
-import { getDoctorById } from "../data/mockData";
+import { getDoctorById, hiredDoctorIds } from "../data/mockData";
 
 function InfoMetric({ icon, label, value, accent = "text-primary" }) {
   return (
@@ -30,6 +30,7 @@ function SectionCard({ title, children, aside }) {
 export function DoctorProfilePage() {
   const { doctorId } = useParams();
   const doctor = getDoctorById(doctorId);
+  const isAssignedDoctor = hiredDoctorIds.includes(doctorId);
 
   if (!doctor) {
     return <Navigate replace to="/patient/doctors/my" />;
@@ -226,18 +227,31 @@ export function DoctorProfilePage() {
               Theo dõi dài hạn, tư vấn định kỳ hoặc cần một bác sĩ hiểu rõ bối cảnh sức khỏe của cả gia đình.
             </p>
             <div className="mt-6 space-y-3">
-              <Link
-                className="block rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-primary transition-colors hover:bg-slate-100"
-                to="/patient/appointments"
-              >
-                Đặt lịch tư vấn thử
-              </Link>
-              <Link
-                className="block rounded-2xl border border-white/25 px-5 py-4 text-center text-base font-bold text-white transition-colors hover:bg-white/10"
-                to="/patient/doctors/hire"
-              >
-                Xem gói thuê bác sĩ
-              </Link>
+              {isAssignedDoctor ? (
+                <>
+                  <Link
+                    className="block rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-primary transition-colors hover:bg-slate-100"
+                    to={`/patient/doctors/${doctor.id}/consult`}
+                  >
+                    Tư vấn với bác sĩ
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="block rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-primary transition-colors hover:bg-slate-100"
+                    to="/patient/appointments"
+                  >
+                    Đặt lịch tư vấn thử
+                  </Link>
+                  <Link
+                    className="block rounded-2xl border border-white/25 px-5 py-4 text-center text-base font-bold text-white transition-colors hover:bg-white/10"
+                    to="/patient/doctors/hire"
+                  >
+                    Xem gói thuê bác sĩ
+                  </Link>
+                </>
+              )}
             </div>
           </section>
 

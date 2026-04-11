@@ -15,6 +15,7 @@ import { DoctorsHirePage } from "./pages/DoctorsHirePage";
 import { DoctorsMyPage } from "./pages/DoctorsMyPage";
 import { HealthRecordDetailPage } from "./pages/HealthRecordDetailPage";
 import { HealthRecordsPage } from "./pages/HealthRecordsPage";
+import { PatientDoctorContactPage } from "./pages/PatientDoctorContactPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { CommunityShell } from "./shells/CommunityShell";
 import { DoctorShell } from "./shells/DoctorShell";
@@ -125,6 +126,10 @@ export const router = createBrowserRouter([
           {
             path: "hire",
             element: <DoctorsHirePage />,
+          },
+          {
+            path: ":doctorId/consult",
+            element: <PatientDoctorContactPage />,
           },
           {
             path: ":doctorId",

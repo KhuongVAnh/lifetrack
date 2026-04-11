@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Doctor LMT avatar">
+  <rect width="512" height="512" fill="#064a6b" />
+  <circle cx="256" cy="192" r="96" fill="#d7eef8" />
+  <path d="M112 448c22-92 96-136 144-136s122 44 144 136" fill="#d7eef8" />
+  <text x="256" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#064a6b">LMT</text>
+</svg>

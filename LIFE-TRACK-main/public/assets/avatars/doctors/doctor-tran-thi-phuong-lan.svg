@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Doctor TTPL avatar">
+  <rect width="512" height="512" fill="#a84a8a" />
+  <circle cx="256" cy="192" r="96" fill="#fde9f7" />
+  <path d="M112 448c22-92 96-136 144-136s122 44 144 136" fill="#fde9f7" />
+  <text x="256" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="#a84a8a">TTPL</text>
+</svg>

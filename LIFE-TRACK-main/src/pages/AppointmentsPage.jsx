@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { appointments, doctorProfiles, getDoctorById } from "../data/mockData";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { RatingStars } from "../components/RatingStars";
 
 export function AppointmentsPage() {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
   const [specialtyId, setSpecialtyId] = useState(appointments.specialties[0].id);
   const [doctorId, setDoctorId] = useState(appointments.suggestedDoctorIds[0]);
   const [dayId, setDayId] = useState(appointments.slotDays[0].id);
   const [timeId, setTimeId] = useState(appointments.timeSlots[0].id);
   const [reason, setReason] = useState("Tái khám và cập nhật huyết áp cho bố.");
   const [attachment, setAttachment] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const suggestedDoctors = useMemo(
     () =>
@@ -21,36 +24,77 @@ export function AppointmentsPage() {
   );
 
   const selectedDoctor = getDoctorById(doctorId);
+  const steps = [
+    { step: 1, label: "Bác sĩ" },
+    { step: 2, label: "Thời gian" },
+    { step: 3, label: "Thông tin" },
+  ];
+
+  const canMoveNext =
+    currentStep === 1
+      ? Boolean(specialtyId && doctorId)
+      : currentStep === 2
+        ? Boolean(dayId && timeId)
+        : Boolean(reason.trim());
+
+  const handleNextStep = () => {
+    if (!canMoveNext || currentStep >= 3) {
+      return;
+    }
+
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const handlePreviousStep = () => {
+    if (currentStep <= 1) {
+      return;
+    }
+
+    setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleConfirmAppointment = () => {
+    if (!canMoveNext) {
+      return;
+    }
+
+    toast.success("Đặt lịch khám thành công");
+    window.setTimeout(() => {
+      navigate("/patient/dashboard");
+    }, 900);
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <section className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-6">
         <div className="relative mx-auto flex max-w-2xl items-center justify-between">
           <div className="absolute left-0 top-5 h-0.5 w-full bg-surface-container-high" />
-          {[
-            { step: 1, label: "Bác sĩ", active: true },
-            { step: 2, label: "Thời gian" },
-            { step: 3, label: "Thông tin" },
-          ].map((item, index) => (
+          {steps.map((item) => {
+            const isCompleted = currentStep > item.step;
+            const isActive = currentStep === item.step;
+
+            return (
             <div key={item.label} className="relative z-10 flex flex-col items-center gap-2 bg-white px-4">
               <div
                 className={[
                   "flex h-10 w-10 items-center justify-center rounded-full font-bold",
-                  index === 0 ? "bg-primary text-white" : "bg-surface-container-high text-outline",
+                  isCompleted || isActive ? "bg-primary text-white" : "bg-surface-container-high text-outline",
                 ].join(" ")}
               >
-                {item.step}
+                {isCompleted ? <span className="material-symbols-outlined text-base">check</span> : item.step}
               </div>
-              <span className={index === 0 ? "text-sm font-bold text-primary" : "text-sm font-medium text-outline"}>
+              <span className={isCompleted || isActive ? "text-sm font-bold text-primary" : "text-sm font-medium text-outline"}>
                 {item.label}
               </span>
             </div>
-          ))}
+          );})}
         </div>
       </section>
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="space-y-8 lg:col-span-7">
+          {currentStep === 1 && (
+          <>
           <section>
             <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-on-surface">
               <span className="material-symbols-outlined text-primary">medical_information</span>
@@ -139,7 +183,10 @@ export function AppointmentsPage() {
               })}
             </div>
           </section>
+          </>
+          )}
 
+          {currentStep === 2 && (
           <section className="grid gap-6 md:grid-cols-2">
             <div>
               <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-on-surface">
@@ -199,7 +246,9 @@ export function AppointmentsPage() {
               </div>
             </div>
           </section>
+          )}
 
+          {currentStep === 3 && (
           <section className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-on-surface">
               <span className="material-symbols-outlined text-primary">description</span>
@@ -224,15 +273,48 @@ export function AppointmentsPage() {
                   onChange={(event) => setAttachment(event.target.value)}
                 />
               </div>
+            </div>
+          </section>
+          )}
+
+          <section className="flex items-center justify-between rounded-2xl border border-surface-variant bg-surface-container-lowest p-4">
+            <button
+              className={[
+                "rounded-xl px-5 py-2.5 text-sm font-bold transition-colors",
+                currentStep > 1
+                  ? "border border-outline-variant bg-white text-on-surface hover:bg-slate-50"
+                  : "cursor-not-allowed border border-surface-container-high bg-surface-container-high text-outline",
+              ].join(" ")}
+              onClick={handlePreviousStep}
+              type="button"
+            >
+              Quay lại
+            </button>
+
+            {currentStep < 3 ? (
               <button
-                className="flex w-full items-center justify-center gap-3 rounded-lg bg-primary py-4 text-lg font-bold text-white shadow-lg transition-all hover:bg-primary-container"
-                onClick={() => setSubmitted(true)}
+                className={[
+                  "rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-colors",
+                  canMoveNext ? "bg-primary hover:bg-primary/90" : "cursor-not-allowed bg-slate-300",
+                ].join(" ")}
+                onClick={handleNextStep}
                 type="button"
               >
-                <span className="material-symbols-outlined">check_circle</span>
+                Tiếp tục bước {currentStep + 1}
+              </button>
+            ) : (
+              <button
+                className={[
+                  "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-colors",
+                  canMoveNext ? "bg-primary hover:bg-primary-container" : "cursor-not-allowed bg-slate-300",
+                ].join(" ")}
+                onClick={handleConfirmAppointment}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-base">check_circle</span>
                 Xác nhận lịch khám
               </button>
-            </div>
+            )}
           </section>
         </div>
 
@@ -254,11 +336,6 @@ export function AppointmentsPage() {
                   <p>Khung giờ: {appointments.timeSlots.find((slot) => slot.id === timeId)?.label}</p>
                   <p>Lý do: {reason}</p>
                 </div>
-              </div>
-            )}
-            {submitted && (
-              <div className="mt-4 rounded-2xl bg-secondary px-4 py-3 text-sm font-bold text-white">
-                Đã tạo lịch hẹn mock thành công. Bạn có thể tiếp tục tinh chỉnh trước khi nối API thật.
               </div>
             )}
           </div>

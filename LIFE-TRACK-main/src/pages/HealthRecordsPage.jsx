@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { familyMembers, patientProfiles } from "../data/mockData";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { StatSparkline } from "../components/StatSparkline";
 
 export function HealthRecordsPage() {
-  const leadMember = patientProfiles[familyMembers[0].id];
+  const [selectedMemberId, setSelectedMemberId] = useState(familyMembers[0].id);
+  const selectedMember = familyMembers.find((member) => member.id === selectedMemberId) ?? familyMembers[0];
+  const leadMember = patientProfiles[selectedMember.id] ?? patientProfiles[familyMembers[0].id];
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -33,16 +35,20 @@ export function HealthRecordsPage() {
           <span className="text-sm font-medium text-primary">Xem tất cả</span>
         </div>
         <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-          {familyMembers.map((member, index) => (
-            <Link
+          {familyMembers.map((member) => {
+            const isSelected = member.id === selectedMember.id;
+
+            return (
+              <button
               key={member.id}
+              onClick={() => setSelectedMemberId(member.id)}
+              type="button"
               className={[
                 "flex w-80 flex-none flex-col justify-between rounded-3xl p-6 transition-all",
-                index === 0
+                isSelected
                   ? "bg-primary text-white shadow-xl ring-4 ring-primary-container/30"
                   : "border border-outline-variant/30 bg-surface-container-lowest hover:border-primary/50",
               ].join(" ")}
-              to={`/patient/health-records/${member.id}`}
             >
               <div className="mb-8 flex items-center gap-4">
                 <ImageWithFallback
@@ -51,23 +57,26 @@ export function HealthRecordsPage() {
                   src={member.avatar}
                 />
                 <div>
-                  <p className={index === 0 ? "text-sm opacity-80" : "text-sm text-on-surface-variant"}>{member.relation}</p>
-                  <h3 className={index === 0 ? "text-xl font-bold" : "text-xl font-bold text-on-surface"}>{member.name}</h3>
+                  <p className={isSelected ? "text-sm opacity-80" : "text-sm text-on-surface-variant"}>{member.relation}</p>
+                  <h3 className={isSelected ? "text-xl font-bold" : "text-xl font-bold text-on-surface"}>{member.name}</h3>
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <span
                   className={[
                     "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider",
-                    index === 0 ? "bg-white/20" : "bg-surface-container-high text-on-surface-variant",
+                    isSelected ? "bg-white/20" : "bg-surface-container-high text-on-surface-variant",
                   ].join(" ")}
                 >
-                  {index === 0 ? "Đang xem" : member.shortStatus}
+                  {isSelected ? "Đang xem" : member.shortStatus}
                 </span>
-                <span className={index === 0 ? "font-bold" : "font-bold text-primary"}>Xem chi tiết</span>
+                <span className={isSelected ? "font-bold" : "font-bold text-primary"}>
+                  {isSelected ? "Đang xem" : "Chọn xem"}
+                </span>
               </div>
-            </Link>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -89,7 +98,7 @@ export function HealthRecordsPage() {
           <div className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-lg font-bold text-on-surface">Xu hướng 5 kỳ gần nhất</p>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Bố</span>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{leadMember.relation}</span>
             </div>
             <StatSparkline colorClass="bg-primary" series={leadMember.chart} />
           </div>

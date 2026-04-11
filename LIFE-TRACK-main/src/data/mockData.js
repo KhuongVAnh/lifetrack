@@ -4,8 +4,7 @@ export const appUser = {
   subtitle: "Tài khoản bệnh nhân",
   roleLabel: "Bệnh nhân chính",
   membership: "Family Care",
-  avatar:
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80",
+  avatar: "/assets/avatars/default/avatar-default.png",
 };
 
 export const familyMembers = [
@@ -20,8 +19,7 @@ export const familyMembers = [
     bloodType: "O+",
     bmi: 23.1,
     metricFocus: "Huyết áp",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
   },
   {
     id: "tran-thi-b",
@@ -34,8 +32,7 @@ export const familyMembers = [
     bloodType: "A+",
     bmi: 21.8,
     metricFocus: "Đường huyết",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
   },
   {
     id: "nguyen-anh-tuan",
@@ -48,8 +45,7 @@ export const familyMembers = [
     bloodType: "B+",
     bmi: 22.5,
     metricFocus: "Nhịp tim",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
   },
   {
     id: "nguyen-be-linh",
@@ -62,8 +58,7 @@ export const familyMembers = [
     bloodType: "AB+",
     bmi: 18.2,
     metricFocus: "Tiêm chủng",
-    avatar:
-      "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=400&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
   },
 ];
 
@@ -96,8 +91,7 @@ export const patientProfiles = {
     memberId: "nguyen-van-a",
     relation: "Bố",
     name: "Nguyễn Văn A",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     healthId: "#LT-001245",
     age: 68,
     bloodType: "O+",
@@ -177,8 +171,7 @@ export const patientProfiles = {
     memberId: "tran-thi-b",
     relation: "Mẹ",
     name: "Trần Thị B",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=500&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     healthId: "#LT-001246",
     age: 63,
     bloodType: "A+",
@@ -239,8 +232,7 @@ export const patientProfiles = {
     memberId: "nguyen-anh-tuan",
     relation: "Con",
     name: "Nguyễn Anh Tuấn",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=500&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     healthId: "#LT-001247",
     age: 28,
     bloodType: "B+",
@@ -301,8 +293,7 @@ export const patientProfiles = {
     memberId: "nguyen-be-linh",
     relation: "Con gái",
     name: "Nguyễn Bé Linh",
-    avatar:
-      "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=500&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     healthId: "#LT-001248",
     age: 9,
     bloodType: "AB+",
@@ -495,8 +486,7 @@ export const doctorProfiles = [
       {
         id: "review-001",
         author: "Lê Anh Tuấn",
-        avatar:
-          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "2 ngày trước",
         content:
@@ -505,15 +495,13 @@ export const doctorProfiles = [
       {
         id: "review-002",
         author: "Nguyễn Thị Thu Hà",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "1 tuần trước",
         content: "Phác đồ điều trị hiệu quả, gia đình tôi yên tâm hơn rất nhiều.",
       },
     ],
-    avatar:
-      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1580281657521-47ec3c1c9a53?auto=format&fit=crop&w=1200&q=80",
   },
@@ -538,8 +526,7 @@ export const doctorProfiles = [
     about: "Tư vấn chuyên sâu các bệnh lý tim mạch mãn tính và tái khám định kỳ tại nhà.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
   },
@@ -561,8 +548,7 @@ export const doctorProfiles = [
     about: "Theo dõi đường huyết, nội tiết nữ và tư vấn dinh dưỡng cá nhân hóa.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80",
   },
@@ -584,8 +570,7 @@ export const doctorProfiles = [
     about: "Tối ưu dinh dưỡng cho người cao tuổi có bệnh nền và sau phẫu thuật.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&w=1200&q=80",
   },
@@ -607,8 +592,7 @@ export const doctorProfiles = [
     about: "Theo dõi phát triển và bệnh lý hô hấp, tiêu hóa thường gặp ở trẻ em.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80",
   },
@@ -630,8 +614,7 @@ export const doctorProfiles = [
     about: "Chuyên gia đầu ngành về các bệnh lý thần kinh ở người cao tuổi.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://randomuser.me/api/portraits/men/52.jpg",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1200&q=80",
   },
@@ -653,8 +636,7 @@ export const doctorProfiles = [
     about: "Theo dõi bệnh lý hô hấp trên và dị ứng theo mùa.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1200&q=80",
   },
@@ -676,8 +658,7 @@ export const doctorProfiles = [
     about: "Tư vấn điều trị viêm da cơ địa và chăm sóc da lâu dài.",
     experiences: [],
     reviews: [],
-    avatar:
-      "https://randomuser.me/api/portraits/women/44.jpg",
+    avatar: "/assets/avatars/default/avatar-default.png",
     cover:
       "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",
   },
@@ -737,7 +718,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-lmt-001",
         author: "Phạm Văn Hùng",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "3 ngày trước",
         content: "Bác sĩ Tâm theo dõi huyết áp của bố tôi rất kỹ, chỉnh thuốc theo từng giai đoạn nên chỉ số ổn định hơn rõ rệt.",
@@ -745,7 +726,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-lmt-002",
         author: "Lê Kim Dung",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "2 tuần trước",
         content: "Điểm tôi thích là bác sĩ giải thích rất rõ vì sao cần đổi giờ uống thuốc và theo dõi triệu chứng nào ở nhà.",
@@ -801,7 +782,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ntc-001",
         author: "Đỗ Mai Anh",
-        avatar: "https://images.unsplash.com/photo-1546961329-78bef0414d7c?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "4 ngày trước",
         content: "Bác sĩ Chi không chỉ kê thuốc mà còn điều chỉnh thực đơn rất sát với sinh hoạt của mẹ tôi nên dễ theo hơn.",
@@ -809,7 +790,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ntc-002",
         author: "Nguyễn Hoàng Nam",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 4,
         date: "10 ngày trước",
         content: "Đi khám cảm giác rất rõ ràng, từng mốc xét nghiệm và mục tiêu đường huyết đều được bác sĩ chốt cụ thể.",
@@ -864,7 +845,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-pmn-001",
         author: "Trương Hải Yến",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "6 ngày trước",
         content: "Sau mổ, bố tôi ăn rất kém nhưng bác sĩ Ngọc lên thực đơn theo từng tuần nên hồi phục tốt hơn hẳn.",
@@ -872,7 +853,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-pmn-002",
         author: "Phạm Văn Duy",
-        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "2 tuần trước",
         content: "Tư vấn rất chi tiết từ món ăn thay thế, khẩu phần đến cách theo dõi cân nặng cho người già.",
@@ -933,7 +914,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ttpl-001",
         author: "Mẹ Minh An",
-        avatar: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "1 tuần trước",
         content: "Bác sĩ Lan rất nhẹ nhàng với trẻ và hướng dẫn phụ huynh cực kỳ cụ thể, đặc biệt về ăn uống sau ốm.",
@@ -941,7 +922,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ttpl-002",
         author: "Bố Bảo Nam",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "3 tuần trước",
         content: "Con tôi hay tái viêm hô hấp, bác sĩ lập hẳn kế hoạch theo dõi ở nhà nên số lần phải nhập viện giảm nhiều.",
@@ -996,7 +977,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-tqa-001",
         author: "Nguyễn Thị Hòa",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "5 ngày trước",
         content: "Bác sĩ Quốc Anh đặt mục tiêu phục hồi rất rõ ràng, gia đình tôi biết phải tập gì mỗi ngày cho ông.",
@@ -1004,7 +985,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-tqa-002",
         author: "Phan Đức Long",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "2 tuần trước",
         content: "Sau đột quỵ, bố tôi cải thiện vận động tốt nhờ chương trình phục hồi có video và lịch theo dõi cụ thể.",
@@ -1059,7 +1040,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ldh-001",
         author: "Anh Tuấn",
-        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "1 tuần trước",
         content: "Bác sĩ Huy giải thích rất rõ cơ chế dị ứng theo mùa và chỉ cho tôi cách xử lý phòng ngủ cực kỳ hữu ích.",
@@ -1067,7 +1048,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-ldh-002",
         author: "Đào Ngọc Mai",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 4,
         date: "18 ngày trước",
         content: "Tôi bị viêm xoang kéo dài, sau khi đổi thói quen vệ sinh mũi và điều trị theo bác sĩ thì đỡ hẳn.",
@@ -1122,7 +1103,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-vtm-001",
         author: "Mẹ Bắp",
-        avatar: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 5,
         date: "5 ngày trước",
         content: "Bác sĩ Mai hướng dẫn routine dưỡng da cho bé rất cụ thể, chỉ sau 2 tuần vùng chàm đã dịu rõ rệt.",
@@ -1130,7 +1111,7 @@ const doctorProfileDeepContent = {
       {
         id: "review-vtm-002",
         author: "Lê Khánh Vy",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
+        avatar: "/assets/avatars/default/avatar-default.png",
         rating: 4,
         date: "11 ngày trước",
         content: "Điểm mạnh là bác sĩ không chỉ kê thuốc mà còn chỉ ra từng tác nhân làm da tôi bùng phát.",

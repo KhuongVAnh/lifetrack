@@ -106,7 +106,7 @@ export function DashboardPage() {
               </div>
               <Link
                 className="flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-white transition-all hover:bg-primary/90"
-                to="/patient/appointments"
+                to={`/patient/doctors/${appointments.upcoming.doctorId}/consult`}
               >
                 <span className="material-symbols-outlined">video_call</span>
                 {appointments.upcoming.roomLabel}

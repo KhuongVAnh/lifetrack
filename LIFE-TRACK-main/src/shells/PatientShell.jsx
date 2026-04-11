@@ -1,9 +1,12 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { appUser } from "../data/mockData";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { PrimarySidebar } from "../components/PrimarySidebar";
 
 export function PatientShell() {
+  const { pathname } = useLocation();
+  const isConsultPage = /^\/patient\/doctors\/[^/]+\/consult$/.test(pathname);
+
   return (
     <div className="min-h-screen bg-background text-on-background md:flex">
       <PrimarySidebar />
@@ -14,7 +17,7 @@ export function PatientShell() {
             <div className="md:hidden">
               <span className="text-lg font-black text-primary">LIFETRACK</span>
             </div>
-            <div className="relative hidden md:block">
+            <div className={`relative ${isConsultPage ? "hidden" : "hidden md:block"}`}>
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                 search
               </span>
