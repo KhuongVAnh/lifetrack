@@ -97,7 +97,7 @@ export function DoctorDashboardPage() {
                         <button onClick={() => navigate('/doctor/appointments')} className="text-primary text-sm font-bold hover:underline">Xem tất cả</button>
                     </div>
                     <div className="space-y-4">
-                        <div className="group flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300">
+                        <div className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300 gap-3 sm:gap-0">
                             <div className="flex items-center gap-4">
                                 <img alt="Patient" className="w-12 h-12 rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDD-YvjQ_htWsk2UR5KdC6zpx9zN-RopCjTpunDoWxL0K2ogHdkDrdvnh93sPssXBmQ9IYB2nZB6u7SKMOafqUlKugPsem82D5d5aEA3GQg2wN-RfmcwzuDn9Kogv6cGo_0EJ_c-KJt2SUHBmiToeSx_d13yk-e87aC5eRCoEem6afDXOQ4hav8D_t0NeuZZUmkvYrGPzAmSWRWsdarWPlWiHgBrPSvujtc9BXidy_fXfDWfPWTvOUahNN3KJTBcFnzYTxNrEeN-dA" />
                                 <div>

@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+const MSG_TABS = [
+  { id: "list", label: "Danh sách", icon: "forum" },
+  { id: "chat", label: "Chat", icon: "chat" },
+  { id: "info", label: "Thông tin", icon: "person" },
+];
+
 export function DoctorMessagesPage() {
     const navigate = useNavigate();
     const [patients, setPatients] = useState([
@@ -52,6 +58,7 @@ export function DoctorMessagesPage() {
 
     const [activePatientId, setActivePatientId] = useState('p2');
     const [draftMessage, setDraftMessage] = useState("");
+    const [mobileTab, setMobileTab] = useState("chat");
     const endOfMessagesRef = useRef(null);
 
     const activePatient = patients.find(p => p.id === activePatientId) || patients[0];
@@ -97,9 +104,27 @@ export function DoctorMessagesPage() {
     const recentPatients = patients.filter(p => p.type === 'recent');
 
     return (
-        <div className="flex flex-1 overflow-hidden h-[calc(100vh-140px)] bg-white rounded-3xl shadow-sm border border-slate-200">
-            {/* Column 1: Danh sách trò chuyện (Chat List) */}
-            <section className="w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar">
+        <div className="flex flex-col gap-4">
+            {/* Mobile tab switcher */}
+            <div className="flex rounded-xl bg-surface-container-low p-1 lg:hidden">
+                {MSG_TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setMobileTab(tab.id)}
+                        className={[
+                            "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all",
+                            mobileTab === tab.id ? "bg-white text-primary shadow-sm" : "text-slate-500",
+                        ].join(" ")}
+                    >
+                        <span className="material-symbols-outlined text-base">{tab.icon}</span>
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="lg:flex lg:flex-1 lg:overflow-hidden lg:h-[calc(100vh-180px)] bg-white rounded-3xl shadow-sm border border-slate-200">
+            {/* Column 1: Danh sách */}
+            <section className={["lg:w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "list" ? "flex" : "hidden lg:flex"].join(" ")}>
                 <div className="p-6">
                     <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Ưu tiên (Khẩn cấp)</h2>
                     <div className="space-y-3">
@@ -139,8 +164,8 @@ export function DoctorMessagesPage() {
                     </div>
                 </div>
             </section>
-            {/* Column 2: Cửa sổ Chat (Chat Window) */}
-            <section className="flex-1 flex flex-col bg-surface-container-lowest">
+            {/* Column 2: Chat Window */}
+            <section className={["flex-1 flex flex-col bg-surface-container-lowest", mobileTab === "chat" ? "flex" : "hidden lg:flex"].join(" ")}>
                 {/* Chat Header */}
                 <div className="h-20 flex items-center justify-between px-8 bg-white border-b border-slate-100 shrink-0">
                     <div className="flex items-center gap-4">
@@ -240,8 +265,8 @@ export function DoctorMessagesPage() {
                     </div>
                 </div>
             </section>
-            {/* Column 3: Thông tin nhanh (Patient Profile/Stats) */}
-            <section className="w-72 flex flex-col bg-slate-50 border-l border-slate-200/50 overflow-y-auto no-scrollbar">
+            {/* Column 3: Thông tin nhanh */}
+            <section className={["lg:w-72 flex flex-col bg-slate-50 border-l border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "info" ? "flex" : "hidden lg:flex"].join(" ")}>
                 <div className="p-6 space-y-8">
                     {/* Real-time Stats Cards */}
                     <div>
@@ -308,6 +333,7 @@ export function DoctorMessagesPage() {
                     </div>
                 </div>
             </section>
+            </div>{/* end desktop flex */}
         </div>
     );
 }

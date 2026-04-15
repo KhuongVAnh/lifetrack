@@ -42,11 +42,11 @@ export function DashboardPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/95 to-primary/35" />
         <ImageWithFallback
           alt="Gia đình khỏe mạnh"
-          className="h-[320px] w-full object-cover"
+          className="h-[200px] md:h-[320px] w-full object-cover"
           src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80"
         />
         <div className="absolute inset-0 z-10 flex max-w-xl flex-col justify-center px-8 text-white md:px-12">
-          <h1 className="mb-4 text-4xl font-extrabold leading-tight">Chăm sóc sức khỏe gia đình trọn vẹn</h1>
+          <h1 className="mb-3 text-2xl font-extrabold leading-tight md:mb-4 md:text-4xl">Chăm sóc sức khỏe gia đình trọn vẹn</h1>
           <p className="mb-8 text-lg opacity-90">
             Kết nối với chuyên gia phù hợp, theo dõi hồ sơ số hóa và chủ động xử lý lịch hẹn của cả nhà.
           </p>

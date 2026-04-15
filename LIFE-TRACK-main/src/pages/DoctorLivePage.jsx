@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const LIVE_TABS = [
+  { id: "patients", label: "Bệnh nhân", icon: "group" },
+  { id: "monitor", label: "Monitor", icon: "ecg" },
+  { id: "vitals", label: "Chỉ số", icon: "analytics" },
+];
+
 export function DoctorLivePage() {
     const navigate = useNavigate();
     const [activePatient, setActivePatient] = useState(0);
     const [activeLabel, setActiveLabel] = useState("Loạn nhịp");
     const [isConfirmed, setIsConfirmed] = useState(false);
+    const [mobileTab, setMobileTab] = useState("monitor");
 
     const patients = [
         {
@@ -43,9 +50,27 @@ export function DoctorLivePage() {
     };
 
     return (
-        <div className="flex gap-6 h-[calc(100vh-140px)]">
-            {/* Cột trái: Danh sách bệnh nhân trực tuyến */}
-            <section className="w-72 flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
+            {/* Mobile tab switcher */}
+            <div className="flex rounded-xl bg-surface-container-low p-1 lg:hidden">
+                {LIVE_TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setMobileTab(tab.id)}
+                        className={[
+                            "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all",
+                            mobileTab === tab.id ? "bg-white text-primary shadow-sm" : "text-slate-500",
+                        ].join(" ")}
+                    >
+                        <span className="material-symbols-outlined text-base">{tab.icon}</span>
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="lg:flex lg:gap-6 lg:h-[calc(100vh-180px)]">
+            {/* Cột trái */}
+            <section className={["w-full lg:w-72 flex flex-col gap-4", mobileTab === "patients" ? "flex" : "hidden lg:flex"].join(" ")}>
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-extrabold text-slate-800">Trực tuyến <span
                         className="ml-2 text-sm font-normal text-slate-400">({patients.length})</span></h2>
@@ -117,7 +142,7 @@ export function DoctorLivePage() {
             </section>
 
             {/* Cột giữa: Khu vực dạng sóng chính */}
-            <section className="flex-1 flex flex-col gap-6">
+            <section className={["flex-1 flex flex-col gap-6", mobileTab === "monitor" ? "flex" : "hidden lg:flex"].join(" ")}>
                 <div className="flex-1 bg-white rounded-[2rem] p-8 shadow-sm relative overflow-hidden flex flex-col">
                     <div className="flex justify-between items-start mb-6">
                         <div>
@@ -213,7 +238,7 @@ export function DoctorLivePage() {
             </section>
 
             {/* Cột phải: Chỉ số thời gian thực */}
-            <section className="w-80 flex flex-col gap-4">
+            <section className={["w-full lg:w-80 flex flex-col gap-4", mobileTab === "vitals" ? "flex" : "hidden lg:flex"].join(" ")}>
                 <h2 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">analytics</span>
                     Chỉ số thời gian thực
@@ -285,6 +310,7 @@ export function DoctorLivePage() {
                     </div>
                 </div>
             </section>
+            </div>{/* end desktop flex */}
         </div>
     );
 }

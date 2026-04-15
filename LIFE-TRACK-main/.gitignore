@@ -1,2 +1,4 @@
 node_modules/
 Template UI/
+.agent/
+.env    

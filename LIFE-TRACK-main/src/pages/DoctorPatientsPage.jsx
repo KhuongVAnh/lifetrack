@@ -14,7 +14,7 @@ export function DoctorPatientsPage() {
     };
 
     return (
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mt-2 lg:mt-6">
             {/* Left Column: Hồ sơ */}
             <div className="lg:col-span-3 space-y-6">
                 <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col items-center text-center">

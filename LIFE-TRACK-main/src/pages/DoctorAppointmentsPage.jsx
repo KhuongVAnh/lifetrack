@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const MOBILE_TABS = [
+  { id: "calendar", label: "Lịch", icon: "calendar_month" },
+  { id: "requests", label: "Yêu cầu", icon: "pending_actions" },
+];
+
 export function DoctorAppointmentsPage() {
     const navigate = useNavigate();
     const [weekOffset, setWeekOffset] = useState(0);
@@ -14,6 +19,7 @@ export function DoctorAppointmentsPage() {
     const [newFrameStart, setNewFrameStart] = useState("");
     const [newFrameEnd, setNewFrameEnd] = useState("");
     const [newFrameDay, setNewFrameDay] = useState("Thứ 2");
+    const [mobileTab, setMobileTab] = useState("calendar");
     const [requests, setRequests] = useState([
         {
             id: 1,
@@ -83,9 +89,35 @@ export function DoctorAppointmentsPage() {
     };
 
     return (
-        <div className="flex flex-1 overflow-hidden p-4 gap-4 h-[calc(100vh-140px)]">
+        <div className="flex flex-col gap-4">
+            {/* Mobile tab switcher */}
+            <div className="flex rounded-xl bg-surface-container-low p-1 lg:hidden">
+                {MOBILE_TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setMobileTab(tab.id)}
+                        className={[
+                            "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-all",
+                            mobileTab === tab.id
+                                ? "bg-white text-primary shadow-sm"
+                                : "text-slate-500 hover:text-slate-700",
+                        ].join(" ")}
+                    >
+                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Desktop: 2-column flex */}
+            <div className="lg:flex lg:flex-1 lg:overflow-hidden lg:gap-4 lg:h-[calc(100vh-180px)]">
             {/* Calendar Section */}
-            <div className="flex-grow flex flex-col bg-surface-container-lowest rounded-2xl p-4 shadow-sm overflow-hidden">
+            <div className={[
+                "flex-grow flex flex-col bg-surface-container-lowest rounded-2xl p-4 shadow-sm",
+                // Mobile: only show when calendar tab active
+                mobileTab === "calendar" ? "flex" : "hidden lg:flex",
+                "lg:overflow-hidden",
+            ].join(" ")}>
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
@@ -198,7 +230,10 @@ export function DoctorAppointmentsPage() {
                 </div>
             </div>
             {/* Right Sidebar */}
-            <aside className="w-72 flex flex-col gap-4 overflow-y-auto no-scrollbar">
+            <aside className={[
+                "flex flex-col gap-4 lg:w-72 lg:overflow-y-auto no-scrollbar",
+                mobileTab === "requests" ? "flex" : "hidden lg:flex",
+            ].join(" ")}>
                 {/* Availability Section */}
                 <section className="bg-surface-container-low rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-3 relative">
@@ -302,6 +337,7 @@ export function DoctorAppointmentsPage() {
                     </div>
                 </section>
             </aside>
+            </div>{/* end desktop flex */}
         </div>
     );
 }
