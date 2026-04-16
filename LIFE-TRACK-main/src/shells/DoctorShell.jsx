@@ -8,9 +8,11 @@ import { BottomNav } from "../components/BottomNav";
 
 export function DoctorShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { pathname } = useLocation();
+  const isConsultPage = pathname.includes("/consult") || pathname === "/patient/doctors";
 
   return (
-    <div className="min-h-screen bg-background text-on-background">
+    <div className="min-h-screen flex flex-col bg-background text-on-background">
       <PrimarySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="min-h-screen md:ml-72">
@@ -49,32 +51,34 @@ export function DoctorShell() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 pb-24 pt-20 md:px-8 md:pb-12 md:pt-24">
-          <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h1 className="text-2xl font-extrabold text-sky-900 md:text-3xl">Bác sĩ gia đình</h1>
-              <p className="mt-2 max-w-3xl text-slate-600 text-sm md:text-base">
-                Kết nối trực tiếp với đội ngũ bác sĩ đồng hành cùng hồ sơ sức khỏe của gia đình bạn.
-              </p>
+        <main className={isConsultPage ? "flex-1 px-4 pb-24 pt-20 md:px-6 md:pb-6 md:pt-24 flex flex-col" : "mx-auto max-w-7xl px-4 pb-24 pt-20 md:px-8 md:pb-12 md:pt-24"}>
+          {!isConsultPage && (
+            <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h1 className="text-2xl font-extrabold text-sky-900 md:text-3xl">Bác sĩ gia đình</h1>
+                <p className="mt-2 max-w-3xl text-slate-600 text-sm md:text-base">
+                  Kết nối trực tiếp với đội ngũ bác sĩ đồng hành cùng hồ sơ sức khỏe của gia đình bạn.
+                </p>
+              </div>
+              <div className="flex gap-2 rounded-full bg-surface-container-low p-1 self-start md:self-auto">
+                {doctorTabs.map((tab) => (
+                  <NavLink
+                    key={tab.to}
+                    className={({ isActive }) =>
+                      [
+                        "rounded-full px-4 py-2 text-sm font-bold transition-all md:px-5 md:py-2.5",
+                        isActive ? "bg-primary text-white shadow-md" : "text-slate-600 hover:bg-white",
+                      ].join(" ")
+                    }
+                    end={tab.to.endsWith("/my")}
+                    to={tab.to}
+                  >
+                    {tab.label}
+                  </NavLink>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2 rounded-full bg-surface-container-low p-1 self-start md:self-auto">
-              {doctorTabs.map((tab) => (
-                <NavLink
-                  key={tab.to}
-                  className={({ isActive }) =>
-                    [
-                      "rounded-full px-4 py-2 text-sm font-bold transition-all md:px-5 md:py-2.5",
-                      isActive ? "bg-primary text-white shadow-md" : "text-slate-600 hover:bg-white",
-                    ].join(" ")
-                  }
-                  end={tab.to.endsWith("/my")}
-                  to={tab.to}
-                >
-                  {tab.label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
+          )}
 
           <Outlet />
         </main>

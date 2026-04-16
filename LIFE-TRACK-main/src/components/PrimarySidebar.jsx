@@ -5,8 +5,10 @@ import { ImageWithFallback } from "./ImageWithFallback";
 
 function getNavClass(isActive) {
   return [
-    "mx-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200",
-    isActive ? "bg-primary/10 font-bold text-primary" : "text-slate-600 hover:bg-slate-200/70",
+    "flex items-center gap-3 px-4 py-3 transition-all duration-300 ease-in-out rounded-lg text-sm",
+    isActive
+      ? "text-primary font-bold bg-sky-50 border-r-4 border-primary"
+      : "text-slate-600 hover:text-primary hover:bg-slate-200/50 font-medium",
   ].join(" ");
 }
 
@@ -45,9 +47,18 @@ export function PrimarySidebar({ isOpen = false, onClose }) {
           <span className="material-symbols-outlined text-xl">close</span>
         </button>
 
-        <div className="mb-8 px-4">
-          <h1 className="text-xl font-black text-primary">LIFETRACK</h1>
-          <p className="mt-1 text-xs font-medium uppercase tracking-[0.24em] text-slate-500">Sự An Tâm Tĩnh Lặng</p>
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>
+                health_metrics
+              </span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-primary tracking-tight leading-none">LIFETRACK</h1>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Cổng Bệnh Nhân</p>
+            </div>
+          </div>
         </div>
 
         <div className="mb-6 rounded-2xl bg-surface-container-lowest p-4 shadow-sm">

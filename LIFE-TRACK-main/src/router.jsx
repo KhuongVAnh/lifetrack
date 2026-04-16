@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <HealthRecordsPage />,
+                element: <HealthRecordDetailPage />,
               },
               {
                 path: ":memberId",
@@ -117,7 +117,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate replace to="/patient/doctors/my" />,
+            element: <PatientDoctorContactPage />,
           },
           {
             path: "my",

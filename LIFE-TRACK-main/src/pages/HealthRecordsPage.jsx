@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { familyMembers, patientProfiles } from "../data/mockData";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { StatSparkline } from "../components/StatSparkline";
@@ -39,10 +40,9 @@ export function HealthRecordsPage() {
             const isSelected = member.id === selectedMember.id;
 
             return (
-              <button
+              <Link
               key={member.id}
-              onClick={() => setSelectedMemberId(member.id)}
-              type="button"
+              to={`/patient/health-records/${member.id}`}
               className={[
                 "flex w-80 flex-none flex-col justify-between rounded-3xl p-6 transition-all",
                 isSelected
@@ -71,10 +71,10 @@ export function HealthRecordsPage() {
                   {isSelected ? "Đang xem" : member.shortStatus}
                 </span>
                 <span className={isSelected ? "font-bold" : "font-bold text-primary"}>
-                  {isSelected ? "Đang xem" : "Chọn xem"}
+                  Xem Monitor Live
                 </span>
               </div>
-              </button>
+              </Link>
             );
           })}
         </div>
