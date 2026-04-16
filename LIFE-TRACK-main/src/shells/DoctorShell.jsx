@@ -15,7 +15,7 @@ export function DoctorShell() {
     <div className="min-h-screen flex flex-col bg-background text-on-background">
       <PrimarySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen md:ml-72">
+      <div className="min-h-screen md:ml-72 flex flex-col">
         <header className="glass-header fixed left-0 right-0 top-0 z-30 flex items-center justify-between bg-white/80 px-4 py-3 md:left-72 md:px-6">
           <div className="flex items-center gap-3">
             {/* Hamburger — mobile only */}

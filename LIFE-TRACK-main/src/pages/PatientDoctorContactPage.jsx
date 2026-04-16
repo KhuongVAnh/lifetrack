@@ -67,7 +67,7 @@ export function PatientDoctorContactPage() {
 
 
   return (
-    <div className="flex flex-col gap-4 flex-1">
+    <div className="flex flex-col gap-4 flex-1 min-h-0">
       {/* Mobile tab switcher */}
       <div className="flex rounded-xl bg-surface-container-low p-1 lg:hidden">
         {MSG_TABS.map((tab) => (
@@ -85,7 +85,7 @@ export function PatientDoctorContactPage() {
         ))}
       </div>
 
-      <div className="lg:flex lg:flex-1 lg:overflow-hidden lg:h-[calc(100vh-140px)] bg-white rounded-3xl shadow-sm border border-slate-200">
+      <div className="lg:flex lg:flex-1 lg:overflow-hidden min-h-0 bg-white rounded-3xl shadow-sm border border-slate-200">
         {/* Column 1: Danh sách bác sĩ */}
         <section className={["lg:w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "list" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="p-6">
@@ -210,21 +210,6 @@ export function PatientDoctorContactPage() {
                   <div className="mt-2 flex items-center gap-1 text-[10px] text-secondary font-bold">
                     <span className="material-symbols-outlined text-[12px]">trending_flat</span>
                     Ổn định
-                  </div>
-                </div>
-                <div className="bg-white p-5 rounded-2xl shadow-sm relative overflow-hidden border border-slate-100">
-                  <div className="absolute -right-2 -top-2 w-16 h-16 bg-secondary/5 rounded-full"></div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>water_drop</span>
-                    <span className="text-xs font-bold text-slate-500">SPO2</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-slate-800">98</span>
-                    <span className="text-sm font-medium text-slate-400">%</span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-1 text-[10px] text-primary font-bold">
-                    <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                    Bình thường
                   </div>
                 </div>
               </div>

@@ -13,7 +13,7 @@ export const primaryNav = [
     icon: "groups",
     activePrefixes: ["/patient/community"],
   },
-  { to: "/patient/doctors/my", label: "Bác sĩ", icon: "badge", activePrefixes: ["/patient/doctors"] },
+  { to: "/patient/doctors", label: "Chat với bác sĩ", icon: "badge", activePrefixes: ["/patient/doctors"] },
   { to: "/patient/settings", label: "Cài đặt", icon: "settings", activePrefixes: ["/patient/settings"] },
 ];
 
