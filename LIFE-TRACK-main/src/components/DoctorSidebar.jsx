@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const doctorNav = [
   { to: "/doctor/dashboard", icon: "dashboard", label: "Bảng điều khiển", activePrefixes: ["/doctor/dashboard"] },
@@ -22,6 +23,7 @@ function getNavClass(isActive) {
 export function DoctorSidebar({ isOpen = false, onClose }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <>
@@ -92,10 +94,17 @@ export function DoctorSidebar({ isOpen = false, onClose }) {
               <span className="material-symbols-outlined">help_outline</span>
               Trợ giúp
             </a>
-            <Link className="flex items-center gap-3 px-4 py-2 text-error hover:opacity-80 transition-colors text-sm font-medium rounded-lg hover:bg-error/5" to="/login" onClick={onClose}>
+            <button
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-error hover:opacity-80 transition-colors text-sm font-medium rounded-lg hover:bg-error/5"
+              onClick={() => {
+                onClose?.();
+                void logout(true, true);
+              }}
+              type="button"
+            >
               <span className="material-symbols-outlined">logout</span>
               Đăng xuất
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

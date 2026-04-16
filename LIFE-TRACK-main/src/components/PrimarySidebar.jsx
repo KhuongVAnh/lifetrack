@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { primaryNav } from "../config/navigation";
-import { appUser } from "../data/mockData";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserAvatar, getUserDisplayName } from "../utils/auth";
 
 function getNavClass(isActive) {
   return [
@@ -14,6 +15,10 @@ function getNavClass(isActive) {
 
 export function PrimarySidebar({ isOpen = false, onClose }) {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+  const displayName = getUserDisplayName(user, "LifeTrack");
+  const avatar = getUserAvatar(user);
+  const subtitle = user?.subtitle || "Tài khoản LifeTrack";
 
   return (
     <>
@@ -63,10 +68,10 @@ export function PrimarySidebar({ isOpen = false, onClose }) {
 
         <div className="mb-6 rounded-2xl bg-surface-container-lowest p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <ImageWithFallback alt={appUser.name} className="h-12 w-12 rounded-full object-cover" src={appUser.avatar} />
+            <ImageWithFallback alt={displayName} className="h-12 w-12 rounded-full object-cover" src={avatar} />
             <div>
-              <p className="text-xs font-medium text-slate-500">{appUser.subtitle}</p>
-              <p className="font-bold text-sky-900">{appUser.name}</p>
+              <p className="text-xs font-medium text-slate-500">{subtitle}</p>
+              <p className="font-bold text-sky-900">{displayName}</p>
             </div>
           </div>
         </div>
@@ -93,10 +98,17 @@ export function PrimarySidebar({ isOpen = false, onClose }) {
             <span className="material-symbols-outlined">help</span>
             Trợ giúp
           </a>
-          <Link className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-500 hover:bg-slate-200/70" to="/login" onClick={onClose}>
+          <button
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-500 hover:bg-slate-200/70"
+            onClick={() => {
+              onClose?.();
+              void logout(true, true);
+            }}
+            type="button"
+          >
             <span className="material-symbols-outlined">logout</span>
             Đăng xuất
-          </Link>
+          </button>
         </div>
       </aside>
     </>

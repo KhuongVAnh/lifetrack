@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { appUser } from "../data/mockData";
 import { doctorTabs, primaryNav } from "../config/navigation";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { PrimarySidebar } from "../components/PrimarySidebar";
 import { BottomNav } from "../components/BottomNav";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserAvatar, getUserDisplayName } from "../utils/auth";
 
 export function DoctorShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
   const isConsultPage = pathname.includes("/consult") || pathname === "/patient/doctors";
+  const { user } = useAuth();
+  const displayName = getUserDisplayName(user, "LifeTrack");
+  const avatar = getUserAvatar(user);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background">
@@ -44,9 +48,9 @@ export function DoctorShell() {
               <span className="material-symbols-outlined">notifications</span>
             </button>
             <ImageWithFallback
-              alt={appUser.name}
+              alt={displayName}
               className="h-8 w-8 rounded-full border border-outline-variant object-cover"
-              src={appUser.avatar}
+              src={avatar}
             />
           </div>
         </header>

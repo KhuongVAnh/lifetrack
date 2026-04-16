@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { appUser } from "../data/mockData";
 import { communityTabs, primaryNav } from "../config/navigation";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { PrimarySidebar } from "../components/PrimarySidebar";
 import { BottomNav } from "../components/BottomNav";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserAvatar, getUserDisplayName } from "../utils/auth";
 
 export function CommunityShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+  const displayName = getUserDisplayName(user, "LifeTrack");
+  const avatar = getUserAvatar(user);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -43,9 +47,9 @@ export function CommunityShell() {
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-error" />
             </button>
             <ImageWithFallback
-              alt={appUser.name}
+              alt={displayName}
               className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary-fixed object-cover"
-              src={appUser.avatar}
+              src={avatar}
             />
           </div>
         </header>

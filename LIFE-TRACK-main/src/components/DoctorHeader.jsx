@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { useAuth } from "../contexts/AuthContext";
+import { getUserAvatar, getUserDisplayName } from "../utils/auth";
 
 export function DoctorHeader({ onMenuClick }) {
-  const navigate = useNavigate();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const displayName = getUserDisplayName(user, "Bác sĩ LifeTrack");
+  const avatar = getUserAvatar(user);
+  const secondaryLabel = user?.email || user?.roleLabel || "Cổng bác sĩ";
 
   return (
     <header className="fixed top-0 right-0 left-0 md:left-64 h-16 glass-header bg-white/80 z-40 flex items-center justify-between px-4 md:px-8 text-on-surface">
@@ -77,20 +81,20 @@ export function DoctorHeader({ onMenuClick }) {
           onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false); }}
         >
           <div className="hidden text-right md:block">
-            <p className="text-sm font-bold text-primary leading-none group-hover:text-[#0070a8] transition-colors">Bác sĩ Minh</p>
-            <p className="text-[11px] text-slate-500 font-medium tracking-wide mt-1">Chuyên khoa Tim mạch</p>
+            <p className="text-sm font-bold text-primary leading-none group-hover:text-[#0070a8] transition-colors">{displayName}</p>
+            <p className="text-[11px] text-slate-500 font-medium tracking-wide mt-1">{secondaryLabel}</p>
           </div>
           <ImageWithFallback
-            alt="Bác sĩ Minh"
+            alt={displayName}
             className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all hover:scale-105"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJabnfXPliyIQ_OlF_ly4Eibm1lazgw0-zzoGZaA0stomvU_HRGUyfVBu7tdM0AC8lBL7Ki8HhlOMdehkjPBIrLROmU4xnD9C6vWvvnE-8JkteAa4F-8A3IrTi8ULg82Tdz3G5ThRhh8VBJ3_o3DVXBntIzFc_IjOqVZdfMkPz_9CuP7ohkbibPlfRJcYxse4-SGSrkkgC81qNvsGo2aZDJP_kOv3rxPhZSms1vMfCAoFK9rVh2JjMEACnlX0SNkQD6ncdo-8W8jY"
+            src={avatar}
           />
 
           {isProfileOpen && (
             <div className="absolute right-0 top-14 w-52 md:w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in flex flex-col">
               <div className="px-4 py-3 border-b border-slate-100 flex flex-col">
-                <span className="font-bold text-sm text-slate-800">Trần Lương Minh</span>
-                <span className="text-[10px] font-medium text-slate-400">minhtl@lifetrack.vn</span>
+                <span className="font-bold text-sm text-slate-800">{displayName}</span>
+                <span className="text-[10px] font-medium text-slate-400">{user?.email || "doctor@lifetrack.vn"}</span>
               </div>
               <button onClick={() => window.alert("Mở trang Hồ sơ cá nhân...")} className="px-4 py-2 mt-2 text-left text-sm text-slate-600 hover:bg-slate-50 font-medium flex gap-3 items-center transition-colors">
                 <span className="material-symbols-outlined text-[20px]">person</span> Hồ sơ của tôi
@@ -99,7 +103,13 @@ export function DoctorHeader({ onMenuClick }) {
                 <span className="material-symbols-outlined text-[20px]">manage_accounts</span> Quản lý tài khoản
               </button>
               <div className="h-px bg-slate-100 my-2"></div>
-              <button onClick={() => navigate("/login")} className="px-4 py-2 mb-1 text-left text-sm text-error hover:bg-error/10 font-bold flex gap-3 items-center transition-colors">
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  void logout(true, true);
+                }}
+                className="px-4 py-2 mb-1 text-left text-sm text-error hover:bg-error/10 font-bold flex gap-3 items-center transition-colors"
+              >
                 <span className="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
               </button>
             </div>

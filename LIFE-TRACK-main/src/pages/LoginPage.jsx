@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getHomePathForRole } from '../utils/auth';
 
 export function LoginPage() {
     const [username, setUsername] = useState('');
@@ -7,14 +9,22 @@ export function LoginPage() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const { login, user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            navigate(getHomePathForRole(user.normalizedRole ?? user.role));
+        }
+    }, [user, navigate]);
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (username === 'patient123' && password === '12345') {
-            navigate('/patient/dashboard');
-        } else if (username === 'doctor123' && password === '12345') {
-            navigate('/doctor/dashboard');
-        } else {
-            setError('Tài khoản hoặc mật khẩu không đúng');
+        setError('');
+        try {
+            const loggedInUser = await login(username, password);
+            navigate(getHomePathForRole(loggedInUser.normalizedRole ?? loggedInUser.role));
+        } catch (err) {
+            setError(err.message || 'Đăng nhập không thành công');
         }
     };
 
@@ -106,7 +116,7 @@ export function LoginPage() {
                                             id="username"
                                             type="text"
                                             className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium placeholder:text-slate-400 focus:bg-white focus:border-[#004976] focus:ring-4 focus:ring-[#004976]/10 outline-none transition-all shadow-sm"
-                                            placeholder="patient123 hoặc doctor123"
+                                            placeholder="patient@example.com hoặc doctor@example.com"
                                             value={username}
                                             onChange={(e) => setUsername(e.target.value)}
                                             required
@@ -149,14 +159,14 @@ export function LoginPage() {
                             <div className="mt-10 pt-8 border-t border-slate-200">
                                 <p className="text-sm font-bold text-slate-500 mb-4 text-center">Hoặc chọn nhanh tài khoản thử nghiệm</p>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('patient123'); setPassword('12345'); }}>
+                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('patient@example.com'); setPassword('123456'); }}>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="material-symbols-outlined text-[#004976] text-lg">personal_injury</span>
                                             <span className="font-bold text-sm text-slate-800 group-hover:text-[#004976] transition-colors">Bệnh nhân</span>
                                         </div>
                                         <p className="text-[10px] text-slate-500 font-medium overflow-hidden whitespace-nowrap text-ellipsis">Click để điền</p>
                                     </div>
-                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('doctor123'); setPassword('12345'); }}>
+                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('doctor@example.com'); setPassword('123456'); }}>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="material-symbols-outlined text-teal-600 text-lg">stethoscope</span>
                                             <span className="font-bold text-sm text-slate-800 group-hover:text-teal-600 transition-colors">Bác sĩ</span>

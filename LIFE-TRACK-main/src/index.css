@@ -49,15 +49,22 @@ button {
 }
 
 .ecg-line {
-  stroke-dasharray: 2000;
-  stroke-dashoffset: 2000;
-  animation: draw 10s linear infinite;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-@keyframes draw {
-  to {
-      stroke-dashoffset: 0;
-  }
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
 }
 
 /* Mobile Drawer Animation */
