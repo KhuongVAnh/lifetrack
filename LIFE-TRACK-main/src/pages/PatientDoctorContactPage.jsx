@@ -63,8 +63,8 @@ export function PatientDoctorContactPage() {
         ))}
       </div>
 
-      <div className="lg:flex lg:flex-1 lg:overflow-hidden min-h-0 bg-white rounded-3xl shadow-sm border border-slate-200">
-        <section className={["lg:w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "list" ? "flex" : "hidden lg:flex"].join(" ")}>
+      <div className="min-h-0 rounded-3xl border border-slate-200 bg-white shadow-sm lg:flex lg:flex-1 lg:overflow-hidden">
+        <section className={["min-h-0 lg:w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "list" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="p-6">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Bác sĩ của tôi</h2>
             <div className="space-y-2">
@@ -112,7 +112,7 @@ export function PatientDoctorContactPage() {
           </div>
         </section>
 
-        <section className={["flex-1 flex flex-col bg-surface-container-lowest", mobileTab === "chat" ? "flex" : "hidden lg:flex"].join(" ")}>
+        <section className={["min-h-0 flex-1 flex flex-col bg-surface-container-lowest", mobileTab === "chat" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="h-20 flex items-center justify-between px-8 bg-white border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-4 min-w-0">
               <ImageWithFallback alt={activeContact?.name || "Bác sĩ"} className="w-12 h-12 rounded-full object-cover" src={getUserAvatar(activeContact)} />
@@ -129,7 +129,7 @@ export function PatientDoctorContactPage() {
             </span>
           </div>
 
-          <div className="flex-1 p-8 overflow-y-auto space-y-6 flex flex-col no-scrollbar">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-8 space-y-6 no-scrollbar">
             <div className="flex justify-center">
               <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full uppercase tracking-widest">Gần đây</span>
             </div>
@@ -198,7 +198,7 @@ export function PatientDoctorContactPage() {
           </div>
         </section>
 
-        <section className={["lg:w-72 flex flex-col bg-slate-50 border-l border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "info" ? "flex" : "hidden lg:flex"].join(" ")}>
+        <section className={["min-h-0 lg:w-72 flex flex-col bg-slate-50 border-l border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "info" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="p-6 space-y-8">
             <div>
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Thông tin bác sĩ</h2>
