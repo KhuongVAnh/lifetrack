@@ -62,7 +62,7 @@ export function DoctorMessagesPage() {
         ))}
       </div>
 
-      <div className="min-h-0 rounded-3xl border border-slate-200 bg-white shadow-sm lg:flex lg:h-[calc(100vh-180px)] lg:flex-1 lg:overflow-hidden">
+      <div className="min-h-0 rounded-3xl border border-slate-200 bg-white shadow-sm flex lg:h-[calc(100vh-180px)] flex-1 overflow-hidden">
         <section className={["min-h-0 lg:w-80 flex flex-col bg-surface-container-low border-r border-slate-200/50 overflow-y-auto no-scrollbar", mobileTab === "list" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="p-6">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Bệnh nhân direct chat</h2>
