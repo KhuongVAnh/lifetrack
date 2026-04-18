@@ -2,24 +2,25 @@ export const primaryNav = [
   { to: "/patient/dashboard", label: "Trang chủ", icon: "home_health", activePrefixes: ["/patient/dashboard"] },
   {
     to: "/patient/health-records",
-    label: "Hồ sơ sức khỏe",
+    label: "Theo dõi trực tiếp",
     icon: "medical_services",
     activePrefixes: ["/patient/health-records"],
   },
   {
     to: "/patient/phr",
-    label: "PHR cá nhân",
+    label: "Hồ sơ sức khỏe",
     icon: "assignment",
     activePrefixes: ["/patient/phr"],
   },
   { to: "/patient/appointments", label: "Lịch hẹn", icon: "event", activePrefixes: ["/patient/appointments"] },
+  { to: "/patient/doctors/my", label: "Bác sĩ của tôi", icon: "badge", activePrefixes: ["/patient/doctors/my", "/patient/doctors/hire"] },
+  { to: "/patient/doctors/chat", label: "Chat với bác sĩ", icon: "forum", activePrefixes: ["/patient/doctors/chat"] },
   {
     to: "/patient/community/knowledge",
     label: "Cộng đồng",
     icon: "groups",
     activePrefixes: ["/patient/community"],
   },
-  { to: "/patient/doctors", label: "Chat với bác sĩ", icon: "badge", activePrefixes: ["/patient/doctors"] },
   { to: "/patient/settings", label: "Cài đặt", icon: "settings", activePrefixes: ["/patient/settings"] },
 ];
 

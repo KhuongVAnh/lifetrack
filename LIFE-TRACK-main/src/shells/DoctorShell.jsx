@@ -10,7 +10,7 @@ import { getUserAvatar, getUserDisplayName } from "../utils/auth";
 export function DoctorShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
-  const isConsultPage = pathname.includes("/consult") || pathname === "/patient/doctors";
+  const isConsultPage = pathname.includes("/consult") || pathname === "/patient/doctors" || pathname.includes("/chat");
   const { user } = useAuth();
   const displayName = getUserDisplayName(user, "LifeTrack");
   const avatar = getUserAvatar(user);

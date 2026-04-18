@@ -18,7 +18,9 @@ import { HealthRecordDetailPage } from "./pages/HealthRecordDetailPage";
 import { HealthRecordsPage } from "./pages/HealthRecordsPage";
 import { PatientDoctorContactPage } from "./pages/PatientDoctorContactPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import { PatientPhrPage } from "./pages/PatientPhrPage";
+import { PatientPhrShell } from "./pages/phr/PatientPhrShell";
+import { PhrOverviewPage } from "./pages/phr/PhrOverviewPage";
+import { PhrHistoryPage } from "./pages/phr/PhrHistoryPage";
 import { DoctorEmrPage } from "./pages/DoctorEmrPage";
 import { CommunityShell } from "./shells/CommunityShell";
 import { DoctorShell } from "./shells/DoctorShell";
@@ -143,7 +145,17 @@ export const router = createBrowserRouter([
               },
               {
                 path: "phr",
-                element: <PatientPhrPage />,
+                element: <PatientPhrShell />,
+                children: [
+                  {
+                    index: true,
+                    element: <PhrOverviewPage />,
+                  },
+                  {
+                    path: "history",
+                    element: <PhrHistoryPage />,
+                  },
+                ],
               },
               {
                 path: "settings",
@@ -175,6 +187,10 @@ export const router = createBrowserRouter([
             children: [
               {
                 index: true,
+                element: <Navigate replace to="/patient/doctors/my" />,
+              },
+              {
+                path: "chat",
                 element: <PatientDoctorContactPage />,
               },
               {
