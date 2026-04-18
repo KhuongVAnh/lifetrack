@@ -16,10 +16,10 @@ export function DoctorShell() {
   const avatar = getUserAvatar(user);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-on-background">
+    <div className={isConsultPage ? "h-[100dvh] flex flex-col bg-background text-on-background overflow-hidden" : "min-h-screen flex flex-col bg-background text-on-background"}>
       <PrimarySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen md:ml-72 flex flex-col">
+      <div className={isConsultPage ? "h-[100dvh] md:ml-72 flex flex-col min-h-0" : "min-h-screen md:ml-72 flex flex-col"}>
         <header className="glass-header fixed left-0 right-0 top-0 z-30 flex items-center justify-between bg-white/80 px-4 py-3 md:left-72 md:px-6">
           <div className="flex items-center gap-3">
             {/* Hamburger — mobile only */}
@@ -55,7 +55,7 @@ export function DoctorShell() {
           </div>
         </header>
 
-        <main className={isConsultPage ? "flex-1 px-4 pb-24 pt-20 md:px-6 md:pb-6 md:pt-24 flex flex-col" : "mx-auto max-w-7xl px-4 pb-24 pt-20 md:px-8 md:pb-12 md:pt-24"}>
+        <main className={isConsultPage ? "flex-1 px-4 pb-24 pt-20 md:px-6 md:pb-6 md:pt-24 flex flex-col min-h-0" : "mx-auto max-w-7xl px-4 pb-24 pt-20 md:px-8 md:pb-12 md:pt-24"}>
           {!isConsultPage && (
             <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
               <div>
