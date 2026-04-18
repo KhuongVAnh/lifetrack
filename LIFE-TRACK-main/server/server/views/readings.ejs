@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dữ liệu ECG</title>
+  <meta charset="UTF-8" />
+</head>
+<body>
+  <h1>Dữ liệu ECG mới nhất</h1>
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>ID</th>
+      <th>Device</th>
+      <th>Heart Rate</th>
+      <th>AI Result</th>
+      <th>Timestamp</th>
+    </tr>
+    <% readings.forEach(r => { %>
+      <tr>
+        <td><%= r.reading_id %></td>
+        <td><%= r.device_id %></td>
+        <td><%= r.heart_rate %></td>
+        <td><%= r.ai_result || "Chưa phân loại" %></td>
+        <td><%= r.timestamp.toISOString() %></td>
+      </tr>
+    <% }) %>
+  </table>
+</body>
+</html>

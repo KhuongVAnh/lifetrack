@@ -6,6 +6,12 @@ export const primaryNav = [
     icon: "medical_services",
     activePrefixes: ["/patient/health-records"],
   },
+  {
+    to: "/patient/phr",
+    label: "PHR cá nhân",
+    icon: "assignment",
+    activePrefixes: ["/patient/phr"],
+  },
   { to: "/patient/appointments", label: "Lịch hẹn", icon: "event", activePrefixes: ["/patient/appointments"] },
   {
     to: "/patient/community/knowledge",

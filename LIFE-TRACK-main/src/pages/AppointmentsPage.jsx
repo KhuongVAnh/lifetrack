@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { appointments, doctorProfiles, getDoctorById } from "../data/mockData";
 import { ImageWithFallback } from "../components/ImageWithFallback";
@@ -146,15 +146,15 @@ export function AppointmentsPage() {
                       selected ? "border-primary/40 shadow-sm" : "border-surface-variant hover:border-primary/30",
                     ].join(" ")}
                   >
-                    <ImageWithFallback alt={doctor.name} className="h-20 w-20 rounded-lg object-cover" src={doctor.avatar} />
-                    <div className="flex-grow">
+                    <ImageWithFallback alt={doctor.name} className="h-20 w-20 shrink-0 rounded-lg object-cover" src={doctor.avatar} />
+                    <div className="min-w-0 flex-grow">
                       <div className="mb-1 flex items-center gap-2">
                         {index === 0 && (
                           <span className="rounded bg-primary-fixed px-1.5 py-0.5 text-[10px] font-bold text-primary">
                             ƯU TÚ
                           </span>
                         )}
-                        <h3 className="text-lg font-bold">{doctor.name}</h3>
+                        <h3 className="text-lg font-bold leading-6 text-on-surface">{doctor.name}</h3>
                       </div>
                       <p className="mb-2 text-sm text-on-surface-variant">
                         {doctor.title} • {doctor.experienceYears} năm kinh nghiệm
@@ -166,18 +166,26 @@ export function AppointmentsPage() {
                         </span>
                       </div>
                     </div>
-                    <button
-                      className={[
-                        "w-full rounded-lg px-6 py-2.5 text-sm font-bold transition-colors md:w-auto",
-                        selected
-                          ? "bg-primary text-white"
-                          : "border border-outline-variant bg-surface-container-high text-on-surface-variant",
-                      ].join(" ")}
-                      onClick={() => setDoctorId(doctor.id)}
-                      type="button"
-                    >
-                      Chọn bác sĩ
-                    </button>
+                    <div className="flex w-full flex-col gap-2 md:w-auto md:shrink-0">
+                      <button
+                        className={[
+                          "rounded-lg px-6 py-2.5 text-sm font-bold whitespace-nowrap transition-colors",
+                          selected
+                            ? "bg-primary text-white"
+                            : "border border-outline-variant bg-surface-container-high text-on-surface-variant hover:border-primary/40",
+                        ].join(" ")}
+                        onClick={() => setDoctorId(doctor.id)}
+                        type="button"
+                      >
+                        Chọn bác sĩ
+                      </button>
+                      <Link
+                        className="rounded-lg border border-primary/35 px-6 py-2.5 text-center text-sm font-bold text-primary transition-colors hover:bg-primary/5"
+                        to={`/patient/doctors/${doctor.id}`}
+                      >
+                        Xem hồ sơ
+                      </Link>
+                    </div>
                   </div>
                 );
               })}

@@ -18,6 +18,8 @@ import { HealthRecordDetailPage } from "./pages/HealthRecordDetailPage";
 import { HealthRecordsPage } from "./pages/HealthRecordsPage";
 import { PatientDoctorContactPage } from "./pages/PatientDoctorContactPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { PatientPhrPage } from "./pages/PatientPhrPage";
+import { DoctorEmrPage } from "./pages/DoctorEmrPage";
 import { CommunityShell } from "./shells/CommunityShell";
 import { DoctorShell } from "./shells/DoctorShell";
 import { PatientShell } from "./shells/PatientShell";
@@ -98,6 +100,10 @@ export const router = createBrowserRouter([
             element: <DoctorMessagesPage />,
           },
           {
+            path: "emr",
+            element: <DoctorEmrPage />,
+          },
+          {
             path: "*",
             element: <Navigate replace to="/doctor/dashboard" />
           }
@@ -134,6 +140,10 @@ export const router = createBrowserRouter([
               {
                 path: "appointments",
                 element: <AppointmentsPage />,
+              },
+              {
+                path: "phr",
+                element: <PatientPhrPage />,
               },
               {
                 path: "settings",

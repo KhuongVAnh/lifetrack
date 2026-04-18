@@ -1,5 +1,8 @@
 node_modules/
 Template UI/
 .env    
-.agent/
 dist/
+server/node_modules
+.agent/
+server/server/env
+

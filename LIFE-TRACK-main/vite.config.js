@@ -9,6 +9,19 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts,
+    proxy: {
+      '/api': {
+        target: 'https://holterserver.up.railway.app',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/socket.io': {
+        target: 'https://holterserver.up.railway.app',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   preview: {
     host: true,

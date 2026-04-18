@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BENH_NHAN @map("bệnh nhân")
+  BAC_SI    @map("bác sĩ")
+  GIA_DINH  @map("gia đình")
+  ADMIN     @map("admin")
+}
+
+enum DeviceStatus {
+  DANG_HOAT_DONG  @map("đang hoạt động")
+  NGUNG_HOAT_DONG @map("ngừng hoạt động")
+}
+
+enum AccessRole {
+  BAC_SI   @map("bác sĩ")
+  GIA_DINH @map("gia đình")
+}
+
+enum AccessStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum ChatRole {
+  user
+  bot
+}
+
+enum NotificationType {
+  ALERT
+  ACCESS_REQUEST
+  ACCESS_RESPONSE
+  ACCESS_REVOKE
+  DIRECT_MESSAGE
+}
+
+model User {
+  user_id       Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          UserRole @default(BENH_NHAN)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  devices                Device[]
+  alerts                 Alert[]
+  patientReports         Report[]                @relation("PatientReports")
+  doctorReports          Report[]                @relation("DoctorReports")
+  chatLogs               ChatLog[]
+  sentDirectMessages     DirectMessage[]         @relation("DirectSender")
+  receivedDirectMessages DirectMessage[]         @relation("DirectReceiver")
+  sharedPatients         AccessPermission[]      @relation("SharedPatients")
+  sharedViewers          AccessPermission[]      @relation("SharedViewers")
+  patientHistories       MedicalHistory[]        @relation("PatientHistories")
+  doctorHistories        MedicalHistory[]        @relation("DoctorHistories")
+  notificationsAuthored  Notification[]          @relation("NotificationActor")
+  notificationRecipients NotificationRecipient[]
+  refreshTokens          RefreshToken[]
+
+  @@map("users")
+}
+
+model Device {
+  device_id     Int          @id @default(autoincrement())
+  user_id       Int
+  serial_number String       @unique
+  status        DeviceStatus @default(DANG_HOAT_DONG)
+  created_at    DateTime     @default(now()) @map("created_at")
+  updated_at    DateTime     @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  readings Reading[]
+
+  @@map("devices")
+}
+
+model Reading {
+  reading_id        Int       @id @default(autoincrement())
+  device_id         Int
+  timestamp         DateTime  @default(now())
+  heart_rate        Int
+  ecg_signal        Json
+  abnormal_detected Boolean   @default(false)
+  ai_result         String?
+  ai_status         String    @default("PENDING")
+  ai_error          String?   @db.Text
+  ai_completed_at   DateTime?
+
+  device Device  @relation(fields: [device_id], references: [device_id], onDelete: Cascade, onUpdate: Cascade)
+  alerts Alert[]
+
+  @@map("readings")
+}
+
+model Alert {
+  alert_id             Int      @id @default(autoincrement())
+  user_id              Int
+  reading_id           Int
+  alert_type           String
+  message              String   @db.Text
+  segment_start_sample Int?
+  segment_end_sample   Int?
+  timestamp            DateTime @default(now())
+  resolved             Boolean  @default(false)
+
+  user    User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  reading Reading @relation(fields: [reading_id], references: [reading_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("alerts")
+}
+
+model Report {
+  report_id  Int      @id @default(autoincrement())
+  user_id    Int
+  doctor_id  Int?
+  summary    String   @db.Text
+  created_at DateTime @default(now()) @map("created_at")
+
+  patient User  @relation("PatientReports", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  doctor  User? @relation("DoctorReports", fields: [doctor_id], references: [user_id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("reports")
+}
+
+model ChatLog {
+  chat_id   Int      @id @default(autoincrement())
+  user_id   Int
+  role      ChatRole
+  message   String   @db.Text
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("chat_logs")
+}
+
+model DirectMessage {
+  message_id       Int      @id @default(autoincrement())
+  conversation_key String   @db.VarChar(64)
+  sender_id        Int
+  receiver_id      Int
+  message          String   @db.Text
+  is_read          Boolean  @default(false)
+  created_at       DateTime @default(now()) @map("created_at")
+
+  sender   User @relation("DirectSender", fields: [sender_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  receiver User @relation("DirectReceiver", fields: [receiver_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([conversation_key, created_at])
+  @@index([receiver_id, is_read, created_at])
+  @@map("direct_messages")
+}
+
+model AccessPermission {
+  permission_id Int          @id @default(autoincrement())
+  patient_id    Int
+  viewer_id     Int
+  role          AccessRole
+  status        AccessStatus @default(pending)
+  created_at    DateTime     @default(now()) @map("created_at")
+  updated_at    DateTime     @updatedAt @map("updated_at")
+
+  patient User @relation("SharedPatients", fields: [patient_id], references: [user_id], onDelete: Cascade)
+  viewer  User @relation("SharedViewers", fields: [viewer_id], references: [user_id], onDelete: Cascade)
+
+  @@map("access_permissions")
+}
+
+model MedicalHistory {
+  history_id       Int       @id @default(autoincrement())
+  user_id          Int
+  doctor_id        Int?
+  ai_diagnosis     String?   @db.Text
+  doctor_diagnosis String?   @db.Text
+  symptoms         String?   @db.Text
+  medication       String?   @db.Text
+  condition        String?   @db.Text
+  notes            String?   @db.Text
+  created_at       DateTime  @default(now()) @map("created_at")
+  updated_at       DateTime  @updatedAt @map("updated_at")
+  deleted_at       DateTime?
+
+  patient User  @relation("PatientHistories", fields: [user_id], references: [user_id], onDelete: Cascade)
+  doctor  User? @relation("DoctorHistories", fields: [doctor_id], references: [user_id], onDelete: SetNull)
+
+  @@map("medical_histories")
+}
+
+model Notification {
+  notification_id Int              @id @default(autoincrement())
+  type            NotificationType
+  title           String
+  message         String           @db.Text
+  actor_id        Int?
+  entity_type     String?
+  entity_id       Int?
+  payload         Json?
+  created_at      DateTime         @default(now()) @map("created_at")
+
+  actor      User?                   @relation("NotificationActor", fields: [actor_id], references: [user_id], onDelete: SetNull, onUpdate: Cascade)
+  recipients NotificationRecipient[]
+
+  @@index([created_at])
+  @@map("notifications")
+}
+
+model RefreshToken {
+  token_id   Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @unique @db.VarChar(191)
+  expires_at DateTime
+  revoked_at DateTime?
+  created_at DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("refresh_tokens")
+}
+
+model NotificationRecipient {
+  recipient_id    Int       @id @default(autoincrement())
+  notification_id Int
+  user_id         Int
+  is_read         Boolean   @default(false)
+  read_at         DateTime?
+  created_at      DateTime  @default(now()) @map("created_at")
+
+  notification Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade, onUpdate: Cascade)
+  user         User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([notification_id, user_id])
+  @@index([user_id, is_read, created_at])
+  @@index([notification_id])
+  @@map("notification_recipients")
+}
