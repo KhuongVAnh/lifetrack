@@ -33,12 +33,12 @@ exports.getPatientHistory = async (req, res) => {
   try {
     const patient_id = Number.parseInt(req.params.patient_id, 10)
 
-    const histories = await prisma.medicalHistory.findMany({
+    const histories = await prisma.medicalVisit.findMany({
       where: { user_id: patient_id, deleted_at: null },
       include: {
         doctor: { select: { user_id: true, name: true, email: true } },
       },
-      orderBy: { created_at: "desc" },
+      orderBy: { visit_date: "desc" },
     })
 
     return res.status(200).json(histories)
@@ -51,16 +51,17 @@ exports.getPatientHistory = async (req, res) => {
 // Hàm xử lý thêm chẩn đoán mới cho bệnh sử bệnh nhân.
 exports.addDiagnosis = async (req, res) => {
   try {
-    const { patient_id, doctor_id, doctor_diagnosis, medication, condition, notes } = req.body
+    const { patient_id, doctor_id, doctor_diagnosis, medication, condition, notes, diagnosis } = req.body
 
-    const newRecord = await prisma.medicalHistory.create({
+    const newRecord = await prisma.medicalVisit.create({
       data: {
         user_id: Number.parseInt(patient_id, 10),
         doctor_id: doctor_id ? Number.parseInt(doctor_id, 10) : null,
-        doctor_diagnosis,
-        medication,
-        condition,
-        notes,
+        diagnosis: diagnosis || "Chẩn đoán y khoa",
+        diagnosis_details: doctor_diagnosis,
+        prescription: medication ? { notes: medication } : null,
+        reason: condition,
+        appointment: notes,
       },
     })
 
@@ -78,8 +79,8 @@ exports.deleteDiagnosis = async (req, res) => {
   try {
     const historyId = Number.parseInt(req.params.id, 10)
 
-    await prisma.medicalHistory.update({
-      where: { history_id: historyId },
+    await prisma.medicalVisit.update({
+      where: { visit_id: historyId },
       data: { deleted_at: new Date() },
     })
 
@@ -94,10 +95,10 @@ exports.deleteDiagnosis = async (req, res) => {
 exports.updateDiagnosis = async (req, res) => {
   try {
     const historyId = Number.parseInt(req.params.id, 10)
-    const { doctor_diagnosis, medication, condition, notes } = req.body
+    const { doctor_diagnosis, medication, condition, notes, diagnosis } = req.body
 
-    const record = await prisma.medicalHistory.findUnique({
-      where: { history_id: historyId },
+    const record = await prisma.medicalVisit.findUnique({
+      where: { visit_id: historyId },
     })
     if (!record) {
       return res
@@ -105,13 +106,14 @@ exports.updateDiagnosis = async (req, res) => {
         .json({ error: "Không tìm thấy bệnh sử cần sửa" })
     }
 
-    const updatedRecord = await prisma.medicalHistory.update({
-      where: { history_id: historyId },
+    const updatedRecord = await prisma.medicalVisit.update({
+      where: { visit_id: historyId },
       data: {
-        doctor_diagnosis,
-        medication,
-        condition,
-        notes,
+        diagnosis: diagnosis || record.diagnosis,
+        diagnosis_details: doctor_diagnosis,
+        prescription: medication ? { notes: medication } : record.prescription,
+        reason: condition,
+        appointment: notes,
       },
     })
 

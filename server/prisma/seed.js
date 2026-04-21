@@ -31,7 +31,8 @@ async function main() {
   await prisma.report.deleteMany()
   await prisma.chatLog.deleteMany()
   await prisma.accessPermission.deleteMany()
-  await prisma.medicalHistory.deleteMany()
+  await prisma.medicalVisit.deleteMany()
+  await prisma.phrOverview.deleteMany()
   await prisma.user.deleteMany()
 
   const commonPasswordHash = await hashPass("123456")
@@ -363,64 +364,82 @@ async function main() {
     ],
   })
 
-  // Bệnh sử được seed theo dòng thời gian để tạo cảm giác hồ sơ theo dõi thật, không còn dạng JSON giả lập.
-  await prisma.medicalHistory.createMany({
+  // PhrOverview giả lập chung
+  await prisma.phrOverview.create({
+    data: {
+      user_id: patient.user_id,
+      personal_info: { fullName: "Nguyễn Văn An", dob: "1990-01-01", gender: "Nam", bloodType: "O+", phone: "0901234567" },
+      vitals: { height: 170, weight: 65, bmi: 22.5, heartRate: 75, bloodPressure: "120/80" },
+      medical_history: { personal: ["Viêm loét dạ dày"], family: [], allergies: ["Hải sản"], lifestyle: { smoking: "Không", alcohol: "Thỉnh thoảng", exercise: "Ít" } },
+      clinical_results: { conclusion: { healthClass: "Loại II", advice: "Ăn uống điều độ, tránh thức khuya." } }
+    }
+  })
+
+  // Bệnh sử theo đúng chuẩn Hồ sơ Sức khỏe (PHR) với các lần khám thực tế tại cơ sở y tế
+  await prisma.medicalVisit.createMany({
     data: [
       {
         user_id: patient.user_id,
-        doctor_id: null,
-        ai_diagnosis: "AI ghi nhận nhịp nhanh xoang nhẹ sau gắng sức, chưa thấy dấu hiệu nguy hiểm tức thời.",
-        symptoms: "Hồi hộp sau khi leo cầu thang 4 tầng, tim đập nhanh khoảng 5 đến 7 phút rồi tự giảm.",
-        medication: "Chưa dùng thuốc. Uống đủ nước, hạn chế cà phê và nghỉ ngơi sớm buổi tối.",
-        condition: "Triệu chứng mức độ nhẹ, xuất hiện không thường xuyên, chưa kèm đau ngực hoặc ngất.",
-        notes: "Đợt đầu tiên xuất hiện sau một tuần làm việc căng thẳng và ngủ ít. Bệnh nhân chủ động ghi lại nhịp tim bằng đồng hồ thông minh.",
-        created_at: toDate("2025-11-18T02:00:00.000Z"),
+        facility: "Bệnh viện Chợ Rẫy",
+        doctor_name: "BS. Nguyễn Văn Minh",
+        diagnosis: "Tăng huyết áp vô căn (I10)",
+        diagnosis_details: "Tăng huyết áp vô căn (nguyen phát). Rối loạn nhịp xoang nhẹ.",
+        reason: "Thấy hồi hộp, tim đập nhanh.",
+        tests: [
+          { id: "att-1", name: "Ket_qua_xet_nghiem.pdf", type: "pdf", url: "#" },
+          { id: "att-2", name: "ECG_Record.jpg", type: "image", url: "#" }
+        ],
+        prescription: [
+          { name: "Amlodipine", dosage: "5mg", quantity: 30, usage: "Sáng 1 viên" },
+          { name: "Bisoprolol", dosage: "2.5mg", quantity: 30, usage: "Sáng 1 viên" }
+        ],
+        advice: "Giảm ăn mặn, tập thể dục nhẹ nhàng. Đo huyết áp mỗi sáng.",
+        appointment: "18/05/2026",
+        visit_date: toDate("2026-04-18T08:00:00.000Z"),
       },
       {
         user_id: patient.user_id,
-        doctor_id: null,
-        ai_diagnosis: "AI tiếp tục ghi nhận cơn nhịp nhanh xoang thoáng qua, liên quan nhiều đến chất kích thích và thiếu ngủ.",
-        symptoms: "Đánh trống ngực sau khi uống 2 ly cà phê, cảm giác bồn chồn, khó tập trung vào cuối buổi chiều.",
-        medication: "Chưa dùng thuốc. Tạm ngưng cà phê sau 15 giờ, tăng thời gian nghỉ giữa giờ làm việc.",
-        condition: "Theo dõi tại nhà, tần suất triệu chứng tăng nhẹ trong những ngày áp lực công việc cao.",
-        notes: "Bệnh nhân nhận thấy triệu chứng giảm khi ngồi nghỉ và tập thở chậm. Không ghi nhận khó thở khi nằm hay phù chân.",
-        created_at: toDate("2025-12-06T14:10:00.000Z"),
+        facility: "Bệnh viện Đại học Y Dược",
+        doctor_name: "BS. Lê Hữu Trí",
+        diagnosis: "Viêm loét dạ dày - tá tràng",
+        diagnosis_details: "Viêm loét hang vị dạ dày mức độ vừa, không có vi khuẩn HP.",
+        reason: "Đau rát vùng thượng vị, ợ hơi nhiều, thỉnh thoảng buồn nôn.",
+        tests: [
+          { id: "att-3", name: "Noi_soi_da_day.pdf", type: "pdf", url: "#" }
+        ],
+        prescription: [
+          { name: "Omeprazole", dosage: "20mg", quantity: 14, usage: "Sáng 1 viên trước ăn 30p" },
+          { name: "Clarithromycin", dosage: "500mg", quantity: 28, usage: "Sáng 1 viên, tối 1 viên" },
+          { name: "Amoxicillin", dosage: "1g", quantity: 28, usage: "Sáng 1 viên, tối 1 viên" }
+        ],
+        advice: "Kiêng chua cay, không thức khuya, chia nhỏ bữa ăn. Uống thuốc đúng giờ.",
+        appointment: "15/06/2026",
+        visit_date: toDate("2026-05-15T09:30:00.000Z"),
       },
       {
         user_id: patient.user_id,
-        doctor_id: doctor.user_id,
-        doctor_diagnosis: "Nhịp nhanh xoang từng cơn kèm ngoại tâm thu thất rải rác, nhiều khả năng liên quan căng thẳng kéo dài và sử dụng chất kích thích.",
-        symptoms: "Hồi hộp rõ hơn vào ban đêm, đôi lúc cảm giác hẫng nhịp, mất ngủ sau các hôm làm việc muộn.",
-        medication: "Magie B6 buổi tối trong 14 ngày; hạn chế cà phê, nước tăng lực và rượu bia; tập thở chậm 2 lần mỗi ngày.",
-        condition: "Hiện chưa cần nhập viện hay dùng thuốc chống loạn nhịp. Hẹn tái khám sau 2 tuần hoặc sớm hơn nếu xuất hiện đau ngực, khó thở, choáng váng.",
-        notes: "Bác sĩ dặn mang theo nhật ký triệu chứng, ghi rõ thời điểm cơn xuất hiện, hoàn cảnh khởi phát và nhịp tim đo được tại nhà.",
-        created_at: toDate("2026-01-15T02:30:00.000Z"),
-      },
-      {
-        user_id: patient.user_id,
-        doctor_id: null,
-        ai_diagnosis: "AI không ghi nhận thêm bất thường nguy hiểm trong tuần theo dõi gần nhất.",
-        symptoms: "Thi thoảng còn hồi hộp ngắn dưới 2 phút khi thức khuya, nhìn chung đỡ hơn trước.",
-        medication: "Duy trì Magie B6 theo hướng dẫn, ngủ trước 23 giờ, đi bộ nhẹ 20 phút mỗi ngày.",
-        condition: "Tình trạng cải thiện, cơn xuất hiện thưa hơn và không còn cảm giác hẫng nhịp kéo dài.",
-        notes: "Bệnh nhân tự đánh giá mức độ khó chịu giảm khoảng 60 đến 70 phần trăm so với đợt đầu. Không xuất hiện đau ngực hay ngất.",
-        created_at: toDate("2026-02-02T12:00:00.000Z"),
-      },
-      {
-        user_id: patient.user_id,
-        doctor_id: doctor.user_id,
-        doctor_diagnosis: "Tái khám cho thấy đáp ứng tốt với thay đổi lối sống, Holter lần gần nhất ổn định hơn, chưa ghi nhận cơn nguy hiểm kéo dài.",
-        symptoms: "Chỉ còn hồi hộp nhẹ khi căng thẳng kéo dài, không đau ngực, không khó thở, không giới hạn vận động thường ngày.",
-        medication: "Ngưng Magie B6 sau đợt hiện tại nếu không còn triệu chứng; tiếp tục hạn chế chất kích thích và duy trì vận động vừa phải.",
-        condition: "Ổn định, theo dõi ngoại trú, tái khám định kỳ sau 3 tháng hoặc sớm hơn nếu triệu chứng quay lại dày hơn.",
-        notes: "Khuyến khích tiếp tục ghi chép bệnh sử, đặc biệt là các mốc công việc căng thẳng, chất kích thích đã dùng và nhịp tim đo được khi có cơn.",
-        created_at: toDate("2026-03-22T04:45:00.000Z"),
-      },
+        facility: "Phòng khám Đa khoa Tâm Anh",
+        doctor_name: "BS. Trần Thị Thu",
+        diagnosis: "Rối loạn lipid máu",
+        diagnosis_details: "Tăng mỡ máu hỗn hợp (Cholesterol và Triglyceride nâng cao).",
+        reason: "Khám sức khỏe tổng quát định kỳ do công ty tổ chức.",
+        tests: [
+          { id: "att-4", name: "MRI_Ket_qua.jpg", type: "image", url: "#" },
+          { id: "att-5", name: "Mau_Tong_Quat.pdf", type: "pdf", url: "#" }
+        ],
+        prescription: [
+          { name: "Rosuvastatin", dosage: "10mg", quantity: 30, usage: "Tối 1 viên" },
+          { name: "Fenofibrate", dosage: "160mg", quantity: 30, usage: "Sáng 1 viên sau ăn" }
+        ],
+        advice: "Hạn chế đồ chiên xào, mỡ nội tạng. Tăng cường ăn rau xanh và tập cardio 30p/ngày.",
+        appointment: "02/05/2026",
+        visit_date: toDate("2026-04-02T14:45:00.000Z"),
+      }
     ],
   })
 
   console.log(
-    "Seed thành công: 4 người dùng, 1 thiết bị, 4 reading, 3 alert, 2 report, 4 chat AI, 2 quyền truy cập, 3 direct message, 2 notification và 5 bản ghi bệnh sử chiều sâu."
+    "Seed thành công: 4 người dùng, 1 thiết bị, 4 reading, 3 alert, 2 report, 4 chat AI, 2 quyền truy cập, 3 direct message, 2 notification và 3 bản ghi bệnh sử chiều sâu (PHR)."
   )
   console.log(
     `Tài khoản mẫu: ${patient.email}, ${doctor.email}, ${family.email}, ${admin.email} | mật khẩu chung: 123456`

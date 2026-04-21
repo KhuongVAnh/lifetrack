@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useAuth } from "../../contexts/AuthContext";
+import { getPhrOverview, updatePhrOverview } from "../../services/phrService";
 import { mockPhrOverview } from "../../data/phrMockData";
 
 function SectionTitle({ icon, title }) {
@@ -12,31 +14,110 @@ function SectionTitle({ icon, title }) {
 }
 
 export function PhrOverviewPage() {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(mockPhrOverview);
+  
+  // Lưu state gốc để có thể Cancel
+  const [originalData, setOriginalData] = useState(mockPhrOverview);
 
-  const handleSave = () => {
-    // Simulate save
-    setIsEditing(false);
-    toast.success("Đã cập nhật hồ sơ sức khỏe");
+  useEffect(() => {
+    let active = true;
+    const fetchOverview = async () => {
+      if (!user?.user_id) return;
+      try {
+        setLoading(true);
+        const data = await getPhrOverview(user.user_id);
+        
+        if (active && data) {
+          // Merge Data to prevent undefined errors
+          const mergedData = {
+            personalInfo: { 
+              ...mockPhrOverview.personalInfo, 
+              ...(data.personal_info || {}),
+              emergencyContact: {
+                ...mockPhrOverview.personalInfo.emergencyContact,
+                ...(data.personal_info?.emergencyContact || {})
+              }
+            },
+            vitals: { ...mockPhrOverview.vitals, ...(data.vitals || {}) },
+            medicalHistory: { 
+              ...mockPhrOverview.medicalHistory, 
+              ...(data.medical_history || {}),
+              lifestyle: {
+                ...mockPhrOverview.medicalHistory.lifestyle,
+                ...(data.medical_history?.lifestyle || {})
+              }
+            },
+            clinicalResults: { 
+              ...mockPhrOverview.clinicalResults, 
+              ...(data.clinical_results || {}),
+              clinical: { ...mockPhrOverview.clinicalResults.clinical, ...(data.clinical_results?.clinical || {}) },
+              subclinical: { ...mockPhrOverview.clinicalResults.subclinical, ...(data.clinical_results?.subclinical || {}) },
+              conclusion: { ...mockPhrOverview.clinicalResults.conclusion, ...(data.clinical_results?.conclusion || {}) },
+            },
+          };
+          
+          setFormData(mergedData);
+          setOriginalData(mergedData);
+        }
+      } catch (error) {
+        toast.error("Không thể tải hồ sơ sức khỏe");
+        console.error(error);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    
+    fetchOverview();
+    return () => { active = false; };
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      if (!user?.user_id) return;
+      const payload = {
+        personal_info: formData.personalInfo,
+        vitals: formData.vitals,
+        medical_history: formData.medicalHistory,
+        clinical_results: formData.clinicalResults,
+      };
+
+      await updatePhrOverview(user.user_id, payload);
+      setOriginalData(formData);
+      setIsEditing(false);
+      toast.success("Đã cập nhật hồ sơ sức khỏe");
+    } catch (error) {
+      toast.error("Lỗi khi lưu hồ sơ sức khỏe");
+      console.error(error);
+    }
   };
 
   const handleCancel = () => {
-    setFormData(mockPhrOverview); // reset
+    setFormData(originalData); // reset
     setIsEditing(false);
   };
 
   const handleInputChange = (section, field, value, subField = null) => {
     setFormData((prev) => {
       const newData = { ...prev };
+      
+      // We must shallow copy the nested objects before mutating nicely, or use structuredClone
+      const clonedData = structuredClone(prev);
+      
       if (subField) {
-        newData[section][field][subField] = value;
+        clonedData[section][field][subField] = value;
       } else {
-        newData[section][field] = value;
+        clonedData[section][field] = value;
       }
-      return newData;
+      return clonedData;
     });
   };
+
+  if (loading) {
+    return <div className="p-8 text-center text-on-surface-variant font-medium animate-pulse">Đang tải hồ sơ...</div>;
+  }
 
   const { personalInfo, vitals, medicalHistory, clinicalResults } = formData;
 
@@ -58,7 +139,8 @@ export function PhrOverviewPage() {
   };
 
   const renderArrayField = (label, valueArray, section, field) => {
-    const textValue = valueArray.join(", ");
+    const arr = Array.isArray(valueArray) ? valueArray : [];
+    const textValue = arr.join(", ");
     return (
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{label}</label>
@@ -141,7 +223,7 @@ export function PhrOverviewPage() {
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">BMI</label>
               <p className="text-sm font-bold text-primary">
-                {isEditing && vitals.height && vitals.weight 
+                {vitals.height && vitals.weight 
                   ? (vitals.weight / ((vitals.height / 100) * (vitals.height / 100))).toFixed(1) 
                   : vitals.bmi}
               </p>
