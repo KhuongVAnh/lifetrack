@@ -47,36 +47,6 @@ export const doctorRoutes = [
           },
         ],
       },
-      {
-        path: "/patient/doctors",
-        element: <DoctorLayout />,
-        children: [
-          {
-            index: true,
-            element: <Navigate replace to="/patient/doctors/my" />,
-          },
-          {
-            path: "chat",
-            lazy: lazyPage(() => import("@/widgets/page-views/PatientDoctorContactPage"), "PatientDoctorContactPage"),
-          },
-          {
-            path: "my",
-            lazy: lazyPage(() => import("@/widgets/page-views/DoctorsMyPage"), "DoctorsMyPage"),
-          },
-          {
-            path: "hire",
-            lazy: lazyPage(() => import("@/widgets/page-views/DoctorsHirePage"), "DoctorsHirePage"),
-          },
-          {
-            path: ":doctorId/consult",
-            lazy: lazyPage(() => import("@/widgets/page-views/PatientDoctorContactPage"), "PatientDoctorContactPage"),
-          },
-          {
-            path: ":doctorId",
-            lazy: lazyPage(() => import("@/widgets/page-views/DoctorProfilePage"), "DoctorProfilePage"),
-          },
-        ],
-      },
     ],
   },
 ];

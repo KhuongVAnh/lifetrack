@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { CommunityLayout, PatientLayout } from "@/app/layouts";
+import { CommunityLayout, PatientLayout, DoctorLayout } from "@/app/layouts";
 import { RequirePatientPortal } from "./guards";
 
 function lazyPage(importer, exportName) {
@@ -57,6 +57,45 @@ export const patientRoutes = [
               {
                 path: "settings",
                 lazy: lazyPage(() => import("@/widgets/page-views/SettingsPage"), "SettingsPage"),
+              },
+            ],
+          },
+          {
+            path: "doctors",
+            element: <DoctorLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate replace to="/patient/doctors/my" />,
+              },
+              {
+                path: "chat",
+                children: [
+                  {
+                    index: true,
+                    lazy: lazyPage(() => import("@/widgets/page-views/PatientDoctorContactPage"), "PatientDoctorContactPage"),
+                  },
+                  {
+                    path: ":doctorId",
+                    lazy: lazyPage(() => import("@/widgets/page-views/PatientDoctorContactPage"), "PatientDoctorContactPage"),
+                  },
+                ],
+              },
+              {
+                path: "my",
+                lazy: lazyPage(() => import("@/widgets/page-views/DoctorsMyPage"), "DoctorsMyPage"),
+              },
+              {
+                path: "hire",
+                lazy: lazyPage(() => import("@/widgets/page-views/DoctorsHirePage"), "DoctorsHirePage"),
+              },
+              {
+                path: ":doctorId/consult",
+                lazy: lazyPage(() => import("@/widgets/page-views/PatientDoctorContactPage"), "PatientDoctorContactPage"),
+              },
+              {
+                path: ":doctorId",
+                lazy: lazyPage(() => import("@/widgets/page-views/DoctorProfilePage"), "DoctorProfilePage"),
               },
             ],
           },

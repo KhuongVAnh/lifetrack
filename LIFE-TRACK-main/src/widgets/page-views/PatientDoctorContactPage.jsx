@@ -115,18 +115,25 @@ export function PatientDoctorContactPage() {
         <section className={["min-h-0 flex-1 flex flex-col bg-surface-container-lowest", mobileTab === "chat" ? "flex" : "hidden lg:flex"].join(" ")}>
           <div className="h-20 flex items-center justify-between px-8 bg-white border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-4 min-w-0">
-              <ImageWithFallback alt={activeContact?.name || "Bác sĩ"} className="w-12 h-12 rounded-full object-cover" src={getUserAvatar(activeContact)} />
+              <div className="relative">
+                <ImageWithFallback alt={activeContact?.name || "Bác sĩ"} className="w-12 h-12 rounded-full object-cover border-2 border-slate-50" src={getUserAvatar(activeContact)} />
+                <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+              </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-on-surface truncate">{activeContact?.name || "Chọn bác sĩ để bắt đầu"}</h3>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-secondary"></span>
-                  <span className="text-xs text-slate-500 truncate">{activeContact?.email || "Direct chat văn bản"}</span>
+                <h3 className="font-black text-slate-800 truncate tracking-tight">{activeContact?.name || "Chọn bác sĩ để bắt đầu"}</h3>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Phòng khám trực tuyến</span>
                 </div>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              Chat văn bản
-            </span>
+            <div className="flex items-center gap-2">
+               <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">phone</span>
+               </button>
+               <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">videocam</span>
+               </button>
+            </div>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-8 space-y-6 no-scrollbar">
@@ -226,32 +233,19 @@ export function PatientDoctorContactPage() {
             </div>
 
             <div>
-              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Tài khoản của tôi</h2>
-              <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <ImageWithFallback alt={getUserDisplayName(user)} className="w-12 h-12 rounded-full border border-slate-200" src={getUserAvatar(user)} />
-                  <div>
-                    <p className="font-bold text-slate-800">{getUserDisplayName(user, "Bệnh nhân")}</p>
-                    <p className="text-xs text-slate-500">{user?.email || "patient@example.com"}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-500">
-                  ECG của bạn được xem ở mục hồ sơ sức khỏe, còn màn này chỉ dùng để nhắn tin văn bản với bác sĩ.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Hành động nhanh</h2>
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Hành động nhanh</h2>
               <div className="space-y-3">
-                <Link to="/patient/health-records" className="w-full flex items-center justify-between p-4 bg-primary text-white rounded-xl shadow-md hover:scale-[0.98] transition-transform">
-                  <span className="font-bold text-sm">Xem ECG của tôi</span>
-                  <span className="material-symbols-outlined text-lg">monitor_heart</span>
+                <Link to={`/patient/doctors/${activeContactId || 'mock'}/profile`} className="group w-full flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all">
+                  <div className="flex flex-col items-start">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Tiểu sử chuyên gia</span>
+                    <span className="font-bold text-sm text-white">Xem hồ sơ bác sĩ</span>
+                  </div>
+                  <span className="material-symbols-outlined text-lg bg-white/10 p-2 rounded-xl group-hover:bg-primary transition-colors">medical_information</span>
                 </Link>
-                <Link to="/patient/health-records" className="w-full flex items-center justify-between p-4 bg-white text-on-surface border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                  <span className="font-bold text-sm">Xem hồ sơ của tôi</span>
-                  <span className="material-symbols-outlined text-lg">open_in_new</span>
-                </Link>
+                
+                <p className="px-2 text-[10px] leading-relaxed text-slate-400 font-medium italic">
+                  * Hồ sơ bao gồm chứng chỉ hành nghề, đánh giá từ bệnh nhân và lịch trình làm việc.
+                </p>
               </div>
             </div>
           </div>
