@@ -21,7 +21,7 @@
 - Sau khi có `ai_result`, hệ thống set `abnormal_detected`.
 - Nếu bất thường, tạo `alert`, emit socket `alert`, tạo notification.
 - Ràng buộc không được phá:
-- Socket event hiện có: `reading-update`, `alert`, `fake-reading`.
+- Socket event hiện có: `reading-update`, `alert`.
 - Notification service hiện có trong `server/services/notificationService`.
 - Contract API hiện có không đổi ở phase này.
 

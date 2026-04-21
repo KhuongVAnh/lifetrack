@@ -157,8 +157,8 @@ model DirectMessage {
   sender   User @relation("DirectSender", fields: [sender_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
   receiver User @relation("DirectReceiver", fields: [receiver_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@index([conversation_key, created_at])
-  @@index([receiver_id, is_read, created_at])
+  @@index([conversation_key, created_at, message_id])
+  @@index([receiver_id, sender_id, is_read])
   @@map("direct_messages")
 }
 
