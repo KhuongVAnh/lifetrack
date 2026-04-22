@@ -1,13 +1,19 @@
 // Controller xử lý danh sách bệnh nhân mà bác sĩ được cấp quyền theo dõi.
 const prisma = require("../prismaClient")
+const { DoctorHireStatus } = require("@prisma/client")
+const {
+  canDoctorWritePatientDomain,
+  canViewPatientDomain,
+} = require("../services/patientDoctorAccessService")
 
 // Hàm xử lý lấy danh sách bệnh nhân được phép theo dõi.
 exports.getAccessiblePatients = async (req, res) => {
   try {
     const viewer_id = Number.parseInt(req.params.viewer_id, 10)
 
-    const accessPermissions = await prisma.accessPermission.findMany({
-      where: { viewer_id, status: "accepted" },
+    // Danh sách bệnh nhân của bác sĩ lấy từ quan hệ thuê active, không còn lấy từ AccessPermission.
+    const doctorHires = await prisma.doctorHire.findMany({
+      where: { doctor_id: viewer_id, status: DoctorHireStatus.ACTIVE },
       include: {
         patient: {
           select: {
@@ -21,7 +27,7 @@ exports.getAccessiblePatients = async (req, res) => {
       },
     })
 
-    return res.status(200).json(accessPermissions)
+    return res.status(200).json(doctorHires)
   } catch (err) {
     console.error("Lỗi getAccessiblePatients:", err)
     res.status(500).json({ error: "Lỗi khi lấy danh sách bệnh nhân" })
@@ -32,6 +38,15 @@ exports.getAccessiblePatients = async (req, res) => {
 exports.getPatientHistory = async (req, res) => {
   try {
     const patient_id = Number.parseInt(req.params.patient_id, 10)
+    const doctor_id = Number.parseInt(req.user?.user_id || req.query.doctor_id, 10)
+
+    // Bác sĩ chỉ được xem bệnh sử nếu bệnh nhân đang thuê và bật quyền EHR.
+    if (Number.isInteger(doctor_id)) {
+      const canView = await canViewPatientDomain({ patientId: patient_id, viewerId: doctor_id, domain: "ehr" })
+      if (!canView) {
+        return res.status(403).json({ error: "Không có quyền xem bệnh sử bệnh nhân" })
+      }
+    }
 
     const histories = await prisma.medicalVisit.findMany({
       where: { user_id: patient_id, deleted_at: null },
@@ -52,6 +67,17 @@ exports.getPatientHistory = async (req, res) => {
 exports.addDiagnosis = async (req, res) => {
   try {
     const { patient_id, doctor_id, doctor_diagnosis, medication, condition, notes, diagnosis } = req.body
+    const requesterDoctorId = Number.parseInt(req.user?.user_id || doctor_id, 10)
+
+    // Bác sĩ chỉ được thêm chẩn đoán nếu có quyền ghi EHR cho bệnh nhân.
+    const canWrite = await canDoctorWritePatientDomain({
+      patientId: Number.parseInt(patient_id, 10),
+      doctorId: requesterDoctorId,
+      domain: "ehr",
+    })
+    if (!canWrite) {
+      return res.status(403).json({ error: "Không có quyền cập nhật bệnh sử bệnh nhân" })
+    }
 
     const newRecord = await prisma.medicalVisit.create({
       data: {

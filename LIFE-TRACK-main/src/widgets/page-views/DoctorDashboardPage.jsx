@@ -1,10 +1,140 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { approveDoctorHire, getDoctorHireRequests, rejectDoctorHire } from "@/features/doctors";
+
+/**
+ * Lấy nhãn trạng thái yêu cầu thuê để bác sĩ đọc nhanh trên dashboard.
+ */
+function getHireRequestStatusLabel(status) {
+    // Map trạng thái backend sang tiếng Việt ngắn gọn.
+    switch (status) {
+        case "PENDING_DOCTOR_APPROVAL":
+            return "Chờ duyệt";
+        case "ACTIVE":
+            return "Đã duyệt";
+        case "REJECTED":
+            return "Đã từ chối";
+        default:
+            return status || "Không rõ";
+    }
+}
 
 export function DoctorDashboardPage() {
     const navigate = useNavigate();
+    const [hireRequests, setHireRequests] = useState([]);
+    const [hireRequestError, setHireRequestError] = useState("");
+    const [processingHireId, setProcessingHireId] = useState(null);
+
+    /**
+     * Tải danh sách yêu cầu thuê gửi đến bác sĩ hiện tại.
+     */
+    const loadHireRequests = async () => {
+        try {
+            // Reset lỗi cũ để không hiển thị nhầm sau lần tải lại thành công.
+            setHireRequestError("");
+
+            // Lấy các yêu cầu pending để bác sĩ duyệt ngay trên dashboard.
+            const requests = await getDoctorHireRequests("PENDING_DOCTOR_APPROVAL");
+            setHireRequests(requests);
+        } catch (error) {
+            // Lưu lỗi ngắn gọn để không làm gãy toàn bộ dashboard.
+            setHireRequestError(error?.response?.data?.message || "Không thể tải yêu cầu thuê bác sĩ.");
+        }
+    };
+
+    /**
+     * Duyệt yêu cầu thuê và xóa khỏi danh sách chờ trên dashboard.
+     */
+    const handleApproveHire = async (hireId) => {
+        try {
+            // Chỉ disable card đang xử lý để bác sĩ vẫn xem được các yêu cầu khác.
+            setProcessingHireId(hireId);
+            await approveDoctorHire(hireId);
+            await loadHireRequests();
+        } finally {
+            // Luôn mở lại nút sau khi request kết thúc.
+            setProcessingHireId(null);
+        }
+    };
+
+    /**
+     * Từ chối yêu cầu thuê và xóa khỏi danh sách chờ trên dashboard.
+     */
+    const handleRejectHire = async (hireId) => {
+        try {
+            // Ghi lại id đang xử lý để tránh bấm lặp.
+            setProcessingHireId(hireId);
+            await rejectDoctorHire(hireId);
+            await loadHireRequests();
+        } finally {
+            // Reset trạng thái xử lý dù API thành công hay lỗi.
+            setProcessingHireId(null);
+        }
+    };
+
+    useEffect(() => {
+        // Tải yêu cầu thuê khi bác sĩ mở dashboard.
+        loadHireRequests();
+    }, []);
 
     return (
         <>
+            <section className="mb-8 rounded-2xl border border-sky-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 className="flex items-center gap-2 text-xl font-extrabold text-primary">
+                            <span className="material-symbols-outlined text-secondary">how_to_reg</span>
+                            Yêu cầu thuê bác sĩ
+                        </h2>
+                        <p className="text-sm font-medium text-slate-500">Bệnh nhân chỉ trở thành bệnh nhân đồng hành sau khi bạn duyệt.</p>
+                    </div>
+                    <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-black text-primary">
+                        {hireRequests.length} chờ duyệt
+                    </span>
+                </div>
+                {hireRequestError ? (
+                    <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{hireRequestError}</div>
+                ) : hireRequests.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">
+                        Hiện không có yêu cầu thuê mới.
+                    </div>
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {hireRequests.slice(0, 4).map((request) => (
+                            <div key={request.hire_id} className="rounded-xl border border-slate-100 bg-surface-container-lowest p-4">
+                                <div className="mb-4 flex items-start justify-between gap-3">
+                                    <div>
+                                        <p className="font-black text-sky-900">{request.patient?.name || "Bệnh nhân"}</p>
+                                        <p className="text-xs font-semibold text-slate-500">{request.patient?.email}</p>
+                                    </div>
+                                    <span className="rounded bg-amber-50 px-2 py-1 text-[10px] font-black uppercase text-amber-700">
+                                        {getHireRequestStatusLabel(request.status)}
+                                    </span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white disabled:bg-slate-300"
+                                        disabled={processingHireId === request.hire_id}
+                                        onClick={() => handleApproveHire(request.hire_id)}
+                                        type="button"
+                                    >
+                                        Duyệt
+                                    </button>
+                                    <button
+                                        className="flex-1 rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50"
+                                        disabled={processingHireId === request.hire_id}
+                                        onClick={() => handleRejectHire(request.hire_id)}
+                                        type="button"
+                                    >
+                                        Từ chối
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
             <section className="mb-10">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-extrabold text-primary flex items-center gap-2">

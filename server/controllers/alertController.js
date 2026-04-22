@@ -1,21 +1,15 @@
 // Controller xử lý tạo, truy vấn và cập nhật trạng thái cảnh báo tim mạch.
 const prisma = require("../prismaClient")
 const { fromPrismaUserRole } = require("../utils/enumMappings")
-const { AccessStatus, NotificationType } = require("@prisma/client")
+const { NotificationType } = require("@prisma/client")
 const { emitToUsers } = require("../services/socketEmitService")
 const { createNotification } = require("../services/notificationService")
+const { getTelemetryRecipientIds } = require("../services/patientDoctorAccessService")
 
 // Hàm xử lý tìm các tài khoản cần nhận thông báo cảnh báo.
 const getAlertRecipientIds = async (patientId) => {
-  const viewers = await prisma.accessPermission.findMany({
-    where: {
-      patient_id: patientId,
-      status: AccessStatus.accepted,
-    },
-    select: { viewer_id: true },
-  })
-
-  return [patientId, ...viewers.map((item) => item.viewer_id)]
+  // Người nhận cảnh báo gồm bệnh nhân, người thân được chia sẻ và bác sĩ thuê được bật quyền ECG.
+  return getTelemetryRecipientIds(patientId)
 }
 
 // Hàm xử lý tạo cảnh báo mới cho bệnh nhân.

@@ -1,367 +1,576 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { appointments, doctorProfiles, getDoctorById } from "@/shared/mocks/appFixtures";
-import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
-import { RatingStars } from "@/shared/ui/RatingStars";
+import {
+  createAppointment,
+  getAppointmentDoctors,
+  getAppointmentSlots,
+  getAppointments,
+  updateAppointmentStatus,
+} from "@/features/appointments/api/appointmentsApi";
 
-export function AppointmentsPage() {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [specialtyId, setSpecialtyId] = useState(appointments.specialties[0].id);
-  const [doctorId, setDoctorId] = useState(appointments.suggestedDoctorIds[0]);
-  const [dayId, setDayId] = useState(appointments.slotDays[0].id);
-  const [timeId, setTimeId] = useState(appointments.timeSlots[0].id);
-  const [reason, setReason] = useState("Tái khám và cập nhật huyết áp cho bố.");
-  const [attachment, setAttachment] = useState("");
+const STATUS_META = {
+  PENDING: { label: "Chờ xác nhận", className: "bg-amber-100 text-amber-700", icon: "pending_actions" },
+  APPROVED: { label: "Đã xác nhận", className: "bg-emerald-100 text-emerald-700", icon: "event_available" },
+  REJECTED: { label: "Từ chối", className: "bg-rose-100 text-rose-700", icon: "event_busy" },
+  CANCELLED: { label: "Đã hủy", className: "bg-slate-100 text-slate-500", icon: "cancel" },
+  COMPLETED: { label: "Hoàn tất", className: "bg-sky-100 text-sky-700", icon: "task_alt" },
+};
 
-  const suggestedDoctors = useMemo(
-    () =>
-      appointments.suggestedDoctorIds
-        .map((id) => getDoctorById(id))
-        .filter((doctor) => doctor),
-    [],
-  );
+/**
+ * Format ngày giờ theo tiếng Việt để UI lịch khám dễ đọc.
+ * Hàm dùng chung cho slot và danh sách lịch hẹn.
+ */
+function formatDateTime(value, options = {}) {
+  // Tạo Date từ ISO string backend trả về.
+  const date = new Date(value);
 
-  const selectedDoctor = getDoctorById(doctorId);
-  const steps = [
-    { step: 1, label: "Bác sĩ" },
-    { step: 2, label: "Thời gian" },
-    { step: 3, label: "Thông tin" },
-  ];
+  // Trả chuỗi rỗng nếu dữ liệu không hợp lệ để tránh UI hiện Invalid Date.
+  if (Number.isNaN(date.getTime())) return "";
 
-  const canMoveNext =
-    currentStep === 1
-      ? Boolean(specialtyId && doctorId)
-      : currentStep === 2
-        ? Boolean(dayId && timeId)
-        : Boolean(reason.trim());
+  // Ghép cấu hình mặc định với override từ caller.
+  return date.toLocaleString("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+    ...options,
+  });
+}
 
-  const handleNextStep = () => {
-    if (!canMoveNext || currentStep >= 3) {
-      return;
-    }
+/**
+ * Format tiền khám theo VND.
+ * Nếu phí bằng 0 thì hiển thị miễn phí để bệnh nhân hiểu trạng thái thanh toán.
+ */
+function formatFee(value) {
+  // Chuyển phí về số để xử lý cả null/undefined.
+  const fee = Number(value || 0);
 
-    setCurrentStep((prev) => prev + 1);
-  };
+  // Phí 0 tương ứng lịch miễn phí do đã thuê bác sĩ hoặc bác sĩ không đặt phí.
+  if (fee <= 0) return "Miễn phí";
 
-  const handlePreviousStep = () => {
-    if (currentStep <= 1) {
-      return;
-    }
+  // Dùng Intl để format tiền Việt Nam nhất quán.
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(fee);
+}
 
-    setCurrentStep((prev) => prev - 1);
-  };
-
-  const handleConfirmAppointment = () => {
-    if (!canMoveNext) {
-      return;
-    }
-
-    toast.success("Đặt lịch khám thành công");
-    window.setTimeout(() => {
-      navigate("/patient/dashboard");
-    }, 900);
-  };
+/**
+ * Badge trạng thái lịch hẹn.
+ * Component nhỏ này giúp danh sách lịch hẹn và summary dùng chung visual.
+ */
+function AppointmentStatusBadge({ status }) {
+  // Lấy metadata theo status, fallback về PENDING nếu backend trả status lạ.
+  const meta = STATUS_META[status] ?? STATUS_META.PENDING;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      <section className="rounded-2xl border border-surface-variant bg-surface-container-lowest p-6">
-        <div className="relative mx-auto flex max-w-2xl items-center justify-between">
-          <div className="absolute left-0 top-5 h-0.5 w-full bg-surface-container-high" />
-          {steps.map((item) => {
-            const isCompleted = currentStep > item.step;
-            const isActive = currentStep === item.step;
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${meta.className}`}>
+      <span className="material-symbols-outlined text-[14px]">{meta.icon}</span>
+      {meta.label}
+    </span>
+  );
+}
 
-            return (
-            <div key={item.label} className="relative z-10 flex flex-col items-center gap-2 bg-white px-4">
-              <div
-                className={[
-                  "flex h-10 w-10 items-center justify-center rounded-full font-bold",
-                  isCompleted || isActive ? "bg-primary text-white" : "bg-surface-container-high text-outline",
-                ].join(" ")}
-              >
-                {isCompleted ? <span className="material-symbols-outlined text-base">check</span> : item.step}
-              </div>
-              <span className={isCompleted || isActive ? "text-sm font-bold text-primary" : "text-sm font-medium text-outline"}>
-                {item.label}
-              </span>
-            </div>
-          );})}
+/**
+ * Kiểm tra bác sĩ có phải bác sĩ bệnh nhân đã thuê/đang đồng hành hay không.
+ * Tạm thời UI hỗ trợ nhiều tên field để sau này backend chỉ cần trả một trong các cờ này.
+ */
+function isHiredDoctor(doctor) {
+  // Các field này đều biểu thị quan hệ đã thuê hoặc quyền truy cập accepted từ backend.
+  return Boolean(
+    doctor?.is_hired ||
+    doctor?.hired ||
+    doctor?.isHired ||
+    doctor?.access_status === "accepted" ||
+    doctor?.accessStatus === "accepted",
+  );
+}
+
+/**
+ * Lấy phí đặt lịch hiển thị cho bác sĩ.
+ * Bác sĩ đã thuê luôn miễn phí; bác sĩ ngoài dùng giá bác sĩ đã setting.
+ */
+function getDoctorBookingFee(doctor) {
+  // Bác sĩ đã thuê không tính phí từng lịch hẹn.
+  if (isHiredDoctor(doctor)) return 0;
+
+  // Nếu API có effective_fee thì ưu tiên dùng, nếu không dùng consultation_fee hiện tại.
+  return Number(doctor?.effective_fee ?? doctor?.consultation_fee ?? 0);
+}
+
+/**
+ * Card chọn bác sĩ cho màn đặt lịch.
+ * Component dùng chung cho nhóm bác sĩ đã thuê và nhóm bác sĩ gợi ý bên ngoài.
+ */
+function DoctorChoiceCard({ doctor, selected, variant = "external", onSelect }) {
+  const hired = variant === "hired" || isHiredDoctor(doctor);
+  const fee = getDoctorBookingFee(doctor);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(doctor.user_id)}
+      className={[
+        "flex min-h-[116px] items-start gap-4 rounded-xl border p-4 text-left transition-all",
+        selected ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-primary/30",
+      ].join(" ")}
+    >
+      <div className={hired ? "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700" : "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-primary"}>
+        <span className="material-symbols-outlined">{hired ? "verified" : "stethoscope"}</span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="break-words font-black leading-5 text-slate-800">{doctor.name}</p>
+          {hired && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700">
+              Đã thuê
+            </span>
+          )}
+        </div>
+        <p className="mt-1 break-words text-xs text-slate-500">{doctor.email}</p>
+        <p className={hired ? "mt-2 text-xs font-black text-emerald-700" : "mt-2 text-xs font-black text-secondary"}>
+          {hired ? "Miễn phí khi đặt lịch" : `${formatFee(fee)} / lượt`}
+        </p>
+      </div>
+
+      {selected && <span className="material-symbols-outlined shrink-0 text-primary">check_circle</span>}
+    </button>
+  );
+}
+
+/**
+ * Trang đặt lịch khám của bệnh nhân.
+ * Trang dùng dữ liệu thật từ backend: danh sách bác sĩ, slot khả dụng và lịch hẹn hiện tại.
+ */
+export function AppointmentsPage() {
+  const [doctors, setDoctors] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [slots, setSlots] = useState([]);
+  const [doctorId, setDoctorId] = useState(null);
+  const [selectedSlotKey, setSelectedSlotKey] = useState("");
+  const [appointmentType, setAppointmentType] = useState("ONLINE");
+  const [reason, setReason] = useState("");
+  const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  /**
+   * Tải dữ liệu ban đầu cho trang đặt lịch.
+   * Hàm lấy bác sĩ thật và danh sách lịch hẹn của bệnh nhân hiện tại.
+   */
+  const fetchInitialData = async () => {
+    try {
+      // Gọi song song để giảm thời gian chờ khi mở trang.
+      const [doctorData, appointmentData] = await Promise.all([
+        getAppointmentDoctors(),
+        getAppointments(),
+      ]);
+
+      // Lưu danh sách bác sĩ và ưu tiên tự chọn bác sĩ đã thuê nếu API trả cờ is_hired/access_status.
+      setDoctors(doctorData);
+      setDoctorId((current) => current ?? doctorData.find((doctor) => isHiredDoctor(doctor))?.user_id ?? doctorData[0]?.user_id ?? null);
+
+      // Lưu lịch hẹn hiện tại để sidebar hiển thị trạng thái mới nhất.
+      setAppointments(appointmentData);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể tải dữ liệu đặt lịch.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Tải slot khả dụng theo bác sĩ đang chọn.
+   * Backend trả cả slot không khả dụng để UI có thể giải thích lý do.
+   */
+  const fetchSlots = async (nextDoctorId) => {
+    if (!nextDoctorId) {
+      setSlots([]);
+      return;
+    }
+
+    setSlotsLoading(true);
+    try {
+      // Lấy slot từ hôm nay đến 14 ngày tới.
+      const from = new Date();
+      const to = new Date();
+      to.setDate(to.getDate() + 14);
+
+      // Gọi API slot thật theo doctor_id.
+      const slotData = await getAppointmentSlots({
+        doctorId: nextDoctorId,
+        from: from.toISOString(),
+        to: to.toISOString(),
+      });
+
+      // Reset slot đang chọn nếu slot cũ không còn trong danh sách mới.
+      setSlots(slotData);
+      setSelectedSlotKey((current) => {
+        const stillExists = slotData.some((slot) => `${slot.start_time}|${slot.end_time}` === current && slot.available);
+        return stillExists ? current : "";
+      });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể tải khung giờ bác sĩ.");
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  // Tải dữ liệu ban đầu khi component mount.
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  // Tải lại slot mỗi khi người dùng chọn bác sĩ khác.
+  useEffect(() => {
+    fetchSlots(doctorId);
+  }, [doctorId]);
+
+  const selectedDoctor = useMemo(
+    () => doctors.find((doctor) => doctor.user_id === doctorId) ?? null,
+    [doctors, doctorId],
+  );
+
+  const hiredDoctors = useMemo(
+    () => doctors.filter((doctor) => isHiredDoctor(doctor)),
+    [doctors],
+  );
+
+  const suggestedDoctors = useMemo(
+    () => doctors.filter((doctor) => !isHiredDoctor(doctor)),
+    [doctors],
+  );
+
+  const selectedSlot = useMemo(
+    () => slots.find((slot) => `${slot.start_time}|${slot.end_time}` === selectedSlotKey) ?? null,
+    [slots, selectedSlotKey],
+  );
+
+  const upcomingAppointments = useMemo(
+    () =>
+      appointments
+        .filter((appointment) => ["PENDING", "APPROVED"].includes(appointment.status))
+        .sort((left, right) => new Date(left.start_time) - new Date(right.start_time)),
+    [appointments],
+  );
+
+  const canSubmit = Boolean(selectedDoctor && selectedSlot && reason.trim() && !submitting);
+
+  /**
+   * Gửi yêu cầu đặt lịch khám.
+   * Hàm build payload từ bác sĩ, slot và thông tin bệnh nhân nhập.
+   */
+  const handleCreateAppointment = async () => {
+    if (!canSubmit) return;
+
+    setSubmitting(true);
+    try {
+      // Gửi dữ liệu ISO string để backend validate đúng slot đã sinh.
+      const appointment = await createAppointment({
+        doctor_id: selectedDoctor.user_id,
+        appointment_date: selectedSlot.start_time,
+        start_time: selectedSlot.start_time,
+        end_time: selectedSlot.end_time,
+        type: appointmentType,
+        reason: reason.trim(),
+        patient_attachment_url: attachmentUrl.trim() || null,
+      });
+
+      // Cập nhật UI local để người dùng thấy lịch vừa đặt ngay.
+      setAppointments((current) => [appointment, ...current]);
+      setReason("");
+      setAttachmentUrl("");
+      setSelectedSlotKey("");
+
+      // Tải lại slot để slot vừa đặt chuyển sang trạng thái bận.
+      await fetchSlots(selectedDoctor.user_id);
+      toast.success("Đặt lịch khám thành công, đang chờ bác sĩ xác nhận.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể đặt lịch, vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /**
+   * Hủy một lịch hẹn còn chờ hoặc đã xác nhận.
+   * Hàm gọi API status và cập nhật lại state local.
+   */
+  const handleCancelAppointment = async (appointmentId) => {
+    try {
+      // Gửi lý do ngắn để bác sĩ nhận notification có ngữ cảnh.
+      const result = await updateAppointmentStatus(appointmentId, "CANCELLED", "Bệnh nhân hủy lịch từ ứng dụng.");
+
+      // Cập nhật chính lịch hẹn vừa hủy trong danh sách hiện tại.
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment.appointment_id === appointmentId ? result.appointment : appointment,
+        ),
+      );
+
+      // Tải lại slot để slot đã hủy có thể mở lại nếu backend cho phép.
+      if (doctorId) await fetchSlots(doctorId);
+      toast.success("Đã hủy lịch hẹn.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể hủy lịch hẹn.");
+    }
+  };
+
+  if (loading) {
+    return <div className="py-16 text-center text-sm font-bold text-slate-400">Đang tải chức năng đặt lịch...</div>;
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 pb-10">
+      <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-primary">Đặt lịch khám</p>
+            <h1 className="mt-1 text-2xl font-black text-slate-900">Chọn bác sĩ và khung giờ phù hợp</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-500">
+              Khung giờ được lấy từ lịch rảnh bác sĩ đã cấu hình và tự động khóa khi có lịch trùng.
+            </p>
+          </div>
+          <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">
+            {upcomingAppointments.length} lịch đang theo dõi
+          </div>
         </div>
       </section>
 
-      <div className="grid gap-8 lg:grid-cols-12">
-        <div className="space-y-8 lg:col-span-7">
-          {currentStep === 1 && (
-          <>
-          <section>
-            <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-on-surface">
-              <span className="material-symbols-outlined text-primary">medical_information</span>
-              Chọn chuyên khoa
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {appointments.specialties.map((specialty) => {
-                const active = specialty.id === specialtyId;
-
-                return (
-                  <button
-                    key={specialty.id}
-                    className={[
-                      "group flex flex-col items-center gap-3 rounded-lg border bg-surface-container-lowest p-5 transition-all",
-                      active ? "border-primary bg-primary/5" : "border-surface-variant hover:border-primary",
-                    ].join(" ")}
-                    onClick={() => setSpecialtyId(specialty.id)}
-                    type="button"
-                  >
-                    <div
-                      className={[
-                        "flex h-14 w-14 items-center justify-center rounded-full transition-colors",
-                        active ? "bg-primary text-white" : "bg-primary-fixed-dim text-primary",
-                      ].join(" ")}
-                    >
-                      <span className="material-symbols-outlined text-2xl">{specialty.icon}</span>
-                    </div>
-                    <span className="text-sm font-bold text-on-surface-variant">{specialty.label}</span>
-                  </button>
-                );
-              })}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">clinical_notes</span>
+              <h2 className="text-lg font-black text-slate-800">1. Chọn bác sĩ</h2>
             </div>
-          </section>
 
-          <section>
-            <div className="mb-4 flex items-end justify-between">
-              <h2 className="text-xl font-bold text-on-surface">Bác sĩ gợi ý</h2>
-              <span className="text-sm font-bold text-primary">Tất cả</span>
-            </div>
-            <div className="space-y-3">
-              {suggestedDoctors.map((doctor, index) => {
-                const selected = doctor.id === doctorId;
-
-                return (
-                  <div
-                    key={doctor.id}
-                    className={[
-                      "group flex flex-col items-start gap-5 rounded-lg border bg-surface-container-lowest p-5 transition-all md:flex-row md:items-center",
-                      selected ? "border-primary/40 shadow-sm" : "border-surface-variant hover:border-primary/30",
-                    ].join(" ")}
-                  >
-                    <ImageWithFallback alt={doctor.name} className="h-20 w-20 shrink-0 rounded-lg object-cover" src={doctor.avatar} />
-                    <div className="min-w-0 flex-grow">
-                      <div className="mb-1 flex items-center gap-2">
-                        {index === 0 && (
-                          <span className="rounded bg-primary-fixed px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                            ƯU TÚ
-                          </span>
-                        )}
-                        <h3 className="text-lg font-bold leading-6 text-on-surface">{doctor.name}</h3>
-                      </div>
-                      <p className="mb-2 text-sm text-on-surface-variant">
-                        {doctor.title} • {doctor.experienceYears} năm kinh nghiệm
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <RatingStars rating={doctor.rating} />
-                        <span className="text-sm font-bold text-secondary">
-                          {doctor.rating} ({doctor.reviewCount})
-                        </span>
-                      </div>
+            {doctors.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+                Chưa có bác sĩ hoạt động trong hệ thống.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-800">Bác sĩ đang đồng hành</p>
+                      <p className="text-xs font-medium text-slate-500">Đặt lịch với bác sĩ đã thuê sẽ được tính miễn phí.</p>
                     </div>
-                    <div className="flex w-full flex-col gap-2 md:w-auto md:shrink-0">
-                      <button
-                        className={[
-                          "rounded-lg px-6 py-2.5 text-sm font-bold whitespace-nowrap transition-colors",
-                          selected
-                            ? "bg-primary text-white"
-                            : "border border-outline-variant bg-surface-container-high text-on-surface-variant hover:border-primary/40",
-                        ].join(" ")}
-                        onClick={() => setDoctorId(doctor.id)}
-                        type="button"
-                      >
-                        Chọn bác sĩ
-                      </button>
-                      <Link
-                        className="rounded-lg border border-primary/35 px-6 py-2.5 text-center text-sm font-bold text-primary transition-colors hover:bg-primary/5"
-                        to={`/patient/doctors/${doctor.id}`}
-                      >
-                        Xem hồ sơ
-                      </Link>
-                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
+                      Miễn phí
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-          </>
-          )}
 
-          {currentStep === 2 && (
-          <section className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-on-surface">
-                <span className="material-symbols-outlined text-primary">calendar_month</span>
-                Chọn ngày khám
-              </h3>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar">
-                {appointments.slotDays.map((day) => {
-                  const active = day.id === dayId;
-                  return (
-                    <button
-                      key={day.id}
-                      className={[
-                        "flex h-20 w-16 flex-shrink-0 flex-col items-center justify-center rounded-lg border text-sm font-bold transition-all",
-                        active
-                          ? "border-primary bg-primary text-white"
-                          : "border-surface-variant bg-surface-container-lowest hover:border-primary",
-                      ].join(" ")}
-                      onClick={() => setDayId(day.id)}
-                      type="button"
-                    >
-                      <span>{day.label}</span>
-                      <span className="text-2xl">{day.day}</span>
-                    </button>
-                  );
-                })}
+                  {hiredDoctors.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-emerald-100 bg-emerald-50/40 p-5 text-sm text-emerald-800">
+                      <p className="font-black">Bạn chưa có bác sĩ đang đồng hành.</p>
+                      <p className="mt-1 text-xs font-medium">Bạn vẫn có thể đặt lịch với bác sĩ ngoài ở phần gợi ý bên dưới.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {hiredDoctors.map((doctor) => (
+                        <DoctorChoiceCard
+                          key={doctor.user_id}
+                          doctor={doctor}
+                          selected={doctor.user_id === doctorId}
+                          variant="hired"
+                          onSelect={setDoctorId}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-800">Gợi ý các bác sĩ phù hợp</p>
+                      <p className="text-xs font-medium text-slate-500">Bác sĩ ngoài có phí theo mức bác sĩ đã thiết lập.</p>
+                    </div>
+                    <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-black text-primary">
+                      Có phí
+                    </span>
+                  </div>
+
+                  {suggestedDoctors.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-sm font-bold text-slate-400">
+                      Chưa có bác sĩ ngoài phù hợp để gợi ý.
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {suggestedDoctors.map((doctor) => (
+                        <DoctorChoiceCard
+                          key={doctor.user_id}
+                          doctor={doctor}
+                          selected={doctor.user_id === doctorId}
+                          variant="external"
+                          onSelect={setDoctorId}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">event_available</span>
+                <h2 className="text-lg font-black text-slate-800">2. Chọn khung giờ</h2>
+              </div>
+              {slotsLoading && <span className="text-xs font-bold text-slate-400">Đang tải slot...</span>}
             </div>
 
-            <div>
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-on-surface">
-                <span className="material-symbols-outlined text-primary">schedule</span>
-                Chọn giờ
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {appointments.timeSlots.map((slot) => {
-                  const active = slot.id === timeId;
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {slots.length === 0 && !slotsLoading ? (
+                <div className="col-span-full rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+                  Bác sĩ chưa cấu hình lịch rảnh trong 14 ngày tới.
+                </div>
+              ) : (
+                slots.slice(0, 42).map((slot) => {
+                  const key = `${slot.start_time}|${slot.end_time}`;
+                  const selected = key === selectedSlotKey;
+
                   return (
                     <button
-                      key={slot.id}
-                      className={[
-                        "rounded-lg py-3 text-sm transition-all",
-                        !slot.available
-                          ? "cursor-not-allowed border border-surface-variant bg-surface-container-high text-outline opacity-50"
-                          : active
-                            ? "border-2 border-primary bg-primary/5 font-bold text-primary"
-                            : "border border-surface-variant bg-surface-container-lowest text-on-surface hover:border-primary",
-                      ].join(" ")}
+                      key={key}
+                      type="button"
                       disabled={!slot.available}
-                      onClick={() => setTimeId(slot.id)}
-                      type="button"
+                      onClick={() => setSelectedSlotKey(key)}
+                      className={[
+                        "rounded-xl border p-3 text-left transition-all",
+                        selected
+                          ? "border-primary bg-primary text-white shadow-md"
+                          : slot.available
+                            ? "border-slate-100 bg-white hover:border-primary/40 hover:bg-sky-50"
+                            : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300",
+                      ].join(" ")}
                     >
-                      {slot.label}
+                      <p className="text-xs font-black">{formatDateTime(slot.start_time, { dateStyle: "medium", timeStyle: "short" })}</p>
+                      <p className={selected ? "mt-1 text-xs text-white/80" : "mt-1 text-xs text-slate-500"}>{slot.label}</p>
+                      {!slot.available && <p className="mt-1 text-[10px] font-bold uppercase">{slot.unavailable_reason}</p>}
                     </button>
                   );
-                })}
-              </div>
+                })
+              )}
             </div>
           </section>
-          )}
 
-          {currentStep === 3 && (
-          <section className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-on-surface">
-              <span className="material-symbols-outlined text-primary">description</span>
-              Thông tin cuộc hẹn
-            </h3>
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">assignment</span>
+              <h2 className="text-lg font-black text-slate-800">3. Thông tin cuộc hẹn</h2>
+            </div>
+
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-bold text-on-surface">Lý do khám</label>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">Hình thức khám</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: "ONLINE", label: "Online", icon: "videocam" },
+                    { id: "OFFLINE", label: "Trực tiếp", icon: "local_hospital" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setAppointmentType(item.id)}
+                      className={[
+                        "flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-black",
+                        appointmentType === item.id ? "border-primary bg-primary/5 text-primary" : "border-slate-100 text-slate-500",
+                      ].join(" ")}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">Lý do khám *</label>
                 <textarea
-                  className="min-h-28 w-full rounded-xl border-none bg-surface-container-high p-4 focus:ring-2 focus:ring-primary/20"
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
+                  className="min-h-28 w-full rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm outline-none focus:border-primary"
+                  placeholder="Mô tả triệu chứng, nhu cầu tư vấn hoặc nội dung tái khám..."
                 />
               </div>
+
               <div>
-                <label className="mb-2 block text-sm font-bold text-on-surface">Hình ảnh (không bắt buộc)</label>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">Tài liệu đính kèm</label>
                 <input
-                  className="w-full rounded-xl border-none bg-surface-container-high p-4 focus:ring-2 focus:ring-primary/20"
-                  placeholder="Dán URL ảnh xét nghiệm hoặc tài liệu"
-                  type="text"
-                  value={attachment}
-                  onChange={(event) => setAttachment(event.target.value)}
+                  value={attachmentUrl}
+                  onChange={(event) => setAttachmentUrl(event.target.value)}
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-primary"
+                  placeholder="Dán URL ảnh xét nghiệm hoặc hồ sơ liên quan"
                 />
               </div>
+
+              <button
+                type="button"
+                disabled={!canSubmit}
+                onClick={handleCreateAppointment}
+                className={[
+                  "flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black text-white transition-colors",
+                  canSubmit ? "bg-primary hover:bg-primary/90" : "cursor-not-allowed bg-slate-300",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-[18px]">send</span>
+                {submitting ? "Đang gửi yêu cầu..." : "Gửi yêu cầu đặt lịch"}
+              </button>
             </div>
-          </section>
-          )}
-
-          <section className="flex items-center justify-between rounded-2xl border border-surface-variant bg-surface-container-lowest p-4">
-            <button
-              className={[
-                "rounded-xl px-5 py-2.5 text-sm font-bold transition-colors",
-                currentStep > 1
-                  ? "border border-outline-variant bg-white text-on-surface hover:bg-slate-50"
-                  : "cursor-not-allowed border border-surface-container-high bg-surface-container-high text-outline",
-              ].join(" ")}
-              onClick={handlePreviousStep}
-              type="button"
-            >
-              Quay lại
-            </button>
-
-            {currentStep < 3 ? (
-              <button
-                className={[
-                  "rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-colors",
-                  canMoveNext ? "bg-primary hover:bg-primary/90" : "cursor-not-allowed bg-slate-300",
-                ].join(" ")}
-                onClick={handleNextStep}
-                type="button"
-              >
-                Tiếp tục bước {currentStep + 1}
-              </button>
-            ) : (
-              <button
-                className={[
-                  "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-colors",
-                  canMoveNext ? "bg-primary hover:bg-primary-container" : "cursor-not-allowed bg-slate-300",
-                ].join(" ")}
-                onClick={handleConfirmAppointment}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-base">check_circle</span>
-                Xác nhận lịch khám
-              </button>
-            )}
           </section>
         </div>
 
-        <aside className="space-y-6 lg:col-span-5">
-          <div className="rounded-[2rem] bg-primary-container p-8 text-white shadow-xl shadow-primary/20">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-fixed-dim">Đặt lịch</p>
-            <h2 className="mt-3 text-2xl font-bold">Tóm tắt cuộc hẹn</h2>
-            {selectedDoctor && (
-              <div className="mt-6 rounded-2xl bg-white/10 p-4">
-                <div className="flex items-center gap-4">
-                  <ImageWithFallback alt={selectedDoctor.name} className="h-16 w-16 rounded-2xl object-cover" src={selectedDoctor.avatar} />
-                  <div>
-                    <h3 className="font-bold">{selectedDoctor.name}</h3>
-                    <p className="text-sm opacity-90">{selectedDoctor.title}</p>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2 text-sm">
-                  <p>Ngày khám: {appointments.slotDays.find((day) => day.id === dayId)?.day}/04/2026</p>
-                  <p>Khung giờ: {appointments.timeSlots.find((slot) => slot.id === timeId)?.label}</p>
-                  <p>Lý do: {reason}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-bold text-on-surface">Bác sĩ đang đồng hành</h3>
-            <div className="space-y-4">
-              {doctorProfiles.slice(0, 2).map((doctor) => (
-                <div key={doctor.id} className="flex items-center gap-4 rounded-2xl bg-surface-container-low p-4">
-                  <ImageWithFallback alt={doctor.name} className="h-14 w-14 rounded-xl object-cover" src={doctor.avatar} />
-                  <div>
-                    <p className="font-bold text-on-surface">{doctor.name}</p>
-                    <p className="text-sm text-on-surface-variant">{doctor.specialty}</p>
-                  </div>
-                </div>
-              ))}
+        <aside className="space-y-6 lg:col-span-4">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-black uppercase tracking-widest text-primary">Tóm tắt</p>
+            <h2 className="mt-1 text-xl font-black text-slate-900">Lịch đang chọn</h2>
+            <div className="mt-4 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
+              <p><span className="font-bold text-slate-500">Bác sĩ:</span> {selectedDoctor?.name || "Chưa chọn"}</p>
+              <p><span className="font-bold text-slate-500">Thời gian:</span> {selectedSlot ? formatDateTime(selectedSlot.start_time) : "Chưa chọn"}</p>
+              <p><span className="font-bold text-slate-500">Hình thức:</span> {appointmentType === "ONLINE" ? "Online" : "Trực tiếp"}</p>
+              <p><span className="font-bold text-slate-500">Phí:</span> {formatFee(getDoctorBookingFee(selectedDoctor))}</p>
             </div>
-          </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-800">Lịch sắp tới</h2>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">{upcomingAppointments.length}</span>
+            </div>
+
+            <div className="space-y-3">
+              {upcomingAppointments.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">
+                  Chưa có lịch hẹn đang hoạt động.
+                </div>
+              ) : (
+                upcomingAppointments.slice(0, 6).map((appointment) => (
+                  <div key={appointment.appointment_id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-black text-slate-800">{appointment.doctor?.name || "Bác sĩ"}</p>
+                        <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(appointment.start_time)}</p>
+                      </div>
+                      <AppointmentStatusBadge status={appointment.status} />
+                    </div>
+                    <p className="mt-3 line-clamp-2 text-xs text-slate-500">{appointment.reason}</p>
+                    {appointment.status !== "CANCELLED" && appointment.status !== "COMPLETED" && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelAppointment(appointment.appointment_id)}
+                        className="mt-3 rounded-lg border border-rose-100 px-3 py-2 text-xs font-black text-rose-600 hover:bg-rose-50"
+                      >
+                        Hủy lịch
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </aside>
       </div>
     </div>

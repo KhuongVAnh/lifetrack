@@ -1,6 +1,6 @@
 ﻿// Controller xử lý chat AI và chat trực tiếp giữa bệnh nhân với bác sĩ.
 const axios = require("axios")
-const { Prisma, AccessRole, AccessStatus, UserRole } = require("@prisma/client")
+const { Prisma, DoctorHireStatus, UserRole } = require("@prisma/client")
 const prisma = require("../prismaClient")
 const { enqueueDirectMessageNotification } = require("../services/directMessageNotificationQueueService")
 
@@ -132,18 +132,17 @@ const resolveDirectPair = async (currentUserId, otherUserId) => {
     throw error
   }
 
-  // Chỉ cho phép chat khi bác sĩ đã được bệnh nhân cấp quyền accepted.
-  const permission = await prisma.accessPermission.findFirst({
+  // Chỉ cho phép chat khi bệnh nhân đã thuê bác sĩ và bác sĩ đã duyệt active.
+  const hire = await prisma.doctorHire.findFirst({
     where: {
       patient_id: patientId,
-      viewer_id: doctorId,
-      role: AccessRole.BAC_SI,
-      status: AccessStatus.accepted,
+      doctor_id: doctorId,
+      status: DoctorHireStatus.ACTIVE,
     },
-    select: { permission_id: true },
+    select: { hire_id: true },
   })
 
-  if (!permission) {
+  if (!hire) {
     const error = new Error("ACCESS_NOT_GRANTED")
     error.status = 403
     throw error
@@ -252,7 +251,7 @@ const mapDirectError = (error, res) => {
     return res.status(403).json({ message: "Chỉ hỗ trợ chat giữa bệnh nhân và bác sĩ" })
   }
   if (error.message === "ACCESS_NOT_GRANTED") {
-    return res.status(403).json({ message: "Bác sĩ chưa được bệnh nhân cấp quyền truy cập" })
+    return res.status(403).json({ message: "Bệnh nhân chưa thuê bác sĩ hoặc yêu cầu thuê chưa được duyệt" })
   }
 
   const statusCode = error.status || 500
@@ -381,14 +380,13 @@ const getDirectChatContacts = async (req, res) => {
     let contacts = []
 
     if (me.role === UserRole.BENH_NHAN) {
-      const accessList = await prisma.accessPermission.findMany({
+      const hireList = await prisma.doctorHire.findMany({
         where: {
           patient_id: userId,
-          role: AccessRole.BAC_SI,
-          status: AccessStatus.accepted,
+          status: DoctorHireStatus.ACTIVE,
         },
         include: {
-          viewer: {
+          doctor: {
             select: {
               user_id: true,
               name: true,
@@ -399,13 +397,12 @@ const getDirectChatContacts = async (req, res) => {
         },
       })
 
-      contacts = accessList.map((item) => item.viewer).filter(Boolean)
+      contacts = hireList.map((item) => item.doctor).filter(Boolean)
     } else {
-      const accessList = await prisma.accessPermission.findMany({
+      const hireList = await prisma.doctorHire.findMany({
         where: {
-          viewer_id: userId,
-          role: AccessRole.BAC_SI,
-          status: AccessStatus.accepted,
+          doctor_id: userId,
+          status: DoctorHireStatus.ACTIVE,
         },
         include: {
           patient: {
@@ -419,7 +416,7 @@ const getDirectChatContacts = async (req, res) => {
         },
       })
 
-      contacts = accessList.map((item) => item.patient).filter(Boolean)
+      contacts = hireList.map((item) => item.patient).filter(Boolean)
     }
 
     const contactSummaries = await buildDirectContactSummaries(userId, contacts)

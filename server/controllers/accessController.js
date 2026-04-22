@@ -26,6 +26,13 @@ exports.shareAccess = async (req, res) => {
         .json({ error: "Không tìm thấy người dùng theo email này" })
     }
 
+    // Bác sĩ không còn nhận quyền qua luồng chia sẻ hồ sơ; bệnh nhân phải gửi yêu cầu thuê bác sĩ.
+    if (toPrismaAccessRole(role) === "BAC_SI") {
+      return res.status(400).json({
+        error: "Bác sĩ cần được thuê qua chức năng Thuê bác sĩ, không dùng chia sẻ hồ sơ",
+      })
+    }
+
     const existing = await prisma.accessPermission.findFirst({
       where: { patient_id: user_id, viewer_id: viewer.user_id },
     })

@@ -6,7 +6,7 @@
  * tương ứng để đảm bảo dữ liệu mới sẽ được truy vấn từ database khi cần thiết
  */
 const prisma = require("../prismaClient")
-const { AccessStatus } = require("@prisma/client")
+const { getTelemetryRecipientIds } = require("./patientDoctorAccessService")
 
 // deviceCache: lưu trữ thông tin thiết bị theo serial_number để tránh phải truy vấn database nhiều lần trong quá trình xử lý telemetry data
 // deviceObject: { device_id, user_id, serial_number, status }
@@ -71,15 +71,8 @@ const getRecipientIdsByPatientCached = async (patientId) => {
     const cached = getValidCachedValue(recipientCache, key)
     if (cached) return cached   
 
-    const viewers = await prisma.accessPermission.findMany({
-        where: {
-            patient_id: key,
-            status: AccessStatus.accepted,
-        },
-        select: { viewer_id: true },
-    })
-
-    const recipients = [key, ...viewers.map((item) => item.viewer_id)]
+    // Người nhận được tính từ quyền người nhà legacy và quyền ECG của bác sĩ thuê active.
+    const recipients = await getTelemetryRecipientIds(key)
     return setCachedValue(recipientCache, key, recipients, RECIPIENT_TTL_MS)
 }
 

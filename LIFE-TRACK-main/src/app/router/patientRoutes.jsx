@@ -41,6 +41,10 @@ export const patientRoutes = [
                 lazy: lazyPage(() => import("@/widgets/page-views/AppointmentsPage"), "AppointmentsPage"),
               },
               {
+                path: "medications",
+                lazy: lazyPage(() => import("@/widgets/page-views/MedicationsPage"), "MedicationsPage"),
+              },
+              {
                 path: "phr",
                 lazy: lazyPage(() => import("@/widgets/page-views/phr/PatientPhrShell"), "PatientPhrShell"),
                 children: [

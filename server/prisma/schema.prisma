@@ -41,6 +41,42 @@ enum NotificationType {
   ACCESS_RESPONSE
   ACCESS_REVOKE
   DIRECT_MESSAGE
+  MEDICATION_REMINDER
+  APPOINTMENT_UPDATE
+}
+
+enum AppointmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum AppointmentType {
+  ONLINE
+  OFFLINE
+}
+
+enum PaymentStatus {
+  FREE
+  PENDING
+  PAID
+}
+
+enum DoctorHireStatus {
+  PENDING_DOCTOR_APPROVAL
+  ACTIVE
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum MedicationLogStatus {
+  PENDING
+  TAKEN
+  MISSED
+  SKIPPED
 }
 
 model User {
@@ -52,6 +88,8 @@ model User {
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now()) @map("created_at")
   updated_at    DateTime @updatedAt @map("updated_at")
+
+  consultation_fee Int? @default(0)
 
   devices                Device[]
   alerts                 Alert[]
@@ -68,6 +106,16 @@ model User {
   notificationsAuthored  Notification[]          @relation("NotificationActor")
   notificationRecipients NotificationRecipient[]
   refreshTokens          RefreshToken[]
+  appointmentsAsPatient  Appointment[]           @relation("PatientAppointments")
+  appointmentsAsDoctor   Appointment[]           @relation("DoctorAppointments")
+  medicationPlans        MedicationPlan[]         @relation("PatientMedicationPlans")
+  medicationPlansAsDoctor MedicationPlan[]        @relation("DoctorMedicationPlans")
+  medicationLogs         MedicationLog[]
+  doctorAvailabilities   DoctorAvailability[]     @relation("DoctorAvailabilities")
+  doctorTimeOffs         DoctorTimeOff[]          @relation("DoctorTimeOffs")
+  doctorProfile          DoctorProfile?           @relation("DoctorProfile")
+  doctorHiresAsPatient   DoctorHire[]             @relation("PatientDoctorHires")
+  doctorHiresAsDoctor    DoctorHire[]             @relation("DoctorDoctorHires")
 
   @@map("users")
 }
@@ -178,6 +226,51 @@ model AccessPermission {
   @@map("access_permissions")
 }
 
+model DoctorProfile {
+  profile_id   Int      @id @default(autoincrement())
+  doctor_id    Int      @unique
+  specialty    String?  @db.VarChar(255)
+  title        String?  @db.VarChar(255)
+  hospital     String?  @db.VarChar(255)
+  location     String?  @db.VarChar(255)
+  bio          String?  @db.Text
+  avatar_url   String?  @db.VarChar(500)
+  hire_price   Int      @default(0)
+  is_listed    Boolean  @default(true)
+  created_at   DateTime @default(now()) @map("created_at")
+  updated_at   DateTime @updatedAt @map("updated_at")
+
+  doctor User @relation("DoctorProfile", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+
+  @@index([is_listed])
+  @@map("doctor_profiles")
+}
+
+model DoctorHire {
+  hire_id              Int              @id @default(autoincrement())
+  patient_id           Int
+  doctor_id            Int
+  status               DoctorHireStatus @default(PENDING_DOCTOR_APPROVAL)
+  price_snapshot       Int              @default(0)
+  can_view_ehr         Boolean          @default(false)
+  can_view_medications Boolean          @default(false)
+  can_view_ecg         Boolean          @default(false)
+  requested_at         DateTime         @default(now())
+  approved_at          DateTime?
+  rejected_at          DateTime?
+  cancelled_at         DateTime?
+  created_at           DateTime         @default(now()) @map("created_at")
+  updated_at           DateTime         @updatedAt @map("updated_at")
+
+  patient User @relation("PatientDoctorHires", fields: [patient_id], references: [user_id], onDelete: Cascade)
+  doctor  User @relation("DoctorDoctorHires", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([patient_id, doctor_id])
+  @@index([doctor_id, status])
+  @@index([patient_id, status])
+  @@map("doctor_hires")
+}
+
 model PhrOverview {
   overview_id      Int      @id @default(autoincrement())
   user_id          Int      @unique
@@ -267,4 +360,122 @@ model NotificationRecipient {
   @@index([user_id, is_read, created_at])
   @@index([notification_id])
   @@map("notification_recipients")
+}
+
+model Appointment {
+  appointment_id Int               @id @default(autoincrement())
+  patient_id     Int
+  doctor_id      Int
+  
+  appointment_date DateTime        
+  start_time     DateTime          
+  end_time       DateTime          
+  
+  status         AppointmentStatus @default(PENDING)
+  type           AppointmentType
+  reason         String            @db.Text
+  patient_attachment_url String?   @db.VarChar(500)
+  
+  meeting_url    String?           @db.VarChar(500) 
+  doctor_note    String?           @db.Text
+  status_reason  String?           @db.Text
+  
+  fee            Int               @default(0)      
+  payment_status PaymentStatus     @default(FREE)
+  
+  created_at     DateTime          @default(now()) @map("created_at")
+  updated_at     DateTime          @updatedAt @map("updated_at")
+
+  patient User @relation("PatientAppointments", fields: [patient_id], references: [user_id], onDelete: Cascade)
+  doctor  User @relation("DoctorAppointments", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+
+  @@index([doctor_id, start_time, end_time])
+  @@index([patient_id, start_time])
+  @@index([status, start_time])
+  @@map("appointments")
+}
+
+model DoctorAvailability {
+  availability_id Int      @id @default(autoincrement())
+  doctor_id       Int
+  day_of_week     Int
+  start_time      String   @db.VarChar(5)
+  end_time        String   @db.VarChar(5)
+  slot_minutes    Int      @default(30)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @map("created_at")
+  updated_at      DateTime @updatedAt @map("updated_at")
+
+  doctor User @relation("DoctorAvailabilities", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+
+  @@index([doctor_id, day_of_week, is_active])
+  @@map("doctor_availabilities")
+}
+
+model DoctorTimeOff {
+  time_off_id Int      @id @default(autoincrement())
+  doctor_id   Int
+  start_time  DateTime
+  end_time    DateTime
+  reason      String?  @db.Text
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+
+  doctor User @relation("DoctorTimeOffs", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+
+  @@index([doctor_id, start_time, end_time])
+  @@map("doctor_time_offs")
+}
+
+model MedicationPlan {
+  plan_id    Int          @id @default(autoincrement())
+  user_id    Int
+  doctor_id  Int?         
+  title      String       
+  start_date DateTime
+  end_date   DateTime?
+  notes      String?      @db.Text
+  is_active  Boolean      @default(true)
+  
+  created_at DateTime     @default(now()) @map("created_at")
+  updated_at DateTime     @updatedAt @map("updated_at")
+
+  user        User         @relation("PatientMedicationPlans", fields: [user_id], references: [user_id], onDelete: Cascade)
+  doctor      User?        @relation("DoctorMedicationPlans", fields: [doctor_id], references: [user_id], onDelete: SetNull)
+  medications Medication[]
+
+  @@index([user_id, is_active, start_date])
+  @@index([doctor_id])
+  @@map("medication_plans")
+}
+
+model Medication {
+  medication_id Int      @id @default(autoincrement())
+  plan_id       Int
+  name          String   
+  dosage        String   
+  times         Json     
+  
+  plan MedicationPlan  @relation(fields: [plan_id], references: [plan_id], onDelete: Cascade)
+  logs MedicationLog[]
+
+  @@map("medications")
+}
+
+model MedicationLog {
+  log_id         Int                 @id @default(autoincrement())
+  user_id        Int
+  medication_id  Int
+  scheduled_time DateTime            
+  taken_at       DateTime?           
+  reminded_at    DateTime?
+  status         MedicationLogStatus @default(PENDING)
+
+  user       User       @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  medication Medication @relation(fields: [medication_id], references: [medication_id], onDelete: Cascade)
+
+  @@unique([medication_id, scheduled_time]) 
+  @@index([user_id, scheduled_time])
+  @@index([status, scheduled_time])
+  @@map("medication_logs")
 }

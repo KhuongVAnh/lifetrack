@@ -1130,8 +1130,47 @@ const doctorProfileDeepContent = {
   },
 };
 
+const doctorProfileImageOverrides = {
+  "nguyen-van-minh": {
+    avatar: "https://images.pexels.com/photos/5452298/pexels-photo-5452298.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "le-minh-tam": {
+    avatar: "https://images.pexels.com/photos/5327656/pexels-photo-5327656.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7088530/pexels-photo-7088530.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "nguyen-thuy-chi": {
+    avatar: "https://images.pexels.com/photos/5214958/pexels-photo-5214958.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7579831/pexels-photo-7579831.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "pham-minh-ngoc": {
+    avatar: "https://images.pexels.com/photos/5998467/pexels-photo-5998467.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7089020/pexels-photo-7089020.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "tran-thi-phuong-lan": {
+    avatar: "https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7089401/pexels-photo-7089401.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "tran-quoc-anh": {
+    avatar: "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7089020/pexels-photo-7089020.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "lam-duc-huy": {
+    avatar: "https://images.pexels.com/photos/8460158/pexels-photo-8460158.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/7088530/pexels-photo-7088530.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+  "vu-thanh-mai": {
+    avatar: "https://images.pexels.com/photos/32254667/pexels-photo-32254667.jpeg?auto=compress&cs=tinysrgb&w=900",
+    cover: "https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  },
+};
+
 doctorProfiles.forEach((doctor) => {
-  Object.assign(doctor, doctorProfileDeepContent[doctor.id] ?? {});
+  Object.assign(
+    doctor,
+    doctorProfileDeepContent[doctor.id] ?? {},
+    doctorProfileImageOverrides[doctor.id] ?? {},
+  );
 });
 
 export const hiredDoctorIds = ["le-minh-tam", "nguyen-thuy-chi"];

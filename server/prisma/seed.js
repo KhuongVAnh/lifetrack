@@ -5,6 +5,7 @@ const {
   AccessRole,
   AccessStatus,
   ChatRole,
+  DoctorHireStatus,
   NotificationType,
 } = require("@prisma/client")
 const { hashPass } = require("../services/authService")
@@ -30,6 +31,8 @@ async function main() {
   await prisma.device.deleteMany()
   await prisma.report.deleteMany()
   await prisma.chatLog.deleteMany()
+  await prisma.doctorHire.deleteMany()
+  await prisma.doctorProfile.deleteMany()
   await prisma.accessPermission.deleteMany()
   await prisma.medicalVisit.deleteMany()
   await prisma.phrOverview.deleteMany()
@@ -37,8 +40,8 @@ async function main() {
 
   const commonPasswordHash = await hashPass("123456")
 
-  // Tạo người dùng mẫu với tên tiếng Việt có dấu để UI nhìn tự nhiên hơn.
-  const patient = await prisma.user.create({
+  // ========== Tạo gia đình 4 thành viên ==========
+  const primaryPatient = await prisma.user.create({
     data: {
       name: "Nguyễn Văn An",
       email: "patient@example.com",
@@ -49,18 +52,29 @@ async function main() {
     },
   })
 
-  const doctor = await prisma.user.create({
+  const spouse = await prisma.user.create({
     data: {
-      name: "BS. Trần Thị Mai",
-      email: "doctor@example.com",
+      name: "Nguyễn Thị Linh",
+      email: "spouse@example.com",
       password_hash: commonPasswordHash,
-      role: UserRole.BAC_SI,
+      role: UserRole.BENH_NHAN,
       is_active: true,
-      created_at: toDate("2025-10-22T02:30:00.000Z"),
+      created_at: toDate("2025-11-15T10:30:00.000Z"),
     },
   })
 
-  const family = await prisma.user.create({
+  const child = await prisma.user.create({
+    data: {
+      name: "Nguyễn Minh Anh",
+      email: "child@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BENH_NHAN,
+      is_active: true,
+      created_at: toDate("2025-12-01T09:00:00.000Z"),
+    },
+  })
+
+  const familyMember = await prisma.user.create({
     data: {
       name: "Lê Thị Hạnh",
       email: "family@example.com",
@@ -70,6 +84,86 @@ async function main() {
       created_at: toDate("2025-11-12T03:15:00.000Z"),
     },
   })
+
+  // ========== Tạo 2 bác sĩ cho gia đình ==========
+  const doctor1 = await prisma.user.create({
+    data: {
+      name: "BS. Trần Thị Mai",
+      email: "doctor1@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 350000,
+      created_at: toDate("2025-10-22T02:30:00.000Z"),
+    },
+  })
+
+  const doctor2 = await prisma.user.create({
+    data: {
+      name: "BS. Phạm Đình Hùng",
+      email: "doctor2@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 400000,
+      created_at: toDate("2025-10-15T08:00:00.000Z"),
+    },
+  })
+
+  // Hồ sơ bác sĩ 1: Tim mạch
+  await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor1.user_id,
+      specialty: "Tim mạch",
+      title: "Bác sĩ chuyên khoa Tim mạch",
+      hospital: "LifeTrack Care",
+      location: "Khám trực tuyến",
+      bio: "Theo dõi bệnh nhân tim mạch mạn tính, tư vấn kết quả ECG và tối ưu phác đồ điều trị tại nhà.",
+      hire_price: 1200000,
+      is_listed: true,
+    },
+  })
+
+  // Hồ sơ bác sĩ 2: Nội khoa tổng quát
+  await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor2.user_id,
+      specialty: "Nội khoa tổng quát",
+      title: "Bác sĩ chuyên khoa Nội khoa",
+      hospital: "Bệnh viện Đại học Y Dược",
+      location: "Khám trực tuyến",
+      bio: "Chuyên về chẩn đoán và điều trị các bệnh nội khoa phổ biến, theo dõi sức khỏe tổng quát.",
+      hire_price: 1000000,
+      is_listed: true,
+    },
+  })
+
+  // Lịch rảnh bác sĩ 1
+  await prisma.doctorAvailability.createMany({
+    data: [
+      { doctor_id: doctor1.user_id, day_of_week: 1, start_time: "08:00", end_time: "11:00", slot_minutes: 30 },
+      { doctor_id: doctor1.user_id, day_of_week: 2, start_time: "14:00", end_time: "17:00", slot_minutes: 30 },
+      { doctor_id: doctor1.user_id, day_of_week: 3, start_time: "08:00", end_time: "11:00", slot_minutes: 30 },
+      { doctor_id: doctor1.user_id, day_of_week: 4, start_time: "14:00", end_time: "17:00", slot_minutes: 30 },
+      { doctor_id: doctor1.user_id, day_of_week: 5, start_time: "08:00", end_time: "11:00", slot_minutes: 30 },
+    ],
+  })
+
+  // Lịch rảnh bác sĩ 2
+  await prisma.doctorAvailability.createMany({
+    data: [
+      { doctor_id: doctor2.user_id, day_of_week: 1, start_time: "09:00", end_time: "12:00", slot_minutes: 45 },
+      { doctor_id: doctor2.user_id, day_of_week: 2, start_time: "15:00", end_time: "18:00", slot_minutes: 45 },
+      { doctor_id: doctor2.user_id, day_of_week: 3, start_time: "09:00", end_time: "12:00", slot_minutes: 45 },
+      { doctor_id: doctor2.user_id, day_of_week: 5, start_time: "15:00", end_time: "18:00", slot_minutes: 45 },
+      { doctor_id: doctor2.user_id, day_of_week: 6, start_time: "10:00", end_time: "13:00", slot_minutes: 45 },
+    ],
+  })
+
+  // Sử dụng alias cho consistency
+  const patient = primaryPatient
+  const doctor = doctor1
+  const family = familyMember
 
   const admin = await prisma.user.create({
     data: {
@@ -91,10 +185,22 @@ async function main() {
     },
   })
 
+  // Thiết bị thứ hai cho vợ
+  const device2 = await prisma.device.create({
+    data: {
+      user_id: spouse.user_id,
+      serial_number: "SN-ECG-0002",
+      status: DeviceStatus.DANG_HOAT_DONG,
+      created_at: toDate("2025-11-20T09:00:00.000Z"),
+    },
+  })
+
   // Seed một chuỗi reading theo thời gian để mô phỏng hành trình theo dõi thực tế nhiều tháng.
   const seededReadings = []
   const readingInputs = [
+    // Patient - Reading baseline
     {
+      deviceId: device.device_id,
       key: "reading_baseline",
       timestamp: "2025-11-18T01:20:00.000Z",
       heart_rate: 72,
@@ -104,7 +210,9 @@ async function main() {
       ai_status: "DONE",
       ai_completed_at: "2025-11-18T01:20:08.000Z",
     },
+    // Patient - Reading stress
     {
+      deviceId: device.device_id,
       key: "reading_stress",
       timestamp: "2025-12-06T13:45:00.000Z",
       heart_rate: 96,
@@ -114,7 +222,9 @@ async function main() {
       ai_status: "DONE",
       ai_completed_at: "2025-12-06T13:45:09.000Z",
     },
+    // Patient - Reading PVC
     {
+      deviceId: device.device_id,
       key: "reading_pvc",
       timestamp: "2026-01-14T04:10:00.000Z",
       heart_rate: 104,
@@ -124,7 +234,9 @@ async function main() {
       ai_status: "DONE",
       ai_completed_at: "2026-01-14T04:10:10.000Z",
     },
+    // Patient - Reading followup
     {
+      deviceId: device.device_id,
       key: "reading_followup",
       timestamp: "2026-03-22T02:25:00.000Z",
       heart_rate: 78,
@@ -134,12 +246,60 @@ async function main() {
       ai_status: "DONE",
       ai_completed_at: "2026-03-22T02:25:06.000Z",
     },
+    // Patient - Recent reading April 2026
+    {
+      deviceId: device.device_id,
+      key: "reading_apr_2026",
+      timestamp: "2026-04-15T08:30:00.000Z",
+      heart_rate: 75,
+      ecg_signal: [0.01, 0.02, 0.03, 0.05, 0.08, 0.06, 0.02, 0.0, 0.01, 0.04, 0.09, 0.05, 0.01, -0.01, 0.02, 0.02],
+      abnormal_detected: false,
+      ai_result: "Bình thường",
+      ai_status: "DONE",
+      ai_completed_at: "2026-04-15T08:35:00.000Z",
+    },
+    // Spouse - Reading normal
+    {
+      deviceId: device2.device_id,
+      key: "reading_spouse_normal1",
+      timestamp: "2025-12-01T07:15:00.000Z",
+      heart_rate: 68,
+      ecg_signal: [0.0, 0.01, 0.02, 0.04, 0.07, 0.05, 0.02, 0.0, -0.01, 0.02, 0.06, 0.04, 0.01, 0.0, 0.01, 0.01],
+      abnormal_detected: false,
+      ai_result: "Bình thường",
+      ai_status: "DONE",
+      ai_completed_at: "2025-12-01T07:20:00.000Z",
+    },
+    // Spouse - Reading with mild irregularity
+    {
+      deviceId: device2.device_id,
+      key: "reading_spouse_irregular",
+      timestamp: "2026-01-25T14:40:00.000Z",
+      heart_rate: 88,
+      ecg_signal: [0.01, 0.03, 0.05, 0.08, 0.09, 0.06, 0.02, 0.01, 0.02, 0.05, 0.1, 0.06, 0.02, 0.0, 0.01, 0.02],
+      abnormal_detected: false,
+      ai_result: "Nhịp nhanh xoang nhẹ",
+      ai_status: "DONE",
+      ai_completed_at: "2026-01-25T14:45:00.000Z",
+    },
+    // Spouse - Recent reading
+    {
+      deviceId: device2.device_id,
+      key: "reading_spouse_apr_2026",
+      timestamp: "2026-04-18T09:00:00.000Z",
+      heart_rate: 72,
+      ecg_signal: [0.0, 0.02, 0.03, 0.05, 0.07, 0.05, 0.02, 0.0, 0.01, 0.04, 0.08, 0.04, 0.01, -0.01, 0.01, 0.02],
+      abnormal_detected: false,
+      ai_result: "Bình thường",
+      ai_status: "DONE",
+      ai_completed_at: "2026-04-18T09:05:00.000Z",
+    },
   ]
 
   for (const readingInput of readingInputs) {
     const createdReading = await prisma.reading.create({
       data: {
-        device_id: device.device_id,
+        device_id: readingInput.deviceId,
         timestamp: toDate(readingInput.timestamp),
         heart_rate: readingInput.heart_rate,
         ecg_signal: readingInput.ecg_signal,
@@ -193,22 +353,63 @@ async function main() {
         resolved: true,
         timestamp: toDate("2026-03-22T02:25:08.000Z"),
       },
+      {
+        user_id: spouse.user_id,
+        reading_id: readingMap.reading_spouse_irregular.reading_id,
+        alert_type: "TACHYCARDIA",
+        message: "Phát hiện nhịp tim tăng nhẹ. Bạn nên giảm căng thẳng và uống đủ nước.",
+        segment_start_sample: 80,
+        segment_end_sample: 120,
+        resolved: true,
+        timestamp: toDate("2026-01-25T14:50:00.000Z"),
+      },
     ],
   })
 
+  // Reports cho patient
   await prisma.report.createMany({
     data: [
       {
         user_id: patient.user_id,
-        doctor_id: doctor.user_id,
+        doctor_id: doctor1.user_id,
         summary: "Đợt khám tháng 01/2026 ghi nhận ngoại tâm thu thất rải rác, chưa có chỉ định nhập viện. Khuyến nghị giảm cà phê, ngủ đúng giờ và tái khám sau 2 tuần.",
         created_at: toDate("2026-01-15T03:00:00.000Z"),
       },
       {
         user_id: patient.user_id,
-        doctor_id: doctor.user_id,
+        doctor_id: doctor1.user_id,
         summary: "Tái khám tháng 03/2026 cho thấy tần suất hồi hộp giảm rõ, Holter không ghi nhận cơn nguy hiểm kéo dài. Tiếp tục theo dõi định kỳ mỗi 3 tháng.",
         created_at: toDate("2026-03-22T04:30:00.000Z"),
+      },
+      {
+        user_id: patient.user_id,
+        doctor_id: doctor2.user_id,
+        summary: "Khám sức khỏe tổng quát 04/2026: chỉ số huyết áp bình thường (120/80), cholesterol nâng cao. Cần kiểm tra máu định kỳ.",
+        created_at: toDate("2026-04-20T02:00:00.000Z"),
+      },
+    ],
+  })
+
+  // Reports cho spouse
+  await prisma.report.createMany({
+    data: [
+      {
+        user_id: spouse.user_id,
+        doctor_id: doctor2.user_id,
+        summary: "Khám sức khỏe tổng quát 12/2025: huyết áp bình thường, không phát hiện bất thường. Tiếp tục duy trì lối sống lành mạnh.",
+        created_at: toDate("2025-12-05T10:00:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        doctor_id: doctor1.user_id,
+        summary: "Khám ECG tháng 01/2026: nhịp tim tăng nhẹ do stress công việc. Khuyến cáo giảm căng thẳng, tập thể dục đều đặn.",
+        created_at: toDate("2026-02-01T08:30:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        doctor_id: doctor2.user_id,
+        summary: "Tái khám 04/2026: tình trạng sức khỏe ổn định. Kết quả xét nghiệm máu trong bình thường. Tiếp tục tái khám sau 6 tháng.",
+        created_at: toDate("2026-04-22T14:00:00.000Z"),
       },
     ],
   })
@@ -239,18 +440,72 @@ async function main() {
         message: "Đó là tín hiệu tích cực. Bạn nên tiếp tục ngủ đủ giấc, hạn chế chất kích thích và ghi lại thời điểm xuất hiện triệu chứng để bác sĩ dễ đánh giá khi tái khám.",
         timestamp: toDate("2026-03-22T05:00:12.000Z"),
       },
+      {
+        user_id: patient.user_id,
+        role: ChatRole.user,
+        message: "Có thể lạc nhịp là do căng thẳng công việc không?",
+        timestamp: toDate("2026-04-10T07:30:00.000Z"),
+      },
+      {
+        user_id: patient.user_id,
+        role: ChatRole.bot,
+        message: "Đúng vậy, căng thẳng là một trong những nguyên nhân chính gây lạc nhịp. Bạn nên thực hành các kỹ thuật thả lỏng như yoga, meditation, hoặc đơn giản là đi bộ buổi sáng.",
+        timestamp: toDate("2026-04-10T07:35:00.000Z"),
+      },
+      {
+        user_id: patient.user_id,
+        role: ChatRole.user,
+        message: "Hôm nay nhịp tim 78, có ổn không bác sĩ?",
+        timestamp: toDate("2026-04-18T10:00:00.000Z"),
+      },
+      {
+        user_id: patient.user_id,
+        role: ChatRole.bot,
+        message: "Nhịp tim 78 lần/phút là hoàn toàn bình thường. Tiếp tục duy trì chế độ ăn uống lành mạnh và tập thể dục đều đặn.",
+        timestamp: toDate("2026-04-18T10:05:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.user,
+        message: "Tôi vừa mới cài app này, có ghi chép tất cả dữ liệu y tế không?",
+        timestamp: toDate("2025-12-10T14:30:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.bot,
+        message: "Ứng dụng này giúp bạn quản lý toàn bộ dữ liệu sức khỏe: kết quả xét nghiệm, chẩn đoán, thuốc đang dùng và lịch hẹn khám. Tất cả đều được bảo mật và chỉ bạn và bác sĩ có thể xem.",
+        timestamp: toDate("2025-12-10T14:35:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.user,
+        message: "Tôi đang ngủ không đủ giấc vì công việc. Điều này có ảnh hưởng đến nhịp tim không?",
+        timestamp: toDate("2026-01-22T23:00:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.bot,
+        message: "Thiếu ngủ có thể làm tăng nhịp tim và gây rối loạn nhịp. Hãy cố gắng ngủ đủ 7-8 tiếng mỗi đêm. Nếu khó ngủ, hãy tắt các thiết bị điện tử 1 giờ trước khi đi ngủ.",
+        timestamp: toDate("2026-01-22T23:10:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.user,
+        message: "Kết quả ECG hôm qua bình thường phải không?",
+        timestamp: toDate("2026-04-20T08:00:00.000Z"),
+      },
+      {
+        user_id: spouse.user_id,
+        role: ChatRole.bot,
+        message: "Vâng, kết quả ECG của bạn hôm qua bình thường. Huyết áp và nhịp tim đều ổn định. Tiếp tục duy trì lối sống hiện tại.",
+        timestamp: toDate("2026-04-20T08:10:00.000Z"),
+      },
     ],
   })
 
+  // ========== Quyền truy cập gia đình ==========
   await prisma.accessPermission.createMany({
     data: [
-      {
-        patient_id: patient.user_id,
-        viewer_id: doctor.user_id,
-        role: AccessRole.BAC_SI,
-        status: AccessStatus.accepted,
-        created_at: toDate("2025-11-16T08:00:00.000Z"),
-      },
       {
         patient_id: patient.user_id,
         viewer_id: family.user_id,
@@ -258,43 +513,339 @@ async function main() {
         status: AccessStatus.accepted,
         created_at: toDate("2025-11-17T08:30:00.000Z"),
       },
+      {
+        patient_id: spouse.user_id,
+        viewer_id: family.user_id,
+        role: AccessRole.GIA_DINH,
+        status: AccessStatus.accepted,
+        created_at: toDate("2025-11-18T10:00:00.000Z"),
+      },
+      {
+        patient_id: child.user_id,
+        viewer_id: family.user_id,
+        role: AccessRole.GIA_DINH,
+        status: AccessStatus.accepted,
+        created_at: toDate("2025-11-20T14:30:00.000Z"),
+      },
     ],
   })
 
-  const conversationKey = buildConversationKey(patient.user_id, doctor.user_id)
+  // ========== Gia đình thuê 2 bác sĩ ==========
+  // Bác sĩ 1 - Tim mạch (được thuê bởi patient chính)
+  await prisma.doctorHire.create({
+    data: {
+      patient_id: patient.user_id,
+      doctor_id: doctor1.user_id,
+      status: DoctorHireStatus.ACTIVE,
+      price_snapshot: 1200000,
+      can_view_ehr: true,
+      can_view_medications: true,
+      can_view_ecg: true,
+      requested_at: toDate("2025-11-16T08:00:00.000Z"),
+      approved_at: toDate("2025-11-16T09:00:00.000Z"),
+    },
+  })
+
+  // Bác sĩ 2 - Nội khoa (được thuê bởi cả patient chính và vợ)
+  await prisma.doctorHire.create({
+    data: {
+      patient_id: patient.user_id,
+      doctor_id: doctor2.user_id,
+      status: DoctorHireStatus.ACTIVE,
+      price_snapshot: 1000000,
+      can_view_ehr: true,
+      can_view_medications: true,
+      can_view_ecg: false,
+      requested_at: toDate("2025-11-20T10:00:00.000Z"),
+      approved_at: toDate("2025-11-20T11:30:00.000Z"),
+    },
+  })
+
+  await prisma.doctorHire.create({
+    data: {
+      patient_id: spouse.user_id,
+      doctor_id: doctor2.user_id,
+      status: DoctorHireStatus.ACTIVE,
+      price_snapshot: 1000000,
+      can_view_ehr: true,
+      can_view_medications: true,
+      can_view_ecg: false,
+      requested_at: toDate("2025-11-22T09:00:00.000Z"),
+      approved_at: toDate("2025-11-22T10:00:00.000Z"),
+    },
+  })
+
+  // Bác sĩ 1 cũng được vợ thuê
+  await prisma.doctorHire.create({
+    data: {
+      patient_id: spouse.user_id,
+      doctor_id: doctor1.user_id,
+      status: DoctorHireStatus.ACTIVE,
+      price_snapshot: 1200000,
+      can_view_ehr: true,
+      can_view_medications: false,
+      can_view_ecg: true,
+      requested_at: toDate("2025-11-21T08:00:00.000Z"),
+      approved_at: toDate("2025-11-21T09:00:00.000Z"),
+    },
+  })
+
+  // Direct messages giữa patient và doctor1
+  const conversationKey1 = buildConversationKey(patient.user_id, doctor1.user_id)
   await prisma.directMessage.createMany({
     data: [
       {
-        conversation_key: conversationKey,
+        conversation_key: conversationKey1,
         sender_id: patient.user_id,
-        receiver_id: doctor.user_id,
+        receiver_id: doctor1.user_id,
         message: "Bác sĩ ơi, tối qua em lại có cơn hồi hộp khoảng 7 phút sau khi làm việc khuya.",
         is_read: true,
         created_at: toDate("2026-01-14T04:40:00.000Z"),
       },
       {
-        conversation_key: conversationKey,
-        sender_id: doctor.user_id,
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
         receiver_id: patient.user_id,
         message: "Em nghỉ ngơi, tránh cà phê hôm nay và đo lại nhịp tim lúc ngồi yên. Nếu có đau ngực hoặc khó thở thì đi khám ngay.",
         is_read: true,
         created_at: toDate("2026-01-14T04:48:00.000Z"),
       },
       {
-        conversation_key: conversationKey,
-        sender_id: doctor.user_id,
+        conversation_key: conversationKey1,
+        sender_id: patient.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Dạ, em đã ngủ tốt hơn rồi. Cơn hồi hộp ít hơn so với trước.",
+        is_read: true,
+        created_at: toDate("2026-02-20T09:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
         receiver_id: patient.user_id,
-        message: "Kết quả tái khám hôm nay ổn hơn nhiều. Em tiếp tục giữ nếp sinh hoạt hiện tại và nhắn lại nếu triệu chứng tăng lên nhé.",
-        is_read: false,
+        message: "Tốt lắm. Hôm nay em có thể gửi cho bác sĩ kết quả ECG để bác sĩ xem chi tiết được không?",
+        is_read: true,
+        created_at: toDate("2026-02-20T10:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: patient.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Vâng bác sĩ. Em vừa mới gửi lên hệ thống, bác sĩ xem được không ạ?",
+        is_read: true,
+        created_at: toDate("2026-02-20T10:15:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
+        receiver_id: patient.user_id,
+        message: "Em tiếp tục giữ nếp sinh hoạt hiện tại và nhắn lại nếu triệu chứng tăng lên nhé. Đặt lịch tái khám trong 3 tuần nữa.",
+        is_read: true,
+        created_at: toDate("2026-02-20T10:45:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: patient.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Kết quả tái khám hôm nay ổn hơn nhiều. Tình trạng em đã cải thiện rồi phải không bác sĩ?",
+        is_read: true,
         created_at: toDate("2026-03-22T05:10:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
+        receiver_id: patient.user_id,
+        message: "Đúng rồi em. Tần suất hồi hộp đã giảm rõ rệt. Tiếp tục duy trì các công việc bác sĩ đã khuyến cáo.",
+        is_read: true,
+        created_at: toDate("2026-03-22T05:20:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: patient.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Em có thể tập thể dục nặng hơn một chút không bác sĩ? Em muốn chạy bộ.",
+        is_read: true,
+        created_at: toDate("2026-04-08T07:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
+        receiver_id: patient.user_id,
+        message: "Em có thể chạy bộ nhẹ nhàng 20-30 phút mỗi ngày. Hãy bắt đầu từ tốc độ chậm và tăng dần. Nếu có cảm thấy hồi hộp thì dừng lại ngay.",
+        is_read: true,
+        created_at: toDate("2026-04-08T08:00:00.000Z"),
+      },
+    ],
+  })
+
+  // Direct messages giữa spouse và doctor2
+  const conversationKey2 = buildConversationKey(spouse.user_id, doctor2.user_id)
+  await prisma.directMessage.createMany({
+    data: [
+      {
+        conversation_key: conversationKey2,
+        sender_id: spouse.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Bác sĩ ơi, em vừa khám xong. Có cần theo dõi gì thêm không ạ?",
+        is_read: true,
+        created_at: toDate("2025-12-05T11:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: doctor2.user_id,
+        receiver_id: spouse.user_id,
+        message: "Kết quả khám của chị rất ổn định. Chị hãy tiếp tục duy trì lối sống lành mạnh như hiện tại.",
+        is_read: true,
+        created_at: toDate("2025-12-05T11:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: spouse.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Công việc bận rộn quá. Em bắt đầu thấy mệt và tim đập nhanh hơn bình thường.",
+        is_read: true,
+        created_at: toDate("2026-01-25T18:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: doctor2.user_id,
+        receiver_id: spouse.user_id,
+        message: "Căng thẳng công việc có thể gây ra tình trạng đó. Em nên cố gắng thư giãn vào buổi tối, tập yoga hoặc thiền.",
+        is_read: true,
+        created_at: toDate("2026-01-25T18:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: spouse.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Em đã thử yoga. Cảm thấy thoải mái hơn. ECG hôm nay có ổn không ạ?",
+        is_read: true,
+        created_at: toDate("2026-02-10T10:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: doctor2.user_id,
+        receiver_id: spouse.user_id,
+        message: "Rất tốt! ECG hôm nay bình thường, nhịp tim ổn định. Tiếp tục duy trì các hoạt động thư giãn.",
+        is_read: true,
+        created_at: toDate("2026-02-10T10:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: spouse.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Tái khám ngày hôm nay được không ạ? Em muốn kiểm tra lại chỉ số máu.",
+        is_read: true,
+        created_at: toDate("2026-04-20T09:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: doctor2.user_id,
+        receiver_id: spouse.user_id,
+        message: "Được chứ. Chiều nay 15h chị đến phòng khám được không?",
+        is_read: true,
+        created_at: toDate("2026-04-20T09:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey2,
+        sender_id: spouse.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Dạ, em đến được. Cảm ơn bác sĩ.",
+        is_read: true,
+        created_at: toDate("2026-04-20T14:00:00.000Z"),
+      },
+    ],
+  })
+
+  // Direct messages giữa patient và doctor2
+  const conversationKey3 = buildConversationKey(patient.user_id, doctor2.user_id)
+  await prisma.directMessage.createMany({
+    data: [
+      {
+        conversation_key: conversationKey3,
+        sender_id: patient.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Bác sĩ ơi, em muốn khám sức khỏe tổng quát, có đặt được lịch hôm nay không?",
+        is_read: true,
+        created_at: toDate("2026-04-15T08:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey3,
+        sender_id: doctor2.user_id,
+        receiver_id: patient.user_id,
+        message: "Được. Chiều nay 14h có slot, em có thể tới được không?",
+        is_read: true,
+        created_at: toDate("2026-04-15T08:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey3,
+        sender_id: patient.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Dạ, em tới được. Cảm ơn bác sĩ.",
+        is_read: true,
+        created_at: toDate("2026-04-15T13:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey3,
+        sender_id: doctor2.user_id,
+        receiver_id: patient.user_id,
+        message: "Kết quả khám hôm nay cho thấy cholesterol hơi nâng cao. Em cần điều chỉnh chế độ ăn uống.",
+        is_read: true,
+        created_at: toDate("2026-04-20T16:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey3,
+        sender_id: patient.user_id,
+        receiver_id: doctor2.user_id,
+        message: "Dạ, em hiểu. Em sẽ giảm ăn đồ chiên xào và tăng rau xanh.",
+        is_read: true,
+        created_at: toDate("2026-04-20T16:30:00.000Z"),
+      },
+    ],
+  })
+
+  // Direct messages giữa spouse và doctor1
+  const conversationKey4 = buildConversationKey(spouse.user_id, doctor1.user_id)
+  await prisma.directMessage.createMany({
+    data: [
+      {
+        conversation_key: conversationKey4,
+        sender_id: spouse.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Bác sĩ ơi, em vừa cài app và muốn kiểm tra lại ECG được không?",
+        is_read: true,
+        created_at: toDate("2025-11-25T08:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey4,
+        sender_id: doctor1.user_id,
+        receiver_id: spouse.user_id,
+        message: "Chắc chắn được. Hãy kết nối thiết bị ECG và gửi bản ghi lên ứng dụng.",
+        is_read: true,
+        created_at: toDate("2025-11-25T08:30:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey4,
+        sender_id: spouse.user_id,
+        receiver_id: doctor1.user_id,
+        message: "Bác sĩ ơi, nhịp tim em tăng lên 88 lần/phút. Có bất thường gì không?",
+        is_read: true,
+        created_at: toDate("2026-01-26T09:00:00.000Z"),
+      },
+      {
+        conversation_key: conversationKey4,
+        sender_id: doctor1.user_id,
+        receiver_id: spouse.user_id,
+        message: "Nhịp tim 88 do căng thẳng công việc thôi. Không có bất thường. Hãy giảm stress và tập luyện tập thể dục.",
+        is_read: true,
+        created_at: toDate("2026-01-26T09:30:00.000Z"),
       },
     ],
   })
 
   const latestDirectMessage = await prisma.directMessage.findFirst({
     where: {
-      conversation_key: conversationKey,
-      sender_id: doctor.user_id,
+      conversation_key: conversationKey1,
+      sender_id: doctor1.user_id,
       receiver_id: patient.user_id,
     },
     orderBy: { created_at: "desc" },
@@ -305,7 +856,7 @@ async function main() {
       type: NotificationType.ALERT,
       title: "Cảnh báo ECG",
       message: "Phát hiện ngoại tâm thu thất rải rác trên bản ghi ngày 14/01/2026.",
-      actor_id: doctor.user_id,
+      actor_id: doctor1.user_id,
       entity_type: "alert",
       entity_id: pvcAlert.alert_id,
       payload: {
@@ -322,12 +873,12 @@ async function main() {
       type: NotificationType.DIRECT_MESSAGE,
       title: "Tin nhắn mới",
       message: latestDirectMessage?.message || "Bác sĩ vừa gửi tin nhắn mới.",
-      actor_id: doctor.user_id,
+      actor_id: doctor1.user_id,
       entity_type: "direct_message",
       entity_id: latestDirectMessage?.message_id || null,
       payload: {
-        conversation_key: conversationKey,
-        sender_id: doctor.user_id,
+        conversation_key: conversationKey1,
+        sender_id: doctor1.user_id,
         receiver_id: patient.user_id,
       },
       created_at: toDate("2026-03-22T05:10:05.000Z"),
@@ -344,7 +895,7 @@ async function main() {
       },
       {
         notification_id: alertNotification.notification_id,
-        user_id: doctor.user_id,
+        user_id: doctor1.user_id,
         is_read: true,
         read_at: toDate("2026-01-14T04:20:00.000Z"),
         created_at: toDate("2026-01-14T04:12:00.000Z"),
@@ -362,6 +913,204 @@ async function main() {
         created_at: toDate("2026-03-22T05:10:05.000Z"),
       },
     ],
+  })
+
+  // Tạo các kế hoạch uống thuốc cho bệnh nhân chính
+  const medicationPlan1 = await prisma.medicationPlan.create({
+    data: {
+      user_id: patient.user_id,
+      doctor_id: doctor1.user_id,
+      title: "Kế hoạch uống thuốc - Tăng huyết áp và rối loạn nhịp",
+      start_date: toDate("2026-04-18T00:00:00.000Z"),
+      end_date: toDate("2026-07-18T00:00:00.000Z"),
+      notes: "Uống thuốc đều đặn mỗi sáng, giảm ăn mặn và tập thể dục nhẹ",
+      is_active: true,
+    },
+  })
+
+  const medicationPlan2 = await prisma.medicationPlan.create({
+    data: {
+      user_id: patient.user_id,
+      doctor_id: doctor2.user_id,
+      title: "Kế hoạch uống thuốc - Viêm loét dạ dày",
+      start_date: toDate("2026-05-15T00:00:00.000Z"),
+      end_date: toDate("2026-06-12T00:00:00.000Z"),
+      notes: "Uống thuốc trước ăn, kiêng chua cay, chia nhỏ bữa ăn",
+      is_active: true,
+    },
+  })
+
+  const medicationPlan3 = await prisma.medicationPlan.create({
+    data: {
+      user_id: patient.user_id,
+      doctor_id: doctor2.user_id,
+      title: "Kế hoạch uống thuốc - Rối loạn lipid máu",
+      start_date: toDate("2026-04-02T00:00:00.000Z"),
+      end_date: null,
+      notes: "Uống thuốc dài hạn, theo dõi chỉ số mỡ máu định kỳ",
+      is_active: true,
+    },
+  })
+
+  // Kế hoạch uống thuốc cho vợ
+  const medicationPlan4 = await prisma.medicationPlan.create({
+    data: {
+      user_id: spouse.user_id,
+      doctor_id: doctor1.user_id,
+      title: "Kế hoạch uống thuốc - Dự phòng tim mạch",
+      start_date: toDate("2026-01-01T00:00:00.000Z"),
+      end_date: null,
+      notes: "Tập yoga đều đặn, uống thuốc mỗi sáng, kiểm tra huyết áp định kỳ",
+      is_active: true,
+    },
+  })
+
+  // Thêm thuốc vào kế hoạch 1: Tăng huyết áp
+  const med1_1 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan1.plan_id,
+      name: "Amlodipine",
+      dosage: "5mg",
+      times: ["08:00"],
+    },
+  })
+
+  const med1_2 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan1.plan_id,
+      name: "Bisoprolol",
+      dosage: "2.5mg",
+      times: ["08:00"],
+    },
+  })
+
+  // Thêm thuốc vào kế hoạch 2: Viêm loét dạ dày
+  const med2_1 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan2.plan_id,
+      name: "Omeprazole",
+      dosage: "20mg",
+      times: ["07:30"],
+    },
+  })
+
+  const med2_2 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan2.plan_id,
+      name: "Clarithromycin",
+      dosage: "500mg",
+      times: ["08:00", "20:00"],
+    },
+  })
+
+  const med2_3 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan2.plan_id,
+      name: "Amoxicillin",
+      dosage: "1g",
+      times: ["08:00", "20:00"],
+    },
+  })
+
+  // Thêm thuốc vào kế hoạch 3: Rối loạn lipid máu
+  const med3_1 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan3.plan_id,
+      name: "Rosuvastatin",
+      dosage: "10mg",
+      times: ["21:00"],
+    },
+  })
+
+  const med3_2 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan3.plan_id,
+      name: "Fenofibrate",
+      dosage: "160mg",
+      times: ["08:00"],
+    },
+  })
+
+  // Thêm thuốc vào kế hoạch 4: Dự phòng tim mạch (cho vợ)
+  const med4_1 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan4.plan_id,
+      name: "Aspirin",
+      dosage: "75mg",
+      times: ["08:00"],
+    },
+  })
+
+  const med4_2 = await prisma.medication.create({
+    data: {
+      plan_id: medicationPlan4.plan_id,
+      name: "Atorvastatin",
+      dosage: "10mg",
+      times: ["21:00"],
+    },
+  })
+
+  // Tạo nhật ký thuốc (MedicationLog) cho các ngày gần đây
+  const today = new Date("2026-03-22")
+  const medicationLogEntries = []
+
+  // Logs cho Amlodipine và Bisoprolol (kế hoạch 1)
+  for (let i = -7; i <= 0; i++) {
+    const logDate = new Date(today)
+    logDate.setDate(logDate.getDate() + i)
+    logDate.setHours(8, 0, 0, 0)
+
+    medicationLogEntries.push(
+      {
+        user_id: patient.user_id,
+        medication_id: med1_1.medication_id,
+        scheduled_time: new Date(logDate),
+        taken_at: i < 0 ? new Date(logDate.getTime() + Math.random() * 3600000) : null,
+        status: i < 0 ? (Math.random() > 0.15 ? "TAKEN" : "MISSED") : "PENDING",
+      },
+      {
+        user_id: patient.user_id,
+        medication_id: med1_2.medication_id,
+        scheduled_time: new Date(logDate),
+        taken_at: i < 0 ? new Date(logDate.getTime() + Math.random() * 3600000) : null,
+        status: i < 0 ? (Math.random() > 0.15 ? "TAKEN" : "MISSED") : "PENDING",
+      }
+    )
+  }
+
+  // Logs cho Omeprazole (kế hoạch 2)
+  for (let i = -5; i <= 0; i++) {
+    const logDate = new Date(today)
+    logDate.setDate(logDate.getDate() + i)
+    logDate.setHours(7, 30, 0, 0)
+
+    medicationLogEntries.push({
+      user_id: patient.user_id,
+      medication_id: med2_1.medication_id,
+      scheduled_time: new Date(logDate),
+      taken_at: i < 0 ? new Date(logDate.getTime() + Math.random() * 3600000) : null,
+      status: i < 0 ? "TAKEN" : "PENDING",
+    })
+  }
+
+  // Logs cho Rosuvastatin (kế hoạch 3)
+  for (let i = -10; i <= 0; i++) {
+    const logDate = new Date(today)
+    logDate.setDate(logDate.getDate() + i)
+    logDate.setHours(21, 0, 0, 0)
+
+    medicationLogEntries.push({
+      user_id: patient.user_id,
+      medication_id: med3_1.medication_id,
+      scheduled_time: new Date(logDate),
+      taken_at: i < 0 ? new Date(logDate.getTime() + Math.random() * 3600000) : null,
+      status: i < 0 ? (Math.random() > 0.1 ? "TAKEN" : "MISSED") : "PENDING",
+    })
+  }
+
+  await prisma.medicationLog.createMany({
+    data: medicationLogEntries,
+    skipDuplicates: true,
   })
 
   // PhrOverview giả lập chung
@@ -438,11 +1187,191 @@ async function main() {
     ],
   })
 
+  // Tạo lịch hẹn khám cho các thành viên gia đình
+  await prisma.appointment.createMany({
+    data: [
+      // Lịch hẹn cho bệnh nhân chính với doctor1
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-05-18T00:00:00.000Z"),
+        start_time: toDate("2026-05-18T08:00:00.000Z"),
+        end_time: toDate("2026-05-18T08:30:00.000Z"),
+        reason: "Tái khám sau 1 tháng điều trị",
+        type: "OFFLINE",
+        status: "COMPLETED",
+        doctor_note: "Kết quả khám tốt, tiếp tục điều trị",
+      },
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-06-15T00:00:00.000Z"),
+        start_time: toDate("2026-06-15T09:00:00.000Z"),
+        end_time: toDate("2026-06-15T09:30:00.000Z"),
+        reason: "Tái khám kiểm tra huyết áp",
+        type: "OFFLINE",
+        status: "APPROVED",
+        doctor_note: "Khám định kỳ hàng tháng",
+      },
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-07-20T00:00:00.000Z"),
+        start_time: toDate("2026-07-20T08:30:00.000Z"),
+        end_time: toDate("2026-07-20T09:00:00.000Z"),
+        reason: "Kiểm tra ECG định kỳ",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Mang theo kết quả ECG nhà",
+      },
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-08-10T00:00:00.000Z"),
+        start_time: toDate("2026-08-10T14:00:00.000Z"),
+        end_time: toDate("2026-08-10T14:45:00.000Z"),
+        reason: "Tái khám sau 3 tháng điều trị",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Mang theo hóa đơn thuốc",
+      },
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2027-01-15T00:00:00.000Z"),
+        start_time: toDate("2027-01-15T08:00:00.000Z"),
+        end_time: toDate("2027-01-15T08:45:00.000Z"),
+        reason: "Tái khám cuối năm",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Kiểm tra toàn diện sau 6 tháng",
+      },
+
+      // Lịch hẹn cho bệnh nhân chính với doctor2
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-05-20T00:00:00.000Z"),
+        start_time: toDate("2026-05-20T09:00:00.000Z"),
+        end_time: toDate("2026-05-20T09:45:00.000Z"),
+        reason: "Khám sức khỏe tổng quát",
+        type: "OFFLINE",
+        status: "COMPLETED",
+        doctor_note: "Kết quả xét nghiệm ổn, tiếp tục theo dõi",
+      },
+      {
+        patient_id: patient.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-07-15T00:00:00.000Z"),
+        start_time: toDate("2026-07-15T10:00:00.000Z"),
+        end_time: toDate("2026-07-15T10:45:00.000Z"),
+        reason: "Kiểm tra cholesterol",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Làm thêm xét nghiệm mỡ máu",
+      },
+
+      // Lịch hẹn cho vợ với doctor1
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-05-22T00:00:00.000Z"),
+        start_time: toDate("2026-05-22T10:00:00.000Z"),
+        end_time: toDate("2026-05-22T10:30:00.000Z"),
+        reason: "Kiểm tra sức khỏe tim mạch",
+        type: "OFFLINE",
+        status: "COMPLETED",
+        doctor_note: "Kết quả bình thường, tiếp tục theo dõi",
+      },
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2026-07-10T00:00:00.000Z"),
+        start_time: toDate("2026-07-10T11:00:00.000Z"),
+        end_time: toDate("2026-07-10T11:30:00.000Z"),
+        reason: "Tái khám giữa năm",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Kiểm tra huyết áp và nhịp tim",
+      },
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor1.user_id,
+        appointment_date: toDate("2027-02-05T00:00:00.000Z"),
+        start_time: toDate("2027-02-05T09:30:00.000Z"),
+        end_time: toDate("2027-02-05T10:00:00.000Z"),
+        reason: "Tái khám định kỳ",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Khám toàn diện định kỳ",
+      },
+
+      // Lịch hẹn cho vợ với doctor2
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-04-20T00:00:00.000Z"),
+        start_time: toDate("2026-04-20T15:00:00.000Z"),
+        end_time: toDate("2026-04-20T15:45:00.000Z"),
+        reason: "Khám sức khỏe tổng quát",
+        type: "OFFLINE",
+        status: "COMPLETED",
+        doctor_note: "Xét nghiệm máu bình thường",
+      },
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-06-25T00:00:00.000Z"),
+        start_time: toDate("2026-06-25T16:00:00.000Z"),
+        end_time: toDate("2026-06-25T16:45:00.000Z"),
+        reason: "Tái khám theo dõi",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Theo dõi huyết áp và mỡ máu",
+      },
+      {
+        patient_id: spouse.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-09-10T00:00:00.000Z"),
+        start_time: toDate("2026-09-10T14:30:00.000Z"),
+        end_time: toDate("2026-09-10T15:15:00.000Z"),
+        reason: "Khám cuối quý III",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Kiểm tra sức khỏe toàn diện",
+      },
+
+      // Lịch hẹn cho con với doctor2
+      {
+        patient_id: child.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2026-06-01T00:00:00.000Z"),
+        start_time: toDate("2026-06-01T10:00:00.000Z"),
+        end_time: toDate("2026-06-01T10:30:00.000Z"),
+        reason: "Khám sức khỏe định kỳ",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Khám sức khỏe hàng năm",
+      },
+      {
+        patient_id: child.user_id,
+        doctor_id: doctor2.user_id,
+        appointment_date: toDate("2027-03-15T00:00:00.000Z"),
+        start_time: toDate("2027-03-15T11:00:00.000Z"),
+        end_time: toDate("2027-03-15T11:30:00.000Z"),
+        reason: "Tái khám sức khỏe",
+        type: "OFFLINE",
+        status: "PENDING",
+        doctor_note: "Khám toàn diện định kỳ",
+      },
+    ],
+  })
+
   console.log(
-    "Seed thành công: 4 người dùng, 1 thiết bị, 4 reading, 3 alert, 2 report, 4 chat AI, 2 quyền truy cập, 3 direct message, 2 notification và 3 bản ghi bệnh sử chiều sâu (PHR)."
+    "Seed thành công: 4 người dùng gia đình, 2 bác sĩ, 1 thiết bị ECG, 8 reading ECG, 4 alert, 6 báo cáo y tế, 16 chat AI, 4 quyền truy cập gia đình, 24+ direct message, 2 notification, 3 bệnh sử, 4 kế hoạch uống thuốc, 10 loại thuốc và 100+ bản ghi nhắc thuốc, 13 lịch hẹn khám."
   )
   console.log(
-    `Tài khoản mẫu: ${patient.email}, ${doctor.email}, ${family.email}, ${admin.email} | mật khẩu chung: 123456`
+    `Tài khoản mẫu: ${patient.email} (bệnh nhân), ${spouse.email} (vợ), ${child.email} (con), ${family.email} (gia đình), ${doctor1.email} (bác sĩ 1), ${doctor2.email} (bác sĩ 2), ${admin.email} (admin) | mật khẩu chung: 123456`
   )
 }
 

@@ -1,343 +1,526 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import {
+  approveAppointment,
+  createDoctorTimeOff,
+  deleteDoctorTimeOff,
+  getAppointments,
+  getDoctorAvailability,
+  saveDoctorAvailability,
+  updateAppointmentStatus,
+} from "@/features/appointments/api/appointmentsApi";
 
-const MOBILE_TABS = [
-  { id: "calendar", label: "Lịch", icon: "calendar_month" },
-  { id: "requests", label: "Yêu cầu", icon: "pending_actions" },
+const WEEKDAYS = [
+  { id: 1, label: "Thứ 2" },
+  { id: 2, label: "Thứ 3" },
+  { id: 3, label: "Thứ 4" },
+  { id: 4, label: "Thứ 5" },
+  { id: 5, label: "Thứ 6" },
+  { id: 6, label: "Thứ 7" },
+  { id: 0, label: "Chủ nhật" },
 ];
 
+const STATUS_META = {
+  PENDING: { label: "Chờ duyệt", className: "bg-amber-100 text-amber-700" },
+  APPROVED: { label: "Đã xác nhận", className: "bg-emerald-100 text-emerald-700" },
+  REJECTED: { label: "Từ chối", className: "bg-rose-100 text-rose-700" },
+  CANCELLED: { label: "Đã hủy", className: "bg-slate-100 text-slate-500" },
+  COMPLETED: { label: "Hoàn tất", className: "bg-sky-100 text-sky-700" },
+};
+
+/**
+ * Format ngày giờ lịch khám theo tiếng Việt.
+ * Hàm trả chuỗi ngắn để dùng trong card và lịch tuần.
+ */
+function formatDateTime(value) {
+  // Chuyển ISO string từ backend thành Date.
+  const date = new Date(value);
+
+  // Bảo vệ UI khỏi dữ liệu ngày không hợp lệ.
+  if (Number.isNaN(date.getTime())) return "";
+
+  // Hiển thị cả ngày và giờ để bác sĩ dễ quét lịch.
+  return date.toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
+}
+
+/**
+ * Format giờ bắt đầu - kết thúc của lịch hẹn.
+ * Hàm dùng trong card lịch tuần để tránh lặp logic.
+ */
+function formatTimeRange(appointment) {
+  // Format riêng giờ bắt đầu và kết thúc.
+  const start = new Date(appointment.start_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  const end = new Date(appointment.end_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+  // Ghép thành chuỗi khoảng giờ.
+  return `${start} - ${end}`;
+}
+
+/**
+ * Badge trạng thái lịch hẹn cho bác sĩ.
+ * Component giúp lịch tuần và danh sách yêu cầu dùng chung style.
+ */
+function StatusBadge({ status }) {
+  // Fallback về PENDING nếu status chưa có trong map.
+  const meta = STATUS_META[status] ?? STATUS_META.PENDING;
+
+  return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${meta.className}`}>{meta.label}</span>;
+}
+
+/**
+ * Tạo một dòng lịch rảnh mặc định cho form cấu hình.
+ * Hàm dùng khi bác sĩ bấm thêm khung giờ.
+ */
+function createAvailabilityDraft() {
+  // Mặc định tạo khung sáng thứ 2, slot 30 phút.
+  return {
+    day_of_week: 1,
+    start_time: "08:00",
+    end_time: "11:00",
+    slot_minutes: 30,
+    is_active: true,
+  };
+}
+
+/**
+ * Trang lịch hẹn của bác sĩ.
+ * Trang hiển thị lịch thật từ backend, yêu cầu chờ duyệt và công cụ cấu hình lịch rảnh.
+ */
 export function DoctorAppointmentsPage() {
-    const navigate = useNavigate();
-    const [weekOffset, setWeekOffset] = useState(0);
-    const [availability, setAvailability] = useState({
-        morning: true,
-        afternoon: false
-    });
-    const [extraFrames, setExtraFrames] = useState([]);
-    const [isAvailMenuOpen, setIsAvailMenuOpen] = useState(false);
-    const [isAddingFrame, setIsAddingFrame] = useState(false);
-    const [newFrameStart, setNewFrameStart] = useState("");
-    const [newFrameEnd, setNewFrameEnd] = useState("");
-    const [newFrameDay, setNewFrameDay] = useState("Thứ 2");
-    const [mobileTab, setMobileTab] = useState("calendar");
-    const [requests, setRequests] = useState([
-        {
-            id: 1,
-            name: "Trần Văn C",
-            type: "Tư vấn Video",
-            icon: "videocam",
-            time: "Hôm nay, 15:30",
-            duration: "30 phút",
-            textColor: "text-primary",
-            bgColor: "bg-white",
-            borderColor: ""
-        },
-        {
-            id: 2,
-            name: "Nguyễn Thị H.",
-            type: "Khám tại nhà",
-            icon: "home",
-            time: "Mai, 09:00",
-            duration: "60 phút",
-            textColor: "text-secondary",
-            bgColor: "bg-white",
-            borderColor: "border-l-4 border-secondary"
-        }
-    ]);
+  const [appointments, setAppointments] = useState([]);
+  const [availability, setAvailability] = useState([]);
+  const [timeOffs, setTimeOffs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingAvailability, setSavingAvailability] = useState(false);
+  const [meetingUrls, setMeetingUrls] = useState({});
+  const [timeOffDraft, setTimeOffDraft] = useState({
+    start_time: "",
+    end_time: "",
+    reason: "",
+  });
 
-    // Lấy thời gian với tuần tương ứng (weekOffset)
-    const baseDate = new Date();
-    const currentDate = new Date(baseDate.getTime());
-    currentDate.setDate(currentDate.getDate() + (weekOffset * 7));
+  /**
+   * Tải toàn bộ dữ liệu cần cho màn lịch bác sĩ.
+   * Hàm lấy lịch hẹn, lịch rảnh và lịch nghỉ trong cùng một lần refresh.
+   */
+  const fetchData = async () => {
+    try {
+      // Gọi song song để màn bác sĩ tải nhanh hơn.
+      const [appointmentData, availabilityData] = await Promise.all([
+        getAppointments(),
+        getDoctorAvailability(),
+      ]);
 
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
-    const currentDayOfWeek = currentDate.getDay(); // 0 is Sun, 1 is Mon...
+      // Lưu lịch hẹn thật từ backend.
+      setAppointments(appointmentData);
 
-    // Tính toán ngày trong tuần (Monday -> Sunday)
-    const weekDates = [];
-    const diffToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(currentDate.getTime());
-        d.setDate(currentDate.getDate() + diffToMonday + i);
-        weekDates.push(d); // Lưu object Date
+      // Nếu bác sĩ chưa có lịch rảnh, gợi ý một dòng mặc định để họ cấu hình nhanh.
+      setAvailability((availabilityData.availability ?? []).length ? availabilityData.availability : [createAvailabilityDraft()]);
+      setTimeOffs(availabilityData.time_offs ?? []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể tải lịch hẹn bác sĩ.");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // String mốc để kiểm tra "hôm nay" của thực tại
-    const todayStr = new Date().toDateString();
+  // Tải dữ liệu khi mở trang.
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    const handleRequestAction = (id) => {
-        setRequests(requests.filter(req => req.id !== id));
-    };
+  const pendingAppointments = useMemo(
+    () => appointments.filter((appointment) => appointment.status === "PENDING"),
+    [appointments],
+  );
 
-    const toggleAvailability = (key) => {
-        setAvailability(prev => ({ ...prev, [key]: !prev[key] }));
-    };
+  const activeAppointments = useMemo(
+    () =>
+      appointments
+        .filter((appointment) => ["PENDING", "APPROVED"].includes(appointment.status))
+        .sort((left, right) => new Date(left.start_time) - new Date(right.start_time)),
+    [appointments],
+  );
 
-    const handleSaveFrame = () => {
-        if (newFrameStart && newFrameEnd) {
-            setExtraFrames([...extraFrames, { id: Date.now(), time: `${newFrameStart} - ${newFrameEnd}`, day: newFrameDay }]);
-            setIsAddingFrame(false);
-            setNewFrameStart("");
-            setNewFrameEnd("");
-            setNewFrameDay("Thứ 2");
-        }
-    };
-
-    const removeFrame = (id) => {
-        setExtraFrames(extraFrames.filter(x => x.id !== id));
-    };
-
-    return (
-        <div className="flex flex-col gap-4">
-            {/* Mobile tab switcher */}
-            <div className="flex rounded-xl bg-surface-container-low p-1 lg:hidden">
-                {MOBILE_TABS.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setMobileTab(tab.id)}
-                        className={[
-                            "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-all",
-                            mobileTab === tab.id
-                                ? "bg-white text-primary shadow-sm"
-                                : "text-slate-500 hover:text-slate-700",
-                        ].join(" ")}
-                    >
-                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Desktop: 2-column flex */}
-            <div className="lg:flex lg:flex-1 lg:overflow-hidden lg:gap-4 lg:h-[calc(100vh-180px)]">
-            {/* Calendar Section */}
-            <div className={[
-                "flex-grow flex flex-col bg-surface-container-lowest rounded-2xl p-4 shadow-sm",
-                // Mobile: only show when calendar tab active
-                mobileTab === "calendar" ? "flex" : "hidden lg:flex",
-                "lg:overflow-hidden",
-            ].join(" ")}>
-                {/* Calendar Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-extrabold text-[#004976]">Tháng {currentMonth}, {currentYear}</h2>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex gap-1">
-                            <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-xl">chevron_left</span>
-                            </button>
-                            <button onClick={() => setWeekOffset(prev => prev + 1)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-xl">chevron_right</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {/* Calendar Grid */}
-                <div className="flex-grow flex flex-col overflow-hidden">
-                    {/* Day Labels */}
-                    <div className="grid grid-cols-8 border-b border-surface-container-high pb-2">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase text-center self-end">
-                            Giờ
-                        </div>
-                        {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'].map((label, idx) => {
-                            const dateObj = weekDates[idx];
-                            const isToday = dateObj.toDateString() === todayStr;
-                            return (
-                                <div key={label} className={`text-center ${isToday ? 'bg-sky-50/50 rounded-lg pt-1 pb-1' : ''}`}>
-                                    <span className={`block text-[10px] font-bold uppercase ${isToday ? 'text-primary' : 'text-slate-400'}`}>
-                                        {label}
-                                    </span>
-                                    <span className={`text-lg font-bold ${isToday ? 'text-primary' : ''}`}>
-                                        {dateObj.getDate()}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {/* Scrollable Grid Body */}
-                    <div className="flex-grow overflow-y-auto no-scrollbar pt-2 relative">
-                        <div className="grid grid-cols-8 divide-x divide-surface-container-high">
-                            {/* Time Column */}
-                            <div className="flex flex-col">
-                                {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].map(hour => (
-                                    <div key={hour} className="h-12 text-[10px] font-bold text-slate-400 pr-2 text-right">
-                                        {hour.toString().padStart(2, '0')}:00
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Dummy Grid Columns */}
-                            {[...Array(7)].map((_, idx) => {
-                                const dateObj = weekDates[idx];
-                                const isToday = dateObj.toDateString() === todayStr;
-                                return (
-                                    <div key={idx} className={`relative ${isToday ? 'bg-sky-50/20' : ''} ${idx === 6 ? 'bg-slate-50/50' : ''}`}>
-                                        <div className="absolute inset-0 grid grid-rows-[repeat(14,48px)] border-t border-surface-container-high/50">
-                                        </div>
-
-                                        {/* Monday Appts */}
-                                        {idx === 0 && (
-                                            <div className="absolute top-[48px] left-1 right-1 h-16 bg-primary/90 text-white p-2 rounded-lg shadow-lg z-10 opacity-70 cursor-move border-2 border-white transition-transform hover:scale-105"
-                                                onClick={() => navigate('/doctor/patients')}>
-                                                <div className="flex items-center gap-1 mb-0.5">
-                                                    <span className="material-symbols-outlined text-[12px]">videocam</span>
-                                                    <span className="text-[8px] font-bold uppercase tracking-wider">Đang di chuyển</span>
-                                                </div>
-                                                <div className="font-bold text-[10px]">Bùi Anh T.</div>
-                                                <div className="text-[8px] opacity-80">08:00 - 09:30</div>
-                                            </div>
-                                        )}
-
-                                        {/* Tuesday Appts */}
-                                        {idx === 1 && (
-                                            <div className="absolute top-[144px] left-1 right-1 h-10 bg-[#0047AB] text-white p-1 rounded-md shadow-sm cursor-pointer hover:bg-opacity-90 transition-all"
-                                                onClick={() => navigate('/doctor/messages')}>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[12px]">videocam</span>
-                                                    <span className="text-[8px] font-bold uppercase">Video</span>
-                                                </div>
-                                                <div className="font-bold text-[10px] truncate">Lê Hoàng Nam</div>
-                                            </div>
-                                        )}
-
-                                        {/* Wednesday Appts */}
-                                        {idx === 2 && (
-                                            <div className="absolute top-[240px] left-1 right-1 h-12 bg-secondary text-white p-1 rounded-md shadow-sm cursor-pointer hover:bg-opacity-90 transition-all"
-                                                onClick={() => navigate('/doctor/patients')}>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[12px]">home</span>
-                                                    <span className="text-[8px] font-bold uppercase">Tại nhà</span>
-                                                </div>
-                                                <div className="font-bold text-[10px] truncate">Bà Nguyễn Thị B</div>
-                                            </div>
-                                        )}
-
-                                        {/* Thursday Appts */}
-                                        {idx === 3 && (
-                                            <div className="absolute top-[96px] left-1 right-1 h-24 bg-slate-100 text-slate-500 p-2 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-center">
-                                                <div className="text-[8px] font-bold uppercase tracking-widest leading-tight">
-                                                    Thời gian tập trung<br />&amp; Nghỉ trưa
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {/* Right Sidebar */}
-            <aside className={[
-                "flex flex-col gap-4 lg:w-72 lg:overflow-y-auto no-scrollbar",
-                mobileTab === "requests" ? "flex" : "hidden lg:flex",
-            ].join(" ")}>
-                {/* Availability Section */}
-                <section className="bg-surface-container-low rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-3 relative">
-                        <h3 className="font-bold text-primary text-sm">Thiết lập thời gian rảnh</h3>
-                        <span onClick={() => setIsAvailMenuOpen(!isAvailMenuOpen)} className="material-symbols-outlined text-primary text-xl cursor-pointer hover:bg-slate-100 rounded-full p-1 transition-colors">more_horiz</span>
-                        {isAvailMenuOpen && (
-                            <div className="absolute right-0 top-8 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-20">
-                                <button onClick={() => setIsAvailMenuOpen(false)} className="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors">Thiết lập nâng cao</button>
-                                <button onClick={() => setIsAvailMenuOpen(false)} className="w-full text-left px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors whitespace-nowrap">Tạm dừng nhận lịch</button>
-                            </div>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between bg-white p-2.5 rounded-xl cursor-pointer" onClick={() => toggleAvailability('morning')}>
-                            <div>
-                                <div className="text-xs font-bold transition-colors" style={!availability.morning ? { color: '#94a3b8' } : {}}>08:00 - 10:00</div>
-                                <div className="text-[9px] text-slate-500">Sáng Thứ 2 - Thứ 6</div>
-                            </div>
-                            <div className={`w-8 h-4 rounded-full relative p-0.5 transition-colors ${availability.morning ? 'bg-secondary-container' : 'bg-slate-300'}`}>
-                                <div className={`w-3 h-3 bg-white rounded-full absolute transition-all ${availability.morning ? 'right-0.5' : 'left-0.5'}`}></div>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between bg-white p-2.5 rounded-xl cursor-pointer" onClick={() => toggleAvailability('afternoon')}>
-                            <div>
-                                <div className="text-xs font-bold transition-colors" style={!availability.afternoon ? { color: '#94a3b8' } : {}}>14:00 - 17:00</div>
-                                <div className="text-[9px] text-slate-500">Chiều Thứ 2 - Thứ 6</div>
-                            </div>
-                            <div className={`w-8 h-4 rounded-full relative p-0.5 transition-colors ${availability.afternoon ? 'bg-secondary-container' : 'bg-slate-300'}`}>
-                                <div className={`w-3 h-3 bg-white rounded-full absolute transition-all ${availability.afternoon ? 'right-0.5' : 'left-0.5'}`}></div>
-                            </div>
-                        </div>
-                        {extraFrames.map(frame => (
-                            <div key={frame.id} className="flex items-center justify-between bg-zinc-50 border border-primary/20 p-2.5 rounded-xl">
-                                <div>
-                                    <div className="text-xs font-bold text-primary">{frame.time}</div>
-                                    <div className="text-[9px] text-slate-500">{frame.day}</div>
-                                </div>
-                                <span onClick={() => removeFrame(frame.id)} className="material-symbols-outlined text-sm text-slate-400 hover:text-error cursor-pointer">close</span>
-                            </div>
-                        ))}
-                        {isAddingFrame ? (
-                            <div className="bg-white p-3 rounded-xl border border-primary/20 shadow-sm space-y-2 animate-fade-in">
-                                <div className="text-[10px] font-bold text-primary mb-1">Thêm khung giờ</div>
-                                <select value={newFrameDay} onChange={e => setNewFrameDay(e.target.value)} className="w-full text-xs p-1.5 border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-700 bg-slate-50">
-                                    {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'].map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
-                                <div className="flex gap-2 items-center">
-                                    <input type="time" value={newFrameStart} onChange={e => setNewFrameStart(e.target.value)} className="w-full text-xs p-1.5 border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-700 bg-slate-50" />
-                                    <span className="text-slate-300 font-black">-</span>
-                                    <input type="time" value={newFrameEnd} onChange={e => setNewFrameEnd(e.target.value)} className="w-full text-xs p-1.5 border border-slate-200 rounded-lg outline-none focus:border-primary text-slate-700 bg-slate-50" />
-                                </div>
-                                <div className="flex gap-2 pt-1">
-                                    <button onClick={handleSaveFrame} className="flex-1 bg-primary text-white font-bold text-[10px] py-1.5 rounded-lg hover:bg-[#003d63] transition-colors shadow-sm">Lưu</button>
-                                    <button onClick={() => setIsAddingFrame(false)} className="flex-1 bg-slate-100 text-slate-600 font-bold text-[10px] py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Hủy</button>
-                                </div>
-                            </div>
-                        ) : (
-                            <button onClick={() => setIsAddingFrame(true)} className="w-full py-1.5 border border-dashed border-primary/40 text-primary text-[10px] font-bold rounded-lg hover:bg-primary/5 transition-colors">
-                                + Thêm khung giờ
-                            </button>
-                        )}
-                    </div>
-                </section>
-                {/* Pending Requests */}
-                <section className="bg-surface-container-low rounded-2xl p-4 flex-grow">
-                    <h3 className="font-bold text-primary text-sm mb-3">Yêu cầu đang chờ ({requests.length})</h3>
-                    <div className="space-y-3">
-                        {requests.length === 0 ? (
-                            <div className="text-xs text-center text-slate-400 p-4 font-bold border-2 border-dashed border-slate-200 rounded-xl">Chưa có yêu cầu mới</div>
-                        ) : (
-                            requests.map(req => (
-                                <div key={req.id} className={`bg-white p-3 rounded-xl shadow-sm ${req.borderColor} transition-all`}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex flex-shrink-0 items-center justify-center text-slate-400 overflow-hidden">
-                                            <span className="material-symbols-outlined text-sm">person</span>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-bold">{req.name}</div>
-                                            <div className={`text-[9px] ${req.textColor} font-medium flex items-center gap-1`}>
-                                                <span className="material-symbols-outlined text-[10px]">{req.icon}</span> {req.type}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-50 px-2 py-1.5 rounded-lg text-[10px] font-bold text-slate-600 mb-2 flex items-center justify-between">
-                                        <span>{req.time}</span>
-                                        <span className={req.textColor}>{req.duration}</span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleRequestAction(req.id)} className="flex-1 py-1.5 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-[#003d63] transition-colors">
-                                            Xác nhận
-                                        </button>
-                                        <button onClick={() => handleRequestAction(req.id)} className="px-2 py-1.5 border border-slate-200 text-slate-400 text-[10px] font-bold rounded-lg hover:bg-error hover:text-white hover:border-error transition-colors">
-                                            X
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </section>
-            </aside>
-            </div>{/* end desktop flex */}
-        </div>
+  /**
+   * Cập nhật một field trong dòng lịch rảnh.
+   * Hàm giữ immutable state để React render đúng.
+   */
+  const updateAvailabilityRow = (index, field, value) => {
+    // Map qua từng dòng và chỉ thay đổi dòng có index tương ứng.
+    setAvailability((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
+      ),
     );
+  };
+
+  /**
+   * Lưu cấu hình lịch rảnh lên backend.
+   * Backend dùng replace-all nên payload là toàn bộ danh sách hiện tại.
+   */
+  const handleSaveAvailability = async () => {
+    setSavingAvailability(true);
+    try {
+      // Chuẩn hóa slot_minutes về số trước khi gửi API.
+      const payload = availability.map((item) => ({
+        day_of_week: Number(item.day_of_week),
+        start_time: item.start_time,
+        end_time: item.end_time,
+        slot_minutes: Number(item.slot_minutes || 30),
+        is_active: item.is_active !== false,
+      }));
+
+      // Lưu và cập nhật lại state bằng dữ liệu backend trả về.
+      const saved = await saveDoctorAvailability(payload);
+      setAvailability(saved.length ? saved : [createAvailabilityDraft()]);
+      toast.success("Đã cập nhật lịch rảnh.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể lưu lịch rảnh.");
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
+
+  /**
+   * Duyệt một yêu cầu lịch hẹn.
+   * Hàm gửi link meeting nếu bác sĩ đã nhập ở card yêu cầu.
+   */
+  const handleApprove = async (appointmentId) => {
+    try {
+      // Lấy meeting URL theo appointment_id từ state form.
+      const meetingUrl = meetingUrls[appointmentId] || null;
+      const result = await approveAppointment(appointmentId, meetingUrl);
+
+      // Cập nhật item vừa duyệt trong danh sách hiện tại.
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment.appointment_id === appointmentId ? result.appointment : appointment,
+        ),
+      );
+      toast.success("Đã xác nhận lịch hẹn.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể xác nhận lịch hẹn.");
+    }
+  };
+
+  /**
+   * Cập nhật trạng thái lịch hẹn từ phía bác sĩ.
+   * Hàm dùng cho từ chối và hoàn tất lịch khám.
+   */
+  const handleStatusUpdate = async (appointmentId, status) => {
+    try {
+      // Gửi reason mặc định để notification có ngữ cảnh cơ bản.
+      const result = await updateAppointmentStatus(
+        appointmentId,
+        status,
+        status === "REJECTED" ? "Bác sĩ từ chối yêu cầu đặt lịch." : "Bác sĩ đánh dấu hoàn tất buổi khám.",
+      );
+
+      // Cập nhật lịch hẹn trong state local.
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment.appointment_id === appointmentId ? result.appointment : appointment,
+        ),
+      );
+      toast.success("Đã cập nhật lịch hẹn.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật lịch hẹn.");
+    }
+  };
+
+  /**
+   * Tạo khoảng nghỉ/chặn lịch cho bác sĩ.
+   * Sau khi tạo xong, state timeOffs được cập nhật để UI thấy ngay.
+   */
+  const handleCreateTimeOff = async () => {
+    try {
+      // Chuyển datetime-local thành ISO string để backend parse chính xác.
+      const payload = {
+        start_time: new Date(timeOffDraft.start_time).toISOString(),
+        end_time: new Date(timeOffDraft.end_time).toISOString(),
+        reason: timeOffDraft.reason,
+      };
+
+      // Gọi API tạo khoảng nghỉ.
+      const created = await createDoctorTimeOff(payload);
+      setTimeOffs((current) => [...current, created]);
+      setTimeOffDraft({ start_time: "", end_time: "", reason: "" });
+      toast.success("Đã thêm lịch nghỉ.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể thêm lịch nghỉ.");
+    }
+  };
+
+  /**
+   * Xóa khoảng nghỉ/chặn lịch đã tạo.
+   * Hàm cập nhật state local sau khi backend xóa thành công.
+   */
+  const handleDeleteTimeOff = async (timeOffId) => {
+    try {
+      // Gọi DELETE theo id khoảng nghỉ.
+      await deleteDoctorTimeOff(timeOffId);
+
+      // Loại bỏ item khỏi danh sách hiện tại.
+      setTimeOffs((current) => current.filter((item) => item.time_off_id !== timeOffId));
+      toast.success("Đã xóa lịch nghỉ.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể xóa lịch nghỉ.");
+    }
+  };
+
+  if (loading) {
+    return <div className="py-16 text-center text-sm font-bold text-slate-400">Đang tải lịch hẹn...</div>;
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-12">
+      <section className="space-y-6 lg:col-span-8">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch khám</p>
+              <h1 className="mt-1 text-2xl font-black text-slate-900">Quản lý lịch hẹn bệnh nhân</h1>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl bg-amber-50 px-4 py-3">
+                <p className="text-xl font-black text-amber-700">{pendingAppointments.length}</p>
+                <p className="text-[10px] font-black uppercase text-amber-600">Chờ duyệt</p>
+              </div>
+              <div className="rounded-xl bg-emerald-50 px-4 py-3">
+                <p className="text-xl font-black text-emerald-700">{activeAppointments.length}</p>
+                <p className="text-[10px] font-black uppercase text-emerald-600">Đang mở</p>
+              </div>
+              <div className="rounded-xl bg-sky-50 px-4 py-3">
+                <p className="text-xl font-black text-sky-700">{appointments.length}</p>
+                <p className="text-[10px] font-black uppercase text-sky-600">Tổng</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-800">Lịch sắp tới</h2>
+            <span className="text-xs font-bold text-slate-400">{activeAppointments.length} lịch</span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {activeAppointments.length === 0 ? (
+              <div className="col-span-full rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm font-bold text-slate-400">
+                Chưa có lịch hẹn đang hoạt động.
+              </div>
+            ) : (
+              activeAppointments.map((appointment) => (
+                <article key={appointment.appointment_id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-black text-slate-800">{appointment.patient?.name || "Bệnh nhân"}</p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(appointment.start_time)}</p>
+                    </div>
+                    <StatusBadge status={appointment.status} />
+                  </div>
+                  <div className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">
+                    {formatTimeRange(appointment)} · {appointment.type === "ONLINE" ? "Online" : "Trực tiếp"}
+                  </div>
+                  <p className="mt-3 line-clamp-2 text-xs text-slate-500">{appointment.reason}</p>
+                  {appointment.status === "APPROVED" && (
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(appointment.appointment_id, "COMPLETED")}
+                      className="mt-3 rounded-lg bg-primary px-3 py-2 text-xs font-black text-white hover:bg-primary/90"
+                    >
+                      Đánh dấu hoàn tất
+                    </button>
+                  )}
+                </article>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-800">Yêu cầu chờ duyệt</h2>
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-700">{pendingAppointments.length}</span>
+          </div>
+
+          <div className="space-y-3">
+            {pendingAppointments.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+                Chưa có yêu cầu đặt lịch mới.
+              </div>
+            ) : (
+              pendingAppointments.map((appointment) => (
+                <article key={appointment.appointment_id} className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="font-black text-slate-800">{appointment.patient?.name || "Bệnh nhân"}</p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(appointment.start_time)}</p>
+                      <p className="mt-2 text-sm text-slate-600">{appointment.reason}</p>
+                    </div>
+                    <StatusBadge status={appointment.status} />
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                    <input
+                      value={meetingUrls[appointment.appointment_id] || ""}
+                      onChange={(event) =>
+                        setMeetingUrls((current) => ({
+                          ...current,
+                          [appointment.appointment_id]: event.target.value,
+                        }))
+                      }
+                      className="rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+                      placeholder="Link meeting nếu khám online"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(appointment.appointment_id)}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-black text-white hover:bg-primary/90"
+                    >
+                      Xác nhận
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(appointment.appointment_id, "REJECTED")}
+                      className="rounded-xl border border-rose-100 px-4 py-2 text-sm font-black text-rose-600 hover:bg-rose-50"
+                    >
+                      Từ chối
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      <aside className="space-y-6 lg:col-span-4">
+        <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch rảnh</p>
+              <h2 className="text-lg font-black text-slate-800">Khung giờ nhận lịch</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAvailability((current) => [...current, createAvailabilityDraft()])}
+              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200"
+            >
+              + Thêm
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {availability.map((item, index) => (
+              <div key={item.availability_id ?? index} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={item.day_of_week}
+                    onChange={(event) => updateAvailabilityRow(index, "day_of_week", Number(event.target.value))}
+                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                  >
+                    {WEEKDAYS.map((day) => (
+                      <option key={day.id} value={day.id}>{day.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={item.slot_minutes}
+                    onChange={(event) => updateAvailabilityRow(index, "slot_minutes", Number(event.target.value))}
+                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                  >
+                    {[15, 20, 30, 45, 60].map((minute) => (
+                      <option key={minute} value={minute}>{minute} phút</option>
+                    ))}
+                  </select>
+                  <input
+                    type="time"
+                    value={item.start_time}
+                    onChange={(event) => updateAvailabilityRow(index, "start_time", event.target.value)}
+                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                  />
+                  <input
+                    type="time"
+                    value={item.end_time}
+                    onChange={(event) => updateAvailabilityRow(index, "end_time", event.target.value)}
+                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAvailability((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                  className="mt-2 text-xs font-black text-rose-500 hover:underline"
+                >
+                  Xóa khung này
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            disabled={savingAvailability}
+            onClick={handleSaveAvailability}
+            className="mt-4 w-full rounded-xl bg-primary px-4 py-3 text-sm font-black text-white hover:bg-primary/90 disabled:opacity-50"
+          >
+            {savingAvailability ? "Đang lưu..." : "Lưu lịch rảnh"}
+          </button>
+        </section>
+
+        <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4">
+            <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch nghỉ</p>
+            <h2 className="text-lg font-black text-slate-800">Chặn slot cụ thể</h2>
+          </div>
+
+          <div className="space-y-3">
+            <input
+              type="datetime-local"
+              value={timeOffDraft.start_time}
+              onChange={(event) => setTimeOffDraft((current) => ({ ...current, start_time: event.target.value }))}
+              className="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm outline-none"
+            />
+            <input
+              type="datetime-local"
+              value={timeOffDraft.end_time}
+              onChange={(event) => setTimeOffDraft((current) => ({ ...current, end_time: event.target.value }))}
+              className="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm outline-none"
+            />
+            <input
+              value={timeOffDraft.reason}
+              onChange={(event) => setTimeOffDraft((current) => ({ ...current, reason: event.target.value }))}
+              className="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm outline-none"
+              placeholder="Lý do nghỉ"
+            />
+            <button
+              type="button"
+              onClick={handleCreateTimeOff}
+              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800"
+            >
+              Thêm lịch nghỉ
+            </button>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {timeOffs.map((timeOff) => (
+              <div key={timeOff.time_off_id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-black text-slate-700">{formatDateTime(timeOff.start_time)}</p>
+                  <p className="truncate text-[11px] text-slate-400">{timeOff.reason || "Không có lý do"}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTimeOff(timeOff.time_off_id)}
+                  className="text-rose-500 hover:text-rose-700"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </aside>
+    </div>
+  );
 }

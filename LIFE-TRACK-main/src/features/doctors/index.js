@@ -5,3 +5,4 @@ export {
   hiredDoctorIds,
   recommendedDoctorIds,
 } from "./mocks/doctorsData";
+export * from "./api/doctorHireApi";

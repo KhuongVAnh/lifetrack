@@ -2,6 +2,10 @@
 
 const prisma = require("../prismaClient")
 const { fromPrismaUserRole } = require("../utils/enumMappings")
+const {
+  canDoctorWritePatientDomain,
+  canViewPatientDomain,
+} = require("../services/patientDoctorAccessService")
 
 const parseId = (value) => Number.parseInt(value, 10)
 
@@ -19,19 +23,17 @@ const getRequesterContext = async (requesterId) => {
   }
 }
 
-const hasAcceptedAccess = async (patientId, viewerId) => {
-  if (patientId === viewerId) return true
+const canManageEhr = async ({ patientId, requesterId, requester }) => {
+  // Bệnh nhân luôn được cập nhật hồ sơ EHR của chính mình.
+  if (patientId === requesterId) return true
 
-  const access = await prisma.accessPermission.findFirst({
-    where: {
-      patient_id: patientId,
-      viewer_id: viewerId,
-      status: "accepted",
-    },
-    select: { permission_id: true },
-  })
+  // Bác sĩ chỉ được ghi khi đang được thuê active và bệnh nhân bật quyền EHR.
+  if (requester?.roleText === "bác sĩ") {
+    return canDoctorWritePatientDomain({ patientId, doctorId: requesterId, domain: "ehr" })
+  }
 
-  return Boolean(access)
+  // Người nhà chỉ được xem theo AccessPermission cũ, không được ghi EHR.
+  return false
 }
 
 // ============================================
@@ -43,7 +45,7 @@ exports.getOverview = async (req, res) => {
     const requesterId = parseId(req.user.user_id)
     const userId = parseId(req.params.user_id)
 
-    const canView = await hasAcceptedAccess(userId, requesterId)
+    const canView = await canViewPatientDomain({ patientId: userId, viewerId: requesterId, domain: "ehr" })
     if (!canView) {
       return res.status(403).json({ error: "Bạn không có quyền xem hồ sơ sức khỏe này" })
     }
@@ -76,8 +78,8 @@ exports.upsertOverview = async (req, res) => {
     const userId = parseId(req.params.user_id)
     const requester = await getRequesterContext(requesterId)
 
-    const canManage = await hasAcceptedAccess(userId, requesterId)
-    // For now, let's allow patients and doctors with accepted access to edit.
+    const canManage = await canManageEhr({ patientId: userId, requesterId, requester })
+    // Chỉ bệnh nhân hoặc bác sĩ thuê được bật quyền EHR mới có thể cập nhật.
     if (!canManage) {
       return res.status(403).json({ error: "Bạn không có quyền cập nhật hồ sơ sức khỏe này" })
     }
@@ -130,7 +132,7 @@ exports.getVisits = async (req, res) => {
     const requesterId = parseId(req.user.user_id)
     const userId = parseId(req.params.user_id)
 
-    const canView = await hasAcceptedAccess(userId, requesterId)
+    const canView = await canViewPatientDomain({ patientId: userId, viewerId: requesterId, domain: "ehr" })
     if (!canView) {
       return res.status(403).json({ error: "Bạn không có quyền xem lịch sử khám này" })
     }
@@ -163,7 +165,7 @@ exports.createVisit = async (req, res) => {
 
     const isDoctor = requester.roleText === "bác sĩ"
     if (isDoctor) {
-      const canManage = await hasAcceptedAccess(targetUserId, requesterId)
+      const canManage = await canDoctorWritePatientDomain({ patientId: targetUserId, doctorId: requesterId, domain: "ehr" })
       if (!canManage) {
         return res.status(403).json({ error: "Bạn không có quyền cập nhật bệnh sử cho bệnh nhân này" })
       }
@@ -234,7 +236,7 @@ exports.updateVisit = async (req, res) => {
     const isPatientOwner = visit.user_id === requesterId
 
     if (isDoctor) {
-      const canManage = await hasAcceptedAccess(visit.user_id, requesterId)
+      const canManage = await canDoctorWritePatientDomain({ patientId: visit.user_id, doctorId: requesterId, domain: "ehr" })
       if (!canManage) {
         return res.status(403).json({ error: "Bạn không có quyền cập nhật lịch sử khám này" })
       }
@@ -300,7 +302,7 @@ exports.deleteVisit = async (req, res) => {
     const isPatientOwner = visit.user_id === requesterId
 
     if (isDoctor) {
-      const canManage = await hasAcceptedAccess(visit.user_id, requesterId)
+      const canManage = await canDoctorWritePatientDomain({ patientId: visit.user_id, doctorId: requesterId, domain: "ehr" })
       if (!canManage) {
         return res.status(403).json({ error: "Không có quyền xóa lịch sử này" })
       }

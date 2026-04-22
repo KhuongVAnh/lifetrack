@@ -29,6 +29,7 @@ const {
 const { ingestTelemetry } = require("./services/telemetryIngestService")
 const { attachAiQueueRealtimeBridge } = require("./services/aiQueueRealtimeBridgeService")
 const { attachDirectMessageNotificationBridge } = require("./services/directMessageNotificationBridgeService")
+const { initCronJobs, stopCronJobs } = require("./services/cronService")
 
 const allowedClientOrigins = [process.env.CLIENT_URL, process.env.CLIENT_URL2, process.env.CLIENT_URL3, process.env.CLIENT_URL4, process.env.CLIENT_URL5]
   .map((origin) => origin?.trim())
@@ -113,7 +114,12 @@ app.use("/test", require("./routes/routesServer"))
 app.use("/api/access", require("./routes/access"))
 app.use("/api/phr", require("./routes/phr"))
 app.use("/api/doctor", require("./routes/doctorRoutes"))
+app.use("/api/doctors", require("./routes/doctors"))
+app.use("/api/doctor-hires", require("./routes/doctorHires"))
 app.use("/api/family", require("./routes/familyRoutes"))
+app.use("/api/appointments", require("./routes/appointments"))
+app.use("/api/medications", require("./routes/medications"))
+
 
 socketService.init(io)
 app.set("io", io)
@@ -243,6 +249,14 @@ const shutdownGracefully = async (signal) => {
   isShuttingDown = true
 
   logServerEvent("SERVER_SHUTDOWN_START", { signal })
+
+  try {
+    stopCronJobs()
+  } catch (error) {
+    logServerEvent("CRON_SHUTDOWN_ERROR", {
+      reason: error?.message || "UNKNOWN",
+    })
+  }
 
   try {
     await shutdownMqttTelemetry()
@@ -419,6 +433,9 @@ const startServer = async () => {
       onTelemetryMessage: handleMqttTelemetryMessage,
     })
     logServerEvent("MQTT_INIT_RESULT", mqttState)
+
+    // Khởi tạo Cron Jobs và truyền io để cron nhắc thuốc có thể emit notification realtime.
+    initCronJobs({ io })
 
     server.listen(PORT, () => {
       logServerEvent("SERVER_LISTENING", {

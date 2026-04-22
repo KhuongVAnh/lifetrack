@@ -1,30 +1,43 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  appointments,
   communityArticles,
   communityQuestions,
   familyMembers,
-  getDoctorById,
-  patientProfiles,
 } from "@/shared/mocks/appFixtures";
 import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { getUserDisplayName } from "@/entities/user";
+import { getAppointments } from "@/features/appointments/api/appointmentsApi";
+import { getMedicationLogs, markMedicationTaken } from "@/features/medications/api/medicationsApi";
 
+/**
+ * Vẽ sparkline nhỏ cho các chỉ số sức khỏe trên dashboard.
+ * Hàm chuyển dữ liệu numeric thành đường SVG bo mượt để hiển thị xu hướng nhanh.
+ */
 function DashboardSparkline({ data, color = "#0060A8" }) {
+  // Nếu dữ liệu không đủ 2 điểm thì không thể vẽ đường xu hướng có ý nghĩa.
   if (!data || data.length < 2) return null;
+
+  // Kích thước cố định giúp các card chỉ số không bị nhảy layout.
   const height = 30;
   const width = 100;
+
+  // Tính min/max để chuẩn hóa dữ liệu về vùng SVG.
   const min = Math.min(...data.map((d) => d.numeric));
   const max = Math.max(...data.map((d) => d.numeric));
   const range = (max - min) || 1;
   
+  // Chuyển từng điểm dữ liệu thành tọa độ x/y trong SVG.
   const points = data.map((d, i) => ({
     x: (i / (data.length - 1)) * width,
     y: height - ((d.numeric - min) / range) * height,
   }));
 
+  // Khởi tạo path từ điểm đầu tiên.
   let pathData = `M ${points[0].x},${points[0].y}`;
+
+  // Dùng cubic bezier giữa các điểm để đường cong mềm hơn polyline thẳng.
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[i];
     const p1 = points[i + 1];
@@ -39,7 +52,12 @@ function DashboardSparkline({ data, color = "#0060A8" }) {
   );
 }
 
+/**
+ * Hiển thị một card chỉ số sức khỏe nhỏ trên dashboard.
+ * Card gồm nhãn, giá trị hiện tại, trạng thái và sparkline xu hướng.
+ */
 function CompactVitalCard({ label, value, unit, status, data, color }) {
+  // Component chỉ nhận props đã chuẩn hóa từ dashboard nên không cần state nội bộ.
   return (
     <div className="flex flex-col gap-2 rounded-[2rem] bg-white p-6 shadow-sm border border-slate-100/50 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
@@ -58,6 +76,53 @@ function CompactVitalCard({ label, value, unit, status, data, color }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Format ngày giờ lịch khám cho dashboard bệnh nhân.
+ * Hàm trả fallback ngắn nếu dữ liệu backend chưa sẵn sàng.
+ */
+function formatAppointmentDateTime(value) {
+  // Parse ISO string từ API lịch hẹn.
+  const date = new Date(value);
+
+  // Tránh render Invalid Date nếu response có lỗi dữ liệu.
+  if (Number.isNaN(date.getTime())) return "Chưa có thời gian";
+
+  // Hiển thị dạng ngày/giờ ngắn để vừa card sidebar.
+  return date.toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
+}
+
+/**
+ * Format giờ uống thuốc để hiển thị gọn trong widget dashboard.
+ * Hàm chỉ lấy giờ/phút vì widget đã nằm trong ngữ cảnh "hôm nay".
+ */
+function formatMedicationTime(value) {
+  // Parse ISO string scheduled_time từ API medication logs.
+  const date = new Date(value);
+
+  // Trả fallback ngắn nếu dữ liệu ngày giờ không hợp lệ.
+  if (Number.isNaN(date.getTime())) return "--:--";
+
+  // Hiển thị giờ 24h theo locale Việt Nam.
+  return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Lấy cấu hình hiển thị cho trạng thái uống thuốc.
+ * Hàm gom label, màu và icon để JSX danh sách thuốc không phải rẽ nhánh nhiều.
+ */
+function getMedicationStatusMeta(status) {
+  // Map trạng thái backend sang text và màu phù hợp trên nền xanh của widget.
+  const map = {
+    PENDING: { label: "Chờ uống", icon: "schedule", className: "bg-amber-300/25 text-amber-50" },
+    TAKEN: { label: "Đã uống", icon: "check_circle", className: "bg-white/20 text-white" },
+    MISSED: { label: "Bỏ lỡ", icon: "error", className: "bg-rose-300/25 text-rose-50" },
+    SKIPPED: { label: "Bỏ qua", icon: "remove_circle", className: "bg-slate-200/20 text-slate-50" },
+  };
+
+  // Fallback về PENDING để UI không vỡ khi backend thêm trạng thái mới.
+  return map[status] ?? map.PENDING;
 }
 
 const bloodPressureSeries = [
@@ -88,7 +153,85 @@ export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const userName = getUserDisplayName(user, "Bệnh nhân");
-  const upcomingDoctor = getDoctorById(appointments.upcoming.doctorId);
+  const [appointmentItems, setAppointmentItems] = useState([]);
+  const [medicationLogs, setMedicationLogs] = useState([]);
+
+  /**
+   * Tải dữ liệu agenda thật cho dashboard.
+   * Hàm lấy lịch hẹn đang hoạt động và log thuốc hôm nay để thay thế mock cũ.
+   */
+  const fetchDashboardAgenda = async () => {
+    try {
+      // Tạo khoảng ngày hôm nay cho API logs.
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+
+      // Gọi song song lịch khám và nhắc thuốc để dashboard không chờ tuần tự.
+      const [appointmentsData, logsData] = await Promise.all([
+        getAppointments(),
+        getMedicationLogs({ from: todayStart.toISOString(), to: todayEnd.toISOString() }),
+      ]);
+
+      // Lưu state; component sẽ tự chọn lịch sắp tới gần nhất bằng useMemo.
+      setAppointmentItems(appointmentsData);
+      setMedicationLogs(logsData);
+    } catch {
+      // Dashboard không toast lỗi để tránh làm phiền khi người dùng vừa vào app.
+      setAppointmentItems([]);
+      setMedicationLogs([]);
+    }
+  };
+
+  // Tải dữ liệu agenda khi dashboard mount.
+  useEffect(() => {
+    fetchDashboardAgenda();
+  }, []);
+
+  const nextAppointment = useMemo(
+    () =>
+      appointmentItems
+        .filter((appointment) => ["PENDING", "APPROVED"].includes(appointment.status))
+        .sort((left, right) => new Date(left.start_time) - new Date(right.start_time))[0],
+    [appointmentItems],
+  );
+
+  const pendingMedicationCount = medicationLogs.filter((log) => log.status === "PENDING").length;
+  const takenMedicationCount = medicationLogs.filter((log) => log.status === "TAKEN").length;
+  const sortedMedicationLogs = useMemo(
+    () =>
+      [...medicationLogs].sort(
+        (left, right) => new Date(left.scheduled_time) - new Date(right.scheduled_time),
+      ),
+    [medicationLogs],
+  );
+
+  /**
+   * Xác nhận đã uống thuốc ngay trên dashboard.
+   * Hàm gọi API cập nhật log và sửa state local để widget phản hồi tức thì.
+   */
+  const handleDashboardMedicationTaken = async (event, logId) => {
+    // Chặn click lan ra các vùng điều hướng khác trong widget.
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+      // Gọi API dùng chung với trang tủ thuốc để đảm bảo quyền và dữ liệu nhất quán.
+      await markMedicationTaken(logId);
+
+      // Cập nhật state local, ghi nhận thời điểm uống ngay tại client.
+      setMedicationLogs((current) =>
+        current.map((log) =>
+          log.log_id === logId
+            ? { ...log, status: "TAKEN", taken_at: new Date().toISOString() }
+            : log,
+        ),
+      );
+    } catch {
+      // Dashboard giữ yên lặng để không làm gián đoạn trải nghiệm; trang tủ thuốc vẫn có xử lý đầy đủ.
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-10">
@@ -140,6 +283,91 @@ export function DashboardPage() {
             <p className="text-center text-xs text-slate-400 px-4">Tất cả thành viên gia đình đang ở mức an toàn.</p>
           </div>
         </div>
+      </section>
+
+      {/* Lịch uống thuốc hôm nay được đặt ngay đầu dashboard vì đây là tác vụ cần bệnh nhân xử lý nhanh nhất. */}
+      <section className="rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-500 p-4 text-white shadow-lg shadow-emerald-100 md:p-5">
+        <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-emerald-100">medication</span>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-emerald-100">Nhắc thuốc hôm nay</p>
+            </div>
+            <h2 className="mt-1 text-xl font-black">Lịch uống thuốc hôm nay</h2>
+            <p className="mt-0.5 text-xs font-medium text-emerald-100">
+              {medicationLogs.length
+                ? `${takenMedicationCount}/${medicationLogs.length} lượt đã hoàn tất, ${pendingMedicationCount} lượt đang chờ.`
+                : "Chưa có lịch uống thuốc nào hôm nay."}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate("/patient/medications")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black text-emerald-700 shadow-lg transition-colors hover:bg-emerald-50"
+          >
+            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            Mở tủ thuốc
+          </button>
+        </div>
+
+        {sortedMedicationLogs.length === 0 ? (
+          <div className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center">
+            <span className="material-symbols-outlined text-2xl text-emerald-100">event_available</span>
+            <p className="mt-1 text-xs font-bold text-emerald-50">Không có lượt uống thuốc hôm nay</p>
+          </div>
+        ) : (
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+            {sortedMedicationLogs.slice(0, 6).map((log) => {
+              const statusMeta = getMedicationStatusMeta(log.status);
+
+              return (
+                <div key={log.log_id} className="rounded-xl bg-white/12 p-3 ring-1 ring-white/10">
+                  {/* Tên thuốc chiếm hàng riêng để không bị badge hoặc nút thao tác che mất. */}
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                      <span className="material-symbols-outlined text-[19px] text-emerald-50">medication</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-black leading-4 text-white">{log.medication?.name ?? "Thuốc"}</p>
+                      <p className="mt-0.5 break-words text-[11px] font-bold leading-4 text-emerald-100">
+                        {formatMedicationTime(log.scheduled_time)}
+                        {log.medication?.dosage ? ` · ${log.medication.dosage}` : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Hàng trạng thái và hành động đặt bên dưới để card ngang vẫn gọn trên desktop/mobile. */}
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black ${statusMeta.className}`}>
+                      <span className="material-symbols-outlined text-[12px]">{statusMeta.icon}</span>
+                      {statusMeta.label}
+                    </span>
+                    {log.status === "PENDING" && (
+                      <button
+                        type="button"
+                        onClick={(event) => handleDashboardMedicationTaken(event, log.log_id)}
+                        className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50"
+                      >
+                        Đánh dấu đã uống
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {sortedMedicationLogs.length > 6 && (
+          <button
+            type="button"
+            onClick={() => navigate("/patient/medications")}
+            className="mt-2 w-full rounded-xl bg-white/10 px-4 py-1.5 text-center text-xs font-black text-emerald-50 transition-colors hover:bg-white/15"
+          >
+            +{sortedMedicationLogs.length - 6} lượt khác trong hôm nay
+          </button>
+        )}
       </section>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 items-start">
@@ -267,44 +495,40 @@ export function DashboardPage() {
                 <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-4 border-white bg-primary shadow-sm" />
                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Lịch khám sắp tới</p>
                 <div className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-4 border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <ImageWithFallback alt={upcomingDoctor?.name} className="h-12 w-12 rounded-xl object-cover" src={upcomingDoctor?.avatar} />
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-slate-800 truncate">{upcomingDoctor?.name}</h4>
-                      <p className="text-xs text-slate-500 truncate">{upcomingDoctor?.specialty}</p>
+                  {nextAppointment ? (
+                    <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 text-primary">
+                        <span className="material-symbols-outlined">stethoscope</span>
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-slate-800 truncate">{nextAppointment.doctor?.name || "Bác sĩ"}</h4>
+                        <p className="text-xs text-slate-500 truncate">{nextAppointment.status === "APPROVED" ? "Đã xác nhận" : "Chờ xác nhận"}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] font-bold pt-2 border-t border-slate-100">
-                    <div className="flex items-center gap-1 text-slate-600">
-                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                      {appointments.upcoming.displayDate}
+                    <div className="flex items-center justify-between text-[11px] font-bold pt-2 border-t border-slate-100">
+                      <div className="flex items-center gap-1 text-slate-600">
+                        <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                        {formatAppointmentDateTime(nextAppointment.start_time)}
+                      </div>
+                      <div className="flex items-center gap-1 text-secondary">
+                        <span className="material-symbols-outlined text-[14px]">videocam</span>
+                        {nextAppointment.type === "ONLINE" ? "Online" : "Trực tiếp"}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-secondary">
-                      <span className="material-symbols-outlined text-[14px]">alarm</span>
-                      {appointments.upcoming.displayTime}
+                    <button onClick={() => navigate("/patient/appointments")} className="w-full mt-2 py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
+                     Xem lịch hẹn
+                    </button>
+                    </>
+                  ) : (
+                    <div className="py-4 text-center">
+                      <span className="material-symbols-outlined text-3xl text-slate-300">event_busy</span>
+                      <p className="mt-2 text-xs font-bold text-slate-400">Chưa có lịch hẹn sắp tới.</p>
+                      <button onClick={() => navigate("/patient/appointments")} className="mt-3 rounded-xl bg-primary px-4 py-2 text-xs font-black text-white">
+                        Đặt lịch mới
+                      </button>
                     </div>
-                  </div>
-                  <button onClick={() => navigate(`/patient/doctors/${appointments.upcoming.doctorId}/consult`)} className="w-full mt-2 py-2.5 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
-                   {appointments.upcoming.roomLabel}
-                  </button>
-                </div>
-              </div>
-
-              {/* Today's Tasks */}
-              <div className="relative pl-6 border-l-2 border-slate-200">
-                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full border-4 border-white bg-slate-200" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Việc cần làm</p>
-                <div className="space-y-3">
-                  {[
-                    "Cập nhật huyết áp cho bố",
-                    "Đọc bài viết về tim mạch",
-                    "Uống Vitamin tổng hợp"
-                  ].map((task, idx) => (
-                    <div key={idx} className="flex items-start gap-4 group cursor-pointer">
-                      <div className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-slate-200 group-hover:border-secondary transition-colors" />
-                      <p className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{task}</p>
-                    </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 ﻿// Controller xử lý telemetry, dữ liệu ECG và lịch sử chỉ số tim mạch.
 const prisma = require("../prismaClient")
 const { randomUUID } = require("crypto")
-const { AccessRole, AccessStatus } = require("@prisma/client")
+const { canViewPatientDomain } = require("../services/patientDoctorAccessService")
 const {
   BASELINE_SAMPLE_RATE,
   generateFakeECGData,
@@ -80,11 +80,27 @@ const getDeviceReadings = async (req, res) => {
   try {
     const deviceId = toDeviceId(req.params.device_id)
     const { limit = 50, offset = 0 } = req.query
+    const requesterId = Number.parseInt(req.user.user_id, 10)
 
     if (deviceId === null) {
       return res.status(400).json({ message: "device_id khong hop le" })
     }
 
+    // Lấy chủ thiết bị trước để kiểm tra quyền xem ECG theo quan hệ thuê/chia sẻ.
+    const device = await prisma.device.findUnique({
+      where: { device_id: deviceId },
+      select: { user_id: true },
+    })
+    if (!device) {
+      return res.status(404).json({ message: "Không tìm thấy thiết bị" })
+    }
+
+    const canView = await canViewPatientDomain({ patientId: device.user_id, viewerId: requesterId, domain: "ecg" })
+    if (!canView) {
+      return res.status(403).json({ message: "Bạn không có quyền xem dữ liệu ECG này" })
+    }
+
+    // Sau khi quyền hợp lệ mới lấy danh sách readings của thiết bị.
     const readings = await prisma.reading.findMany({
       where: { device_id: deviceId },
       orderBy: { timestamp: "desc" },
@@ -105,6 +121,13 @@ const getUserReadingHistory = async (req, res) => {
     const { user_id } = req.params
     const { limit = 100, offset = 0 } = req.query
     const userId = Number.parseInt(user_id, 10)
+    const requesterId = Number.parseInt(req.user.user_id, 10)
+
+    // Lịch sử ECG của user chỉ mở cho chủ sở hữu, người thân được chia sẻ hoặc bác sĩ thuê được bật ECG.
+    const canView = await canViewPatientDomain({ patientId: userId, viewerId: requesterId, domain: "ecg" })
+    if (!canView) {
+      return res.status(403).json({ message: "Bạn không có quyền xem lịch sử ECG này" })
+    }
 
     const readings = await prisma.reading.findMany({
       where: {
@@ -200,17 +223,9 @@ const getReadingDetail = async (req, res) => {
 
     const patientId = reading.device.user_id
     if (requesterId !== patientId) {
-      const viewerAccess = await prisma.accessPermission.findFirst({
-        where: {
-          patient_id: patientId,
-          viewer_id: requesterId,
-          role: { in: [AccessRole.BAC_SI, AccessRole.GIA_DINH] },
-          status: AccessStatus.accepted,
-        },
-        select: { permission_id: true },
-      })
-
-      if (!viewerAccess) {
+      // Bác sĩ phải là người đang được thuê active và được bật quyền ECG; người thân dùng quyền chia sẻ cũ.
+      const canView = await canViewPatientDomain({ patientId, viewerId: requesterId, domain: "ecg" })
+      if (!canView) {
         return res.status(403).json({ message: "Bạn không có quyền xem reading này" })
       }
     }

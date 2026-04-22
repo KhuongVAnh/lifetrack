@@ -3,6 +3,11 @@ const router = express.Router()
 const doctorController = require("../controllers/doctorController")
 const { authenticateToken, authorizeRoles } = require("../middleware/auth")
 
+/**
+ * API portal bác sĩ cần token để controller kiểm tra đúng bác sĩ hiện tại.
+ */
+router.use(authenticateToken)
+
 // Lấy danh sách bệnh nhân được phép xem
 router.get("/patients/:viewer_id", doctorController.getAccessiblePatients)
 

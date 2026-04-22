@@ -19,10 +19,10 @@ router.post("/fake", authenticateToken, createFakeReading)
 // Lấy chi tiết reading theo `reading_id`
 router.get("/detail/:reading_id", authenticateToken, getReadingDetail)
 
-// Lấy dữ liệu đọc của thiết bị
-router.get("/:device_id", authenticateToken, getDeviceReadings)
-
 // Lấy lịch sử đọc của người dùng
 router.get("/history/:user_id", authenticateToken, getUserReadingHistory)
+
+// Lấy dữ liệu đọc của thiết bị
+router.get("/:device_id", authenticateToken, getDeviceReadings)
 
 module.exports = router
