@@ -59,7 +59,7 @@ export function DoctorShell() {
               <div>
                 <h1 className="text-2xl font-extrabold text-sky-900 md:text-3xl">Bác sĩ gia đình</h1>
                 <p className="mt-2 max-w-3xl text-slate-600 text-sm md:text-base">
-                  Kết nối trực tiếp với đội ngũ bác sĩ đồng hành cùng hồ sơ sức khỏe của gia đình bạn.
+                  Kết nối trực tiếp với đội ngũ bác sĩ đồng hành cùng sức khỏe của gia đình bạn
                 </p>
               </div>
               <div className="flex gap-2 rounded-full bg-surface-container-low p-1 self-start md:self-auto">

@@ -292,22 +292,35 @@ export function MedicationsPage() {
 
   /** Tải dữ liệu đơn thuốc và lịch sử uống thuốc từ API */
   const fetchData = async () => {
+    const from = new Date();
+    const to = new Date();
+    to.setDate(to.getDate() + 7);
+
+    let loadedPlans = [];
+    let loadedLogs = [];
+    let hasError = false;
+
     try {
-      // Gọi song song hai API để tối ưu thời gian tải
-      const from = new Date();
-      const to = new Date();
-      to.setDate(to.getDate() + 7);
-      const [plansData, logsData] = await Promise.all([
-        getMedicationPlans(),
-        getMedicationLogs({ from: from.toISOString(), to: to.toISOString() }),
-      ]);
-      setPlans(plansData);
-      setLogs(logsData);
-    } catch {
-      toast.error("Không thể tải thông tin thuốc.");
-    } finally {
-      setLoading(false);
+      loadedPlans = await getMedicationPlans();
+      setPlans(loadedPlans);
+    } catch (error) {
+      hasError = true;
+      console.error("Lỗi tải danh sách đơn thuốc:", error);
     }
+
+    try {
+      loadedLogs = await getMedicationLogs({ from: from.toISOString(), to: to.toISOString() });
+      setLogs(loadedLogs);
+    } catch (error) {
+      hasError = true;
+      console.error("Lỗi tải lịch uống thuốc:", error);
+    }
+
+    if (hasError) {
+      toast.error("Không thể tải toàn bộ dữ liệu thuốc. Vui lòng thử lại hoặc kiểm tra kết nối.");
+    }
+
+    setLoading(false);
   };
 
   // Tải dữ liệu khi component mount

@@ -125,6 +125,22 @@ function getMedicationStatusMeta(status) {
   return map[status] ?? map.PENDING;
 }
 
+/**
+ * Lấy icon phù hợp cho loại thuốc dựa trên type.
+ */
+function getMedicationIcon(type) {
+  const iconMap = {
+    "Thuốc hạ huyết áp": "blood_pressure",
+    "Thuốc chẹn beta": "monitor_heart",
+    "Thuốc ức chế bơm proton": "stomach",
+    "Thuốc kháng sinh": "sanitizer",
+    "Thuốc statin": "lab_research",
+    "Thuốc giảm triglyceride": "lab_research",
+    "Thuốc chống đông máu": "bloodtype",
+  };
+  return iconMap[type] ?? "medication";
+}
+
 const bloodPressureSeries = [
   { label: "T2", value: "128/82", numeric: 128 },
   { label: "T3", value: "126/80", numeric: 126 },
@@ -248,10 +264,10 @@ export function DashboardPage() {
               <span className="text-xs font-bold uppercase tracking-[0.3em] text-secondary">Chào buổi sáng, {userName}</span>
             </div>
             <h1 className="mb-4 text-3xl md:text-5xl font-black leading-tight">
-              Sức khỏe gia đình <br className="hidden md:block" /> nằm trong tầm tay.
+              Sức khỏe gia đình <br className="hidden md:block" /> nằm trong tầm tay
             </h1>
             <p className="mb-8 text-lg text-slate-300 max-w-md font-medium leading-relaxed">
-              Tất cả chỉ số, lịch khám và hỗ trợ từ bác sĩ chuyên gia được đồng bộ hóa ngay tại đây.
+              Tất cả chỉ số, lịch khám và hỗ trợ từ bác sĩ chuyên gia được đồng bộ hóa ngay tại đây
             </p>
             <div className="flex flex-wrap gap-4">
               <button onClick={() => navigate("/patient/appointments")} className="flex items-center gap-2 rounded-2xl bg-white px-8 py-4 font-black text-slate-900 shadow-xl transition-all hover:scale-[1.02] active:scale-95">
@@ -326,7 +342,7 @@ export function DashboardPage() {
                   {/* Tên thuốc chiếm hàng riêng để không bị badge hoặc nút thao tác che mất. */}
                   <div className="flex items-start gap-2.5">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
-                      <span className="material-symbols-outlined text-[19px] text-emerald-50">medication</span>
+                      <span className="material-symbols-outlined text-[19px] text-emerald-50">{getMedicationIcon(log.medication?.type)}</span>
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-black leading-4 text-white">{log.medication?.name ?? "Thuốc"}</p>
@@ -334,6 +350,11 @@ export function DashboardPage() {
                         {formatMedicationTime(log.scheduled_time)}
                         {log.medication?.dosage ? ` · ${log.medication.dosage}` : ""}
                       </p>
+                      {log.medication?.description && (
+                        <p className="mt-1 break-words text-[10px] leading-3 text-emerald-200">
+                          {log.medication.description}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -377,9 +398,9 @@ export function DashboardPage() {
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-6 w-1 rounded-full bg-primary" />
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Xu hướng cá nhân</h2>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">Sức khỏe của tôi</h2>
               </div>
-              <Link className="text-xs font-bold text-primary uppercase tracking-widest hover:underline" to="/patient/health-records">Toàn bộ hồ sơ</Link>
+              <Link className="text-xs font-bold text-primary uppercase tracking-widest hover:underline" to="/patient/health-records">Xem chi tiết</Link>
             </div>
             
             <div className="grid gap-4 md:grid-cols-3">
@@ -449,7 +470,7 @@ export function DashboardPage() {
              <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-6 w-1 rounded-full bg-slate-800" />
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Cộng đồng & Kiến thức</h2>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">Cộng đồng</h2>
               </div>
             </div>
             
@@ -487,7 +508,7 @@ export function DashboardPage() {
         {/* SIDEBAR: UNIFIED AGENDA */}
         <div className="lg:col-span-4 space-y-8">
            <section className="rounded-[2.5rem] bg-white p-8 border border-slate-100 shadow-sm">
-            <h2 className="text-xl font-black text-slate-800 tracking-tight mb-6">Chương trình hôm nay</h2>
+            <h2 className="text-xl font-black text-slate-800 tracking-tight mb-6">Lịch hẹn hôm nay</h2>
             
             <div className="space-y-8">
               {/* Upcoming Appointment as its own stylish component */}

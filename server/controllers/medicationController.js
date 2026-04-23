@@ -444,7 +444,13 @@ const getMedicationLogs = async (req, res) => {
       },
       include: {
         medication: {
-          include: {
+          select: {
+            medication_id: true,
+            name: true,
+            dosage: true,
+            times: true,
+            type: true,
+            description: true,
             plan: {
               select: {
                 plan_id: true,

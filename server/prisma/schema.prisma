@@ -533,6 +533,8 @@ model Medication {
   name          String   
   dosage        String   
   times         Json     
+  type          String?  // Loại thuốc (ví dụ: "Thuốc hạ huyết áp", "Thuốc kháng sinh")
+  description   String?  // Mô tả tác dụng cơ bản của thuốc
   
   plan MedicationPlan  @relation(fields: [plan_id], references: [plan_id], onDelete: Cascade)
   logs MedicationLog[]

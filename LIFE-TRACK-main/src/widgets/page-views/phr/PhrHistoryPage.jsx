@@ -81,7 +81,7 @@ export function PhrHistoryPage() {
   return (
     <div className="space-y-6 pb-12">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-on-surface">Lịch sử Y tế (Timeline)</h2>
+        <h2 className="text-xl font-bold text-on-surface">Lịch sử Y tế </h2>
         <button
           onClick={openAddForm}
           className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 transition-colors shadow-sm"

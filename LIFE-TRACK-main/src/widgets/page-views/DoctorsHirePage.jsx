@@ -125,7 +125,7 @@ export function DoctorsHirePage() {
       <section>
         <div className="mb-6">
           <h2 className="text-2xl font-extrabold tracking-tight text-primary">Gói Chăm Sóc Sức Khỏe</h2>
-          <p className="mt-1 text-on-surface-variant">Lựa chọn gói chăm sóc và gửi yêu cầu thuê bác sĩ phù hợp.</p>
+          <p className="mt-1 text-on-surface-variant">Lựa chọn gói chăm sóc và gửi yêu cầu thuê bác sĩ phù hợp</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {doctorPackages.map((pkg) => (

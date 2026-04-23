@@ -326,7 +326,7 @@ export function AppointmentsPage() {
             <p className="text-[11px] font-black uppercase tracking-widest text-primary">Đặt lịch khám</p>
             <h1 className="mt-1 text-2xl font-black text-slate-900">Chọn bác sĩ và khung giờ phù hợp</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              Khung giờ được lấy từ lịch rảnh bác sĩ đã cấu hình và tự động khóa khi có lịch trùng.
+              Khung giờ được lấy từ lịch rảnh bác sĩ
             </p>
           </div>
           <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">

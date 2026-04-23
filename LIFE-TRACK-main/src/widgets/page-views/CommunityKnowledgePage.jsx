@@ -11,7 +11,7 @@ export function CommunityKnowledgePage() {
         <div>
           <h1 className="mb-2 text-4xl font-extrabold text-primary">Cộng đồng Sống Khỏe</h1>
           <p className="text-lg text-on-surface-variant">
-            Chia sẻ kiến thức y tế chính thống và giải đáp thắc mắc cùng chuyên gia.
+            Chia sẻ kiến thức y tế chính thống và giải đáp thắc mắc cùng chuyên gia
           </p>
         </div>
         <div className="flex gap-3">

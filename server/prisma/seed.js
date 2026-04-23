@@ -1425,6 +1425,8 @@ async function main() {
       name: "Amlodipine",
       dosage: "5mg",
       times: ["08:00"],
+      type: "Thuốc hạ huyết áp",
+      description: "Giảm huyết áp bằng cách làm giãn mạch máu, giúp tim bơm máu dễ dàng hơn",
     },
   })
 
@@ -1434,6 +1436,8 @@ async function main() {
       name: "Bisoprolol",
       dosage: "2.5mg",
       times: ["08:00"],
+      type: "Thuốc chẹn beta",
+      description: "Giảm nhịp tim và sức co bóp của tim, giúp kiểm soát huyết áp và ngăn ngừa đau tim",
     },
   })
 
@@ -1444,6 +1448,8 @@ async function main() {
       name: "Omeprazole",
       dosage: "20mg",
       times: ["07:30"],
+      type: "Thuốc ức chế bơm proton",
+      description: "Giảm sản xuất axit dạ dày, giúp chữa lành vết loét và giảm triệu chứng ợ nóng",
     },
   })
 
@@ -1453,6 +1459,8 @@ async function main() {
       name: "Clarithromycin",
       dosage: "500mg",
       times: ["08:00", "20:00"],
+      type: "Thuốc kháng sinh",
+      description: "Tiêu diệt vi khuẩn Helicobacter pylori gây loét dạ dày",
     },
   })
 
@@ -1462,6 +1470,8 @@ async function main() {
       name: "Amoxicillin",
       dosage: "1g",
       times: ["08:00", "20:00"],
+      type: "Thuốc kháng sinh",
+      description: "Tiêu diệt vi khuẩn gây nhiễm trùng, thường dùng kết hợp trong điều trị loét dạ dày",
     },
   })
 
@@ -1472,6 +1482,8 @@ async function main() {
       name: "Rosuvastatin",
       dosage: "10mg",
       times: ["21:00"],
+      type: "Thuốc statin",
+      description: "Giảm cholesterol xấu (LDL) và triglyceride, tăng cholesterol tốt (HDL) trong máu",
     },
   })
 
@@ -1481,6 +1493,8 @@ async function main() {
       name: "Fenofibrate",
       dosage: "160mg",
       times: ["08:00"],
+      type: "Thuốc giảm triglyceride",
+      description: "Giảm mức triglyceride và cholesterol xấu, giúp cải thiện hồ sơ lipid máu",
     },
   })
 
@@ -1491,6 +1505,8 @@ async function main() {
       name: "Aspirin",
       dosage: "75mg",
       times: ["08:00"],
+      type: "Thuốc chống đông máu",
+      description: "Ngăn ngừa hình thành cục máu đông, giảm nguy cơ đột quỵ và nhồi máu cơ tim",
     },
   })
 
@@ -1500,6 +1516,8 @@ async function main() {
       name: "Atorvastatin",
       dosage: "10mg",
       times: ["21:00"],
+      type: "Thuốc statin",
+      description: "Giảm cholesterol và triglyceride, bảo vệ mạch máu và tim mạch",
     },
   })
 

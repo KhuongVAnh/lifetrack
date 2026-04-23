@@ -81,18 +81,15 @@ export function DoctorsMyPage() {
    */
   const loadHires = async () => {
     try {
-      // Reset lỗi cũ để lần tải mới không giữ thông báo sai.
       setError("");
       setLoading(true);
 
-      // API trả dữ liệu thật theo token bệnh nhân hiện tại.
       const data = await getMyDoctorHires();
       setHires(data);
     } catch (err) {
-      // Hiển thị lỗi ngắn gọn nếu server chưa phản hồi.
-      setError(err?.response?.data?.message || "Không thể tải bác sĩ của tôi.");
+      setError(err?.response?.data?.message || "Không thể tải bác sĩ của tôi. Vui lòng thử lại.");
+      setHires([]);
     } finally {
-      // Tắt loading dù request thành công hay thất bại.
       setLoading(false);
     }
   };
@@ -169,7 +166,6 @@ export function DoctorsMyPage() {
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-sky-900">Bác sĩ của bạn</h2>
-            <p className="text-sm text-slate-500">Danh sách này lấy từ API quan hệ thuê thật.</p>
           </div>
           <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white" to="/patient/doctors/hire">
             <span className="material-symbols-outlined text-base">person_add</span>
@@ -177,7 +173,18 @@ export function DoctorsMyPage() {
           </Link>
         </div>
 
-        {error && <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>}
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+            <div>{error}</div>
+            <button
+              className="mt-3 inline-flex rounded-lg bg-red-600 px-3 py-2 text-xs font-black text-white hover:bg-red-700"
+              onClick={loadHires}
+              type="button"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="rounded-xl bg-surface-container-low p-6 text-sm font-bold text-slate-500">Đang tải bác sĩ của bạn...</div>

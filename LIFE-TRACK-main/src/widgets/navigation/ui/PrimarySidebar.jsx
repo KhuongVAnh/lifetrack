@@ -61,7 +61,7 @@ export function PrimarySidebar({ isOpen = false, onClose }) {
             </div>
             <div>
               <h1 className="text-2xl font-black text-primary tracking-tight leading-none">LIFETRACK</h1>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Cổng Bệnh Nhân</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Lắng nghe nhịp sống</p>
             </div>
           </div>
         </div>
