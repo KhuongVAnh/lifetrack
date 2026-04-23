@@ -38,6 +38,10 @@ export const doctorRoutes = [
             lazy: lazyPage(() => import("@/widgets/page-views/DoctorMessagesPage"), "DoctorMessagesPage"),
           },
           {
+            path: "profile",
+            lazy: lazyPage(() => import("@/widgets/page-views/DoctorMyProfilePage"), "DoctorMyProfilePage"),
+          },
+          {
             path: "emr",
             lazy: lazyPage(() => import("@/widgets/page-views/DoctorEmrPage"), "DoctorEmrPage"),
           },

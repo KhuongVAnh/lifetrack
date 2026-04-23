@@ -31,9 +31,19 @@ async function main() {
   await prisma.device.deleteMany()
   await prisma.report.deleteMany()
   await prisma.chatLog.deleteMany()
+  await prisma.appointment.deleteMany()
+  await prisma.doctorTimeOff.deleteMany()
+  await prisma.doctorAvailability.deleteMany()
+  await prisma.doctorReview.deleteMany()
   await prisma.doctorHire.deleteMany()
+  await prisma.doctorProfileExperience.deleteMany()
+  await prisma.doctorProfileResearch.deleteMany()
+  await prisma.doctorProfileEducation.deleteMany()
   await prisma.doctorProfile.deleteMany()
   await prisma.accessPermission.deleteMany()
+  await prisma.medicationLog.deleteMany()
+  await prisma.medication.deleteMany()
+  await prisma.medicationPlan.deleteMany()
   await prisma.medicalVisit.deleteMany()
   await prisma.phrOverview.deleteMany()
   await prisma.user.deleteMany()
@@ -110,32 +120,417 @@ async function main() {
     },
   })
 
+  const doctor3 = await prisma.user.create({
+    data: {
+      name: "BS. Nguyễn Thùy Chi",
+      email: "doctor3@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 300000,
+      created_at: toDate("2025-10-05T07:30:00.000Z"),
+    },
+  })
+
+  const doctor4 = await prisma.user.create({
+    data: {
+      name: "BS. Lê Minh Tâm",
+      email: "doctor4@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 450000,
+      created_at: toDate("2025-10-02T03:20:00.000Z"),
+    },
+  })
+
+  const doctor5 = await prisma.user.create({
+    data: {
+      name: "BS. Phạm Minh Ngọc",
+      email: "doctor5@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 380000,
+      created_at: toDate("2025-09-28T09:10:00.000Z"),
+    },
+  })
+
+  const doctor6 = await prisma.user.create({
+    data: {
+      name: "BS. Lâm Đức Huy",
+      email: "doctor6@example.com",
+      password_hash: commonPasswordHash,
+      role: UserRole.BAC_SI,
+      is_active: true,
+      consultation_fee: 420000,
+      created_at: toDate("2025-09-20T04:45:00.000Z"),
+    },
+  })
+
   // Hồ sơ bác sĩ 1: Tim mạch
-  await prisma.doctorProfile.create({
+  const doctor1Profile = await prisma.doctorProfile.create({
     data: {
       doctor_id: doctor1.user_id,
       specialty: "Tim mạch",
-      title: "Bác sĩ chuyên khoa Tim mạch",
-      hospital: "LifeTrack Care",
-      location: "Khám trực tuyến",
-      bio: "Theo dõi bệnh nhân tim mạch mạn tính, tư vấn kết quả ECG và tối ưu phác đồ điều trị tại nhà.",
+      title: "BS.CKII Tim mạch - Theo dõi từ xa",
+      hospital: "Trung tâm Tim mạch LifeTrack",
+      location: "TP.HCM · Khám trực tuyến",
+      bio: "Chuyên theo dõi tăng huyết áp, rối loạn nhịp và phục hồi sau biến cố tim mạch. Tập trung mô hình chăm sóc liên tục từ dữ liệu ECG, triệu chứng hằng ngày và điều chỉnh lối sống tại nhà.",
+      avatar_url: "/assets/avatars/doctors/doctor-vu-thanh-mai.svg",
+      experience_years: 12,
+      public_contact_email: "bs.mai@lifetrack.vn",
       hire_price: 1200000,
       is_listed: true,
     },
   })
 
   // Hồ sơ bác sĩ 2: Nội khoa tổng quát
-  await prisma.doctorProfile.create({
+  const doctor2Profile = await prisma.doctorProfile.create({
     data: {
       doctor_id: doctor2.user_id,
       specialty: "Nội khoa tổng quát",
-      title: "Bác sĩ chuyên khoa Nội khoa",
+      title: "ThS.BS Nội khoa - Quản lý bệnh mạn tính",
       hospital: "Bệnh viện Đại học Y Dược",
-      location: "Khám trực tuyến",
-      bio: "Chuyên về chẩn đoán và điều trị các bệnh nội khoa phổ biến, theo dõi sức khỏe tổng quát.",
+      location: "TP.HCM · Khám trực tuyến",
+      bio: "Tập trung quản lý đái tháo đường, rối loạn mỡ máu, tăng huyết áp và các vấn đề nội khoa thường gặp. Ưu tiên kế hoạch điều trị thực tế, dễ theo dõi và phối hợp tốt với lịch tái khám định kỳ.",
+      avatar_url: "/assets/avatars/doctors/doctor-tran-quoc-anh.svg",
+      experience_years: 10,
+      public_contact_email: "bs.hung@lifetrack.vn",
       hire_price: 1000000,
       is_listed: true,
     },
+  })
+
+  const doctor3Profile = await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor3.user_id,
+      specialty: "Nội tiết",
+      title: "BS Nội tiết - Theo dõi chuyển hóa",
+      hospital: "Phòng khám Nội tiết LifeTrack",
+      location: "Hà Nội · Khám trực tuyến",
+      bio: "Theo dõi đái tháo đường, tiền đái tháo đường, tuyến giáp và các rối loạn chuyển hóa với kế hoạch điều trị bám sát sinh hoạt hằng ngày.",
+      avatar_url: "/assets/avatars/doctors/doctor-nguyen-thuy-chi.svg",
+      experience_years: 9,
+      public_contact_email: "bs.chi@lifetrack.vn",
+      hire_price: 950000,
+      is_listed: true,
+    },
+  })
+
+  const doctor4Profile = await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor4.user_id,
+      specialty: "Thần kinh",
+      title: "BS Thần kinh - Đau đầu và rối loạn giấc ngủ",
+      hospital: "Trung tâm Thần kinh Sài Gòn",
+      location: "TP.HCM · Khám trực tuyến",
+      bio: "Tư vấn đau đầu mạn tính, chóng mặt, mất ngủ và theo dõi các biểu hiện thần kinh chức năng qua mô hình khám định kỳ.",
+      avatar_url: "/assets/avatars/doctors/doctor-le-minh-tam.svg",
+      experience_years: 11,
+      public_contact_email: "bs.tam@lifetrack.vn",
+      hire_price: 1350000,
+      is_listed: true,
+    },
+  })
+
+  const doctor5Profile = await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor5.user_id,
+      specialty: "Hô hấp",
+      title: "BS Hô hấp - Theo dõi hen và COPD",
+      hospital: "Bệnh viện Phổi Trung ương",
+      location: "Hà Nội · Khám trực tuyến",
+      bio: "Đồng hành với bệnh nhân hen phế quản, COPD và các vấn đề hô hấp tái diễn, ưu tiên kiểm soát triệu chứng và theo dõi dài hạn.",
+      avatar_url: "/assets/avatars/doctors/doctor-pham-minh-ngoc.svg",
+      experience_years: 8,
+      public_contact_email: "bs.ngoc@lifetrack.vn",
+      hire_price: 1100000,
+      is_listed: true,
+    },
+  })
+
+  const doctor6Profile = await prisma.doctorProfile.create({
+    data: {
+      doctor_id: doctor6.user_id,
+      specialty: "Dinh dưỡng lâm sàng",
+      title: "BS Dinh dưỡng - Quản lý cân nặng và bệnh mạn tính",
+      hospital: "Trung tâm Dinh dưỡng MedCare",
+      location: "Đà Nẵng · Khám trực tuyến",
+      bio: "Thiết kế lộ trình dinh dưỡng cá nhân hóa cho bệnh nhân thừa cân, rối loạn mỡ máu, tiền đái tháo đường và phục hồi thể trạng sau điều trị.",
+      avatar_url: "/assets/avatars/doctors/doctor-lam-duc-huy.svg",
+      experience_years: 7,
+      public_contact_email: "bs.huy@lifetrack.vn",
+      hire_price: 900000,
+      is_listed: true,
+    },
+  })
+
+  await prisma.doctorProfileEducation.createMany({
+    data: [
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Bác sĩ Chuyên khoa II Tim mạch",
+        organization: "Đại học Y Dược TP.HCM",
+        year_label: "2016",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Chứng chỉ Siêu âm tim nâng cao",
+        organization: "Bệnh viện Chợ Rẫy",
+        year_label: "2018",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Đào tạo theo dõi ECG từ xa",
+        organization: "Hội Tim mạch học Việt Nam",
+        year_label: "2022",
+        display_order: 2,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Thạc sĩ Nội khoa",
+        organization: "Đại học Y Hà Nội",
+        year_label: "2017",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Chứng chỉ Quản lý bệnh mạn tính",
+        organization: "Bệnh viện Đại học Y Dược",
+        year_label: "2019",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Đào tạo Dinh dưỡng lâm sàng",
+        organization: "Trường Đại học Y khoa Phạm Ngọc Thạch",
+        year_label: "2021",
+        display_order: 2,
+      },
+      {
+        profile_id: doctor3Profile.profile_id,
+        title: "Bác sĩ Nội trú Nội tiết",
+        organization: "Đại học Y Hà Nội",
+        year_label: "2016",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor3Profile.profile_id,
+        title: "Chứng chỉ Quản lý đái tháo đường",
+        organization: "Bệnh viện Nội tiết Trung ương",
+        year_label: "2019",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor4Profile.profile_id,
+        title: "Thạc sĩ Thần kinh học",
+        organization: "Đại học Y Dược TP.HCM",
+        year_label: "2015",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor4Profile.profile_id,
+        title: "Đào tạo Y học giấc ngủ",
+        organization: "Bệnh viện Đại học Y Dược",
+        year_label: "2020",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor5Profile.profile_id,
+        title: "Bác sĩ Chuyên khoa I Hô hấp",
+        organization: "Đại học Y Hà Nội",
+        year_label: "2018",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor5Profile.profile_id,
+        title: "Chứng chỉ Quản lý hen phế quản",
+        organization: "Bệnh viện Phổi Trung ương",
+        year_label: "2021",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor6Profile.profile_id,
+        title: "Bác sĩ đa khoa",
+        organization: "Đại học Y Dược Huế",
+        year_label: "2017",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor6Profile.profile_id,
+        title: "Chứng chỉ Dinh dưỡng lâm sàng",
+        organization: "Viện Dinh dưỡng Quốc gia",
+        year_label: "2022",
+        display_order: 1,
+      },
+    ],
+  })
+
+  await prisma.doctorProfileResearch.createMany({
+    data: [
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Theo dõi ngoại tâm thu bằng dữ liệu ECG đeo liên tục ở bệnh nhân ngoại trú",
+        source: "Tạp chí Tim mạch học Việt Nam",
+        published_year: 2023,
+        display_order: 0,
+      },
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Ứng dụng cảnh báo sớm trong quản lý tăng huyết áp từ xa",
+        source: "Hội nghị Tim mạch Toàn quốc",
+        published_year: 2024,
+        display_order: 1,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Mô hình theo dõi đường huyết và tuân thủ điều trị ở bệnh nhân nội khoa mạn tính",
+        source: "Tạp chí Y học Thực hành",
+        published_year: 2022,
+        display_order: 0,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Tối ưu tái khám ngoại trú cho bệnh nhân tăng huyết áp và rối loạn lipid máu",
+        source: "Hội nghị Nội khoa miền Nam",
+        published_year: 2024,
+        display_order: 1,
+      },
+      {
+        profile_id: doctor3Profile.profile_id,
+        title: "Theo dõi HbA1c và hành vi dùng thuốc trong chăm sóc từ xa",
+        source: "Tạp chí Nội tiết và Chuyển hóa",
+        published_year: 2023,
+        display_order: 0,
+      },
+      {
+        profile_id: doctor4Profile.profile_id,
+        title: "Đặc điểm đau đầu mạn tính ở nhóm bệnh nhân làm việc cường độ cao",
+        source: "Hội nghị Thần kinh học Việt Nam",
+        published_year: 2022,
+        display_order: 0,
+      },
+      {
+        profile_id: doctor5Profile.profile_id,
+        title: "Cải thiện tuân thủ điều trị hen ở bệnh nhân ngoại trú bằng nhắc theo dõi số hóa",
+        source: "Tạp chí Hô hấp Việt Nam",
+        published_year: 2024,
+        display_order: 0,
+      },
+      {
+        profile_id: doctor6Profile.profile_id,
+        title: "Tác động của can thiệp dinh dưỡng cá nhân hóa trên nhóm tiền đái tháo đường",
+        source: "Tạp chí Dinh dưỡng cộng đồng",
+        published_year: 2023,
+        display_order: 0,
+      },
+    ],
+  })
+
+  await prisma.doctorProfileExperience.createMany({
+    data: [
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Bác sĩ điều trị Tim mạch",
+        organization: "Bệnh viện Nhân dân 115",
+        time_label: "2014 - 2018",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Phụ trách phòng khám Rối loạn nhịp",
+        organization: "Trung tâm Tim mạch khu vực",
+        time_label: "2018 - 2022",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor1Profile.profile_id,
+        title: "Bác sĩ đồng hành tim mạch từ xa",
+        organization: "LifeTrack Care",
+        time_label: "2022 - nay",
+        display_order: 2,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Bác sĩ Nội trú Nội khoa",
+        organization: "Bệnh viện Đại học Y Dược",
+        time_label: "2015 - 2018",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Bác sĩ điều trị Nội tổng quát",
+        organization: "Bệnh viện Quận 1",
+        time_label: "2018 - 2021",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor2Profile.profile_id,
+        title: "Bác sĩ quản lý bệnh mạn tính",
+        organization: "Phòng khám phối hợp LifeTrack",
+        time_label: "2021 - nay",
+        display_order: 2,
+      },
+      {
+        profile_id: doctor3Profile.profile_id,
+        title: "Bác sĩ Nội tiết",
+        organization: "Bệnh viện Nội tiết Trung ương",
+        time_label: "2017 - 2021",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor3Profile.profile_id,
+        title: "Bác sĩ tư vấn chuyển hóa từ xa",
+        organization: "LifeTrack Care",
+        time_label: "2021 - nay",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor4Profile.profile_id,
+        title: "Bác sĩ điều trị Thần kinh",
+        organization: "Bệnh viện Nhân dân Gia Định",
+        time_label: "2015 - 2019",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor4Profile.profile_id,
+        title: "Phụ trách phòng khám đau đầu",
+        organization: "Trung tâm Thần kinh Sài Gòn",
+        time_label: "2019 - nay",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor5Profile.profile_id,
+        title: "Bác sĩ Hô hấp",
+        organization: "Bệnh viện Phổi Trung ương",
+        time_label: "2018 - 2022",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor5Profile.profile_id,
+        title: "Bác sĩ theo dõi hô hấp mạn tính",
+        organization: "Mạng lưới LifeTrack",
+        time_label: "2022 - nay",
+        display_order: 1,
+      },
+      {
+        profile_id: doctor6Profile.profile_id,
+        title: "Bác sĩ tư vấn dinh dưỡng bệnh lý",
+        organization: "Viện Dinh dưỡng Quốc gia",
+        time_label: "2019 - 2023",
+        display_order: 0,
+      },
+      {
+        profile_id: doctor6Profile.profile_id,
+        title: "Bác sĩ đồng hành dinh dưỡng trực tuyến",
+        organization: "MedCare x LifeTrack",
+        time_label: "2023 - nay",
+        display_order: 1,
+      },
+    ],
   })
 
   // Lịch rảnh bác sĩ 1
@@ -157,6 +552,23 @@ async function main() {
       { doctor_id: doctor2.user_id, day_of_week: 3, start_time: "09:00", end_time: "12:00", slot_minutes: 45 },
       { doctor_id: doctor2.user_id, day_of_week: 5, start_time: "15:00", end_time: "18:00", slot_minutes: 45 },
       { doctor_id: doctor2.user_id, day_of_week: 6, start_time: "10:00", end_time: "13:00", slot_minutes: 45 },
+    ],
+  })
+
+  await prisma.doctorAvailability.createMany({
+    data: [
+      { doctor_id: doctor3.user_id, day_of_week: 1, start_time: "18:00", end_time: "21:00", slot_minutes: 30 },
+      { doctor_id: doctor3.user_id, day_of_week: 3, start_time: "18:00", end_time: "21:00", slot_minutes: 30 },
+      { doctor_id: doctor3.user_id, day_of_week: 6, start_time: "08:00", end_time: "11:00", slot_minutes: 30 },
+      { doctor_id: doctor4.user_id, day_of_week: 2, start_time: "19:00", end_time: "22:00", slot_minutes: 45 },
+      { doctor_id: doctor4.user_id, day_of_week: 4, start_time: "19:00", end_time: "22:00", slot_minutes: 45 },
+      { doctor_id: doctor4.user_id, day_of_week: 6, start_time: "14:00", end_time: "17:00", slot_minutes: 45 },
+      { doctor_id: doctor5.user_id, day_of_week: 1, start_time: "07:30", end_time: "10:30", slot_minutes: 30 },
+      { doctor_id: doctor5.user_id, day_of_week: 4, start_time: "13:30", end_time: "16:30", slot_minutes: 30 },
+      { doctor_id: doctor5.user_id, day_of_week: 5, start_time: "07:30", end_time: "10:30", slot_minutes: 30 },
+      { doctor_id: doctor6.user_id, day_of_week: 2, start_time: "08:00", end_time: "11:00", slot_minutes: 60 },
+      { doctor_id: doctor6.user_id, day_of_week: 5, start_time: "14:00", end_time: "17:00", slot_minutes: 60 },
+      { doctor_id: doctor6.user_id, day_of_week: 0, start_time: "09:00", end_time: "11:00", slot_minutes: 60 },
     ],
   })
 
@@ -532,7 +944,7 @@ async function main() {
 
   // ========== Gia đình thuê 2 bác sĩ ==========
   // Bác sĩ 1 - Tim mạch (được thuê bởi patient chính)
-  await prisma.doctorHire.create({
+  const patientDoctor1Hire = await prisma.doctorHire.create({
     data: {
       patient_id: patient.user_id,
       doctor_id: doctor1.user_id,
@@ -547,7 +959,7 @@ async function main() {
   })
 
   // Bác sĩ 2 - Nội khoa (được thuê bởi cả patient chính và vợ)
-  await prisma.doctorHire.create({
+  const patientDoctor2Hire = await prisma.doctorHire.create({
     data: {
       patient_id: patient.user_id,
       doctor_id: doctor2.user_id,
@@ -561,7 +973,7 @@ async function main() {
     },
   })
 
-  await prisma.doctorHire.create({
+  const spouseDoctor2Hire = await prisma.doctorHire.create({
     data: {
       patient_id: spouse.user_id,
       doctor_id: doctor2.user_id,
@@ -576,7 +988,7 @@ async function main() {
   })
 
   // Bác sĩ 1 cũng được vợ thuê
-  await prisma.doctorHire.create({
+  const spouseDoctor1Hire = await prisma.doctorHire.create({
     data: {
       patient_id: spouse.user_id,
       doctor_id: doctor1.user_id,
@@ -588,6 +1000,47 @@ async function main() {
       requested_at: toDate("2025-11-21T08:00:00.000Z"),
       approved_at: toDate("2025-11-21T09:00:00.000Z"),
     },
+  })
+
+  await prisma.doctorReview.createMany({
+    data: [
+      {
+        doctor_id: doctor1.user_id,
+        patient_id: patient.user_id,
+        source_hire_id: patientDoctor1Hire.hire_id,
+        rating: 5,
+        comment: "Bác sĩ giải thích kết quả ECG rất rõ ràng, phản hồi nhanh khi tôi có cơn hồi hộp về đêm và giúp tôi yên tâm hơn khi theo dõi tại nhà.",
+        is_visible: true,
+        created_at: toDate("2026-02-02T08:00:00.000Z"),
+      },
+      {
+        doctor_id: doctor1.user_id,
+        patient_id: spouse.user_id,
+        source_hire_id: spouseDoctor1Hire.hire_id,
+        rating: 4,
+        comment: "Theo dõi sát, tư vấn kỹ về chế độ sinh hoạt và nhịp tim. Tôi mong lịch online buổi tối có thêm vài khung giờ nữa.",
+        is_visible: true,
+        created_at: toDate("2026-03-11T10:30:00.000Z"),
+      },
+      {
+        doctor_id: doctor2.user_id,
+        patient_id: patient.user_id,
+        source_hire_id: patientDoctor2Hire.hire_id,
+        rating: 5,
+        comment: "Bác sĩ nội khoa tư vấn rất thực tế, giúp tôi sắp xếp thuốc và lịch tái khám gọn gàng hơn. Phù hợp cho theo dõi bệnh mạn tính lâu dài.",
+        is_visible: true,
+        created_at: toDate("2026-02-18T09:15:00.000Z"),
+      },
+      {
+        doctor_id: doctor2.user_id,
+        patient_id: spouse.user_id,
+        source_hire_id: spouseDoctor2Hire.hire_id,
+        rating: 4,
+        comment: "Khám tổng quát cẩn thận và giải thích dễ hiểu. Sau buổi khám tôi biết rõ nên theo dõi chỉ số nào trong các lần tái khám tiếp theo.",
+        is_visible: true,
+        created_at: toDate("2026-04-22T07:45:00.000Z"),
+      },
+    ],
   })
 
   // Direct messages giữa patient và doctor1
@@ -1368,10 +1821,10 @@ async function main() {
   })
 
   console.log(
-    "Seed thành công: 4 người dùng gia đình, 2 bác sĩ, 1 thiết bị ECG, 8 reading ECG, 4 alert, 6 báo cáo y tế, 16 chat AI, 4 quyền truy cập gia đình, 24+ direct message, 2 notification, 3 bệnh sử, 4 kế hoạch uống thuốc, 10 loại thuốc và 100+ bản ghi nhắc thuốc, 13 lịch hẹn khám."
+    "Seed thành công: 4 người dùng gia đình, 6 bác sĩ có hồ sơ chi tiết, trong đó 4 bác sĩ chưa được thuê, 4 đánh giá bác sĩ, 1 thiết bị ECG, 8 reading ECG, 4 alert, 6 báo cáo y tế, 16 chat AI, 4 quyền truy cập gia đình, 24+ direct message, 2 notification, 3 bệnh sử, 4 kế hoạch uống thuốc, 10 loại thuốc và 100+ bản ghi nhắc thuốc, 13 lịch hẹn khám."
   )
   console.log(
-    `Tài khoản mẫu: ${patient.email} (bệnh nhân), ${spouse.email} (vợ), ${child.email} (con), ${family.email} (gia đình), ${doctor1.email} (bác sĩ 1), ${doctor2.email} (bác sĩ 2), ${admin.email} (admin) | mật khẩu chung: 123456`
+    `Tài khoản mẫu: ${patient.email} (bệnh nhân), ${spouse.email} (vợ), ${child.email} (con), ${family.email} (gia đình), ${doctor1.email}, ${doctor2.email}, ${doctor3.email}, ${doctor4.email}, ${doctor5.email}, ${doctor6.email} (các bác sĩ), ${admin.email} (admin) | mật khẩu chung: 123456`
   )
 }
 

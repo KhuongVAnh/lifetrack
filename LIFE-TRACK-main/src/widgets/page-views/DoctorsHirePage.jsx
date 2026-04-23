@@ -250,12 +250,16 @@ export function DoctorsHirePage() {
           <>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {paginatedDoctors.map((doctor) => {
-                const isAlreadyHired = activeOrPendingHires.some((hire) => hire.doctor_id === doctor.user_id);
+                const hireStatus = doctor.viewerState?.hire_status || null;
+                const isAlreadyHired =
+                  activeOrPendingHires.some((hire) => hire.doctor_id === doctor.user_id) ||
+                  ["ACTIVE", "PENDING_DOCTOR_APPROVAL"].includes(hireStatus);
                 return (
                   <CatalogDoctorCard
                     key={doctor.user_id}
                     doctor={doctor}
                     isAlreadyHired={isAlreadyHired}
+                    hireStatus={hireStatus}
                     isLoading={hiringDoctorId === doctor.user_id}
                     onHire={() => handleHireDoctor(doctor.user_id)}
                   />
@@ -304,16 +308,20 @@ export function DoctorsHirePage() {
  */
 function RealHireCard({ hire }) {
   const active = hire.status === "ACTIVE";
+  const profile = hire.doctor?.profile || null;
+  const doctorName = hire.doctor?.name || "Bác sĩ";
+  const doctorTitle = profile?.title || profile?.specialty || "Hồ sơ bác sĩ đang được cập nhật";
+  const doctorAvatar = profile?.avatar_url || "/assets/avatars/default/avatar-default.png";
 
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="flex gap-4">
-        <ImageWithFallback alt={hire.doctor?.name || "Bác sĩ"} className="h-20 w-20 shrink-0 rounded-xl object-cover" src="/assets/avatars/default/avatar-default.png" />
+        <ImageWithFallback alt={doctorName} className="h-20 w-20 shrink-0 rounded-xl object-cover" src={doctorAvatar} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <h3 className="break-words font-black text-sky-900">{hire.doctor?.name || "Bác sĩ"}</h3>
-              <p className="text-xs font-semibold text-slate-500">Hồ sơ bác sĩ đang được cập nhật</p>
+              <h3 className="break-words font-black text-sky-900">{doctorName}</h3>
+              <p className="text-xs font-semibold text-slate-500">{doctorTitle}</p>
             </div>
             <span className={active ? "rounded bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700" : "rounded bg-amber-50 px-2 py-1 text-[10px] font-black uppercase text-amber-700"}>
               {active ? "Đang thuê" : "Chờ bác sĩ duyệt"}
@@ -338,7 +346,9 @@ function RealHireCard({ hire }) {
 /**
  * Card bác sĩ từ catalog hệ thống với thông tin chi tiết và nút thuê.
  */
-function CatalogDoctorCard({ doctor, isAlreadyHired, isLoading, onHire }) {
+function CatalogDoctorCard({ doctor, isAlreadyHired, hireStatus, isLoading, onHire }) {
+  const isPending = hireStatus === "PENDING_DOCTOR_APPROVAL";
+
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
       <div className="mb-4">
@@ -363,14 +373,21 @@ function CatalogDoctorCard({ doctor, isAlreadyHired, isLoading, onHire }) {
           </p>
         )}
 
-        {doctor.rating && (
+        {doctor.reviewCount > 0 && (
           <div className="mb-3 flex items-center gap-2">
             <RatingStars rating={doctor.rating} />
-            <span className="text-xs font-bold text-slate-600">{doctor.rating}</span>
+            <span className="text-xs font-bold text-slate-600">
+              {doctor.rating.toFixed(1)} • {doctor.reviewCount} đánh giá
+            </span>
           </div>
         )}
 
         {doctor.bio && <p className="mb-3 line-clamp-2 text-xs text-slate-600">{doctor.bio}</p>}
+        {doctor.experienceYears ? (
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+            {doctor.experienceYears}+ năm kinh nghiệm
+          </p>
+        ) : null}
       </div>
 
       <div className="flex gap-2 border-t border-slate-100 pt-4">
@@ -387,8 +404,12 @@ function CatalogDoctorCard({ doctor, isAlreadyHired, isLoading, onHire }) {
             {isLoading ? "Đang gửi..." : "Thuê"}
           </button>
         ) : (
-          <button className="flex-1 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700" disabled type="button">
-            Đã thuê
+          <button
+            className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold ${isPending ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}
+            disabled
+            type="button"
+          >
+            {isPending ? "Đã gửi yêu cầu" : "Đã thuê"}
           </button>
         )}
       </div>

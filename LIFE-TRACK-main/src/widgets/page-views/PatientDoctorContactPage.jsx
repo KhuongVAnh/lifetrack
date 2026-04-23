@@ -235,7 +235,7 @@ export function PatientDoctorContactPage() {
             <div>
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Hành động nhanh</h2>
               <div className="space-y-3">
-                <Link to={`/patient/doctors/${activeContactId || 'mock'}/profile`} className="group w-full flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all">
+                <Link to={`/patient/doctors/${activeContactId || "mock"}`} className="group w-full flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 hover:scale-[1.02] transition-all">
                   <div className="flex flex-col items-start">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Tiểu sử chuyên gia</span>
                     <span className="font-bold text-sm text-white">Xem hồ sơ bác sĩ</span>

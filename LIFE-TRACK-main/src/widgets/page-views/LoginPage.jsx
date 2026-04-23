@@ -116,7 +116,7 @@ export function LoginPage() {
                                             id="username"
                                             type="text"
                                             className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium placeholder:text-slate-400 focus:bg-white focus:border-[#004976] focus:ring-4 focus:ring-[#004976]/10 outline-none transition-all shadow-sm"
-                                            placeholder="patient@example.com hoặc doctor@example.com"
+                                            placeholder="patient@example.com hoặc doctor1@example.com"
                                             value={username}
                                             onChange={(e) => setUsername(e.target.value)}
                                             required
@@ -166,7 +166,7 @@ export function LoginPage() {
                                         </div>
                                         <p className="text-[10px] text-slate-500 font-medium overflow-hidden whitespace-nowrap text-ellipsis">Click để điền</p>
                                     </div>
-                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('doctor@example.com'); setPassword('123456'); }}>
+                                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl hover:bg-white hover:border-[#004976]/50 hover:shadow-md transition-all cursor-pointer group" onClick={() => { setUsername('doctor1@example.com'); setPassword('123456'); }}>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="material-symbols-outlined text-teal-600 text-lg">stethoscope</span>
                                             <span className="font-bold text-sm text-slate-800 group-hover:text-teal-600 transition-colors">Bác sĩ</span>

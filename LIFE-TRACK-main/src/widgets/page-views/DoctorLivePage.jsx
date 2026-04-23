@@ -7,7 +7,7 @@ import { RealtimeEcgChart } from "@/features/realtime-monitor/ui/RealtimeEcgChar
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useRealtimeEcgStream } from "@/features/realtime-monitor/model/useRealtimeEcgStream";
 import { useWarningReadings } from "@/features/warning-readings/model/useWarningReadings";
-import { getContacts } from "@/features/direct-chat/api/chatApi";
+import { getDoctorPortalPatients } from "@/features/doctor-portal";
 import { formatDateTime } from "@/features/realtime-monitor/lib/ecgMonitor";
 import { getUserAvatar } from "@/entities/user";
 
@@ -31,7 +31,7 @@ export function DoctorLivePage() {
   const [patients, setPatients] = useState([]);
   const [activePatientId, setActivePatientId] = useState(preselectedPatientId);
   const [loadingPatients, setLoadingPatients] = useState(false);
-  const [contactsError, setContactsError] = useState("");
+  const [patientsError, setPatientsError] = useState("");
   const [mobileTab, setMobileTab] = useState("monitor");
   const [selectedReadingId, setSelectedReadingId] = useState(null);
   const [showAlertsModal, setShowAlertsModal] = useState(false);
@@ -40,12 +40,20 @@ export function DoctorLivePage() {
     const loadPatients = async () => {
       setLoadingPatients(true);
       try {
-        const data = await getContacts();
-        const patientContacts = (data.contacts ?? []).filter((contact) => contact.normalizedRole === "patient");
-        setPatients(patientContacts);
-        setContactsError("");
+        const data = await getDoctorPortalPatients({ domain: "ecg" });
+        setPatients(
+          data.map((item) => ({
+            ...item,
+            user_id: item.patientId,
+            name: item.patient?.name || "Bệnh nhân",
+            email: item.patient?.email || "",
+            unread_count: item.unreadCount,
+            last_message_at: item.lastMessageAt,
+          })),
+        );
+        setPatientsError("");
       } catch (error) {
-        setContactsError(error.response?.data?.message || "Không thể tải danh sách bệnh nhân theo dõi");
+        setPatientsError(error.response?.data?.message || "Không thể tải danh sách bệnh nhân theo dõi");
         setPatients([]);
       } finally {
         setLoadingPatients(false);
@@ -102,13 +110,13 @@ export function DoctorLivePage() {
     loading: loadingWarnings,
     error: warningsError,
   } = useWarningReadings(activePatient?.user_id, socket, {
-    scope: "system",
+    scope: "patient",
     enabled: Boolean(activePatient?.user_id),
     pollIntervalMs: 8000,
     limit: 5,
   });
 
-  const combinedError = contactsError || streamError || warningsError;
+  const combinedError = patientsError || streamError || warningsError;
 
   return (
     <>
@@ -137,9 +145,9 @@ export function DoctorLivePage() {
               <span className="material-symbols-outlined animate-pulse text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>fiber_manual_record</span>
             </div>
 
-            {contactsError && (
+            {patientsError && (
               <div className="rounded-2xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error">
-                {contactsError}
+                {patientsError}
               </div>
             )}
 
@@ -151,7 +159,7 @@ export function DoctorLivePage() {
               )}
               {!loadingPatients && !patients.length && (
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-500">
-                  Chưa có bệnh nhân nào khả dụng trong danh sách direct chat.
+                  Chưa có bệnh nhân nào đang mở quyền ECG để theo dõi realtime.
                 </div>
               )}
               {patients.map((patient) => {
@@ -173,13 +181,13 @@ export function DoctorLivePage() {
                           <p className="text-[11px] uppercase tracking-widest opacity-80">{patient.email}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-lg bg-white/10 p-2 text-center">
-                          <p className="text-[10px] uppercase opacity-70">Cảnh báo</p>
-                          <p className="text-base font-bold">{warningReadings.length || "--"}</p>
-                        </div>
-                        <div className="rounded-lg bg-white/10 p-2 text-center">
-                          <p className="text-[10px] uppercase opacity-70">Unread</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-white/10 p-2 text-center">
+                      <p className="text-[10px] uppercase opacity-70">Cảnh báo</p>
+                      <p className="text-base font-bold">{activePatient.latestUnresolvedAlertCount || 0}</p>
+                    </div>
+                    <div className="rounded-lg bg-white/10 p-2 text-center">
+                      <p className="text-[10px] uppercase opacity-70">Tin mới</p>
                           <p className="text-base font-bold">{patient.unread_count ?? 0}</p>
                         </div>
                       </div>
@@ -381,14 +389,13 @@ export function DoctorLivePage() {
 
               <div className="flex flex-col gap-1 rounded-2xl border border-slate-50 bg-white p-5 shadow-sm transition-all hover:shadow-md">
                 <div className="flex items-center justify-between text-primary">
-                  <span className="text-xs font-bold uppercase tracking-widest">SpO2</span>
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>water_drop</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">AI Status</span>
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>psychology</span>
                 </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-black tracking-tighter text-slate-800">98</span>
-                  <span className="text-sm font-bold text-slate-400">%</span>
-                </div>
-                <p className="text-[10px] uppercase text-slate-400">Dữ liệu demo</p>
+                <span className="mt-2 text-2xl font-black tracking-tight text-slate-800">
+                  {latestReading?.ai_status || "PENDING"}
+                </span>
+                <p className="text-[10px] uppercase text-slate-400">{latestReading?.ai_result || "Chờ kết quả AI mới nhất"}</p>
               </div>
 
               <button
@@ -408,11 +415,21 @@ export function DoctorLivePage() {
               </button>
 
               <div className="mt-auto space-y-3 pt-4">
-                <button onClick={() => navigate("/doctor/patients")} className="flex w-full items-center justify-between rounded-xl border border-sky-100 bg-sky-50 p-4 font-bold text-primary shadow-sm transition-colors hover:bg-sky-100" type="button">
+                <button
+                  onClick={() => activePatient && navigate(`/doctor/emr?patientId=${activePatient.user_id}`)}
+                  className="flex w-full items-center justify-between rounded-xl border border-sky-100 bg-sky-50 p-4 font-bold text-primary shadow-sm transition-colors hover:bg-sky-100 disabled:opacity-50"
+                  disabled={!activePatient}
+                  type="button"
+                >
                   Xem hồ sơ chi tiết
                   <span className="material-symbols-outlined">folder_shared</span>
                 </button>
-                <button onClick={() => navigate("/doctor/messages")} className="flex w-full items-center justify-between rounded-xl bg-error p-4 font-bold text-white shadow-sm transition-colors hover:bg-[#a51515]" type="button">
+                <button
+                  onClick={() => activePatient && navigate(`/doctor/messages?patientId=${activePatient.user_id}`)}
+                  className="flex w-full items-center justify-between rounded-xl bg-error p-4 font-bold text-white shadow-sm transition-colors hover:bg-[#a51515] disabled:opacity-50"
+                  disabled={!activePatient}
+                  type="button"
+                >
                   Mở màn chat văn bản
                   <span className="material-symbols-outlined">chat</span>
                 </button>

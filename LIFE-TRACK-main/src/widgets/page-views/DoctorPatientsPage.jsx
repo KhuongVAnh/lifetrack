@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth";
-import { httpClient } from "@/shared/api";
+import { getDoctorPortalPatients } from "@/features/doctor-portal";
 
 const ACCESS_ITEMS = [
   { key: "can_view_ehr", label: "EHR", icon: "clinical_notes" },
@@ -14,7 +13,7 @@ const ACCESS_ITEMS = [
  */
 function getAccessSummary(hire) {
   // Đếm số nhóm dữ liệu bệnh nhân đã bật cho bác sĩ.
-  const enabledCount = ACCESS_ITEMS.filter((item) => hire[item.key]).length;
+  const enabledCount = ACCESS_ITEMS.filter((item) => hire[toCamelCase(item.key)]).length;
 
   // Trả về mô tả ngắn để card bệnh nhân dễ quét.
   return enabledCount === ACCESS_ITEMS.length ? "Đã mở toàn bộ hồ sơ" : `${enabledCount}/${ACCESS_ITEMS.length} nhóm hồ sơ được mở`;
@@ -25,7 +24,6 @@ function getAccessSummary(hire) {
  */
 export function DoctorPatientsPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [hires, setHires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -39,15 +37,13 @@ export function DoctorPatientsPage() {
    * Tải danh sách bệnh nhân active theo hợp đồng thuê bác sĩ.
    */
   const loadPatients = async () => {
-    if (!user?.user_id) return;
-
     try {
       // Xóa lỗi cũ trước khi tải dữ liệu mới.
       setError("");
       setLoading(true);
 
-      // Backend trả doctor_hires active thay cho access_permissions legacy.
-      const { data } = await httpClient.get(`/doctor/patients/${user.user_id}`);
+      // Backend trả doctor_hires active đã gắn message summary và quyền truy cập.
+      const data = await getDoctorPortalPatients({ domain: "all" });
       setHires(Array.isArray(data) ? data : []);
     } catch (err) {
       // Lưu lỗi để bác sĩ biết danh sách chưa tải được.
@@ -59,9 +55,9 @@ export function DoctorPatientsPage() {
   };
 
   useEffect(() => {
-    // Tải lại khi có user từ AuthProvider.
-    loadPatients();
-  }, [user?.user_id]);
+    // Tải danh sách bệnh nhân doctor portal khi vào trang.
+    void loadPatients();
+  }, []);
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-8">
@@ -115,7 +111,6 @@ export function DoctorPatientsPage() {
  */
 function PatientHireCard({ hire, navigate }) {
   const patient = hire.patient || {};
-  const canOpenAnyRecord = hire.can_view_ehr || hire.can_view_medications || hire.can_view_ecg;
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -134,11 +129,11 @@ function PatientHireCard({ hire, navigate }) {
         {ACCESS_ITEMS.map((item) => (
           <div
             key={item.key}
-            className={hire[item.key] ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700" : "rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-400"}
+            className={hire[toCamelCase(item.key)] ? "rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700" : "rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-400"}
           >
             <span className="material-symbols-outlined text-base">{item.icon}</span>
             <p className="mt-1 text-xs font-black">{item.label}</p>
-            <p className="text-[10px] font-bold">{hire[item.key] ? "Được xem" : "Đang khóa"}</p>
+            <p className="text-[10px] font-bold">{hire[toCamelCase(item.key)] ? "Được xem" : "Đang khóa"}</p>
           </div>
         ))}
       </div>
@@ -146,20 +141,41 @@ function PatientHireCard({ hire, navigate }) {
       <div className="flex flex-wrap gap-2">
         <button
           className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:bg-slate-300"
-          disabled={!canOpenAnyRecord}
-          onClick={() => navigate("/doctor/live")}
+          disabled={!hire.canViewEcg}
+          onClick={() => navigate(`/doctor/live?patientId=${patient.user_id}`)}
           type="button"
         >
           Xem dữ liệu
         </button>
         <button
           className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700"
-          onClick={() => navigate("/doctor/messages")}
+          onClick={() => navigate(`/doctor/messages?patientId=${patient.user_id}`)}
           type="button"
         >
           Nhắn tin
         </button>
+        <button
+          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-50"
+          disabled={!hire.canViewEhr}
+          onClick={() => navigate(`/doctor/emr?patientId=${patient.user_id}`)}
+          type="button"
+        >
+          EMR
+        </button>
       </div>
     </div>
   );
+}
+
+function toCamelCase(value) {
+  switch (value) {
+    case "can_view_ehr":
+      return "canViewEhr";
+    case "can_view_medications":
+      return "canViewMedications";
+    case "can_view_ecg":
+      return "canViewEcg";
+    default:
+      return value;
+  }
 }

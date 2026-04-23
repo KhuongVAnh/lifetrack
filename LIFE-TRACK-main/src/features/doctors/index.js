@@ -6,3 +6,5 @@ export {
   recommendedDoctorIds,
 } from "./mocks/doctorsData";
 export * from "./api/doctorHireApi";
+export * from "./api/doctorProfileApi";
+export * from "./lib/doctorProfile";

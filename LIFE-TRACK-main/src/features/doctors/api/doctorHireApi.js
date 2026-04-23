@@ -1,19 +1,6 @@
 import { httpClient } from "@/shared/api";
 
 /**
- * Lấy catalog bác sĩ hệ thống kèm trạng thái thuê của bệnh nhân hiện tại.
- */
-export const getDoctorCatalog = async (q = "") => {
-  // Truyền q khi người dùng tìm kiếm để backend lọc theo tên/chuyên khoa/bệnh viện.
-  const { data } = await httpClient.get("/doctors/catalog", {
-    params: q ? { q } : {},
-  });
-
-  // Luôn trả mảng để component render an toàn khi API không có dữ liệu.
-  return data.doctors ?? [];
-};
-
-/**
  * Bệnh nhân gửi yêu cầu thuê một bác sĩ.
  */
 export const requestDoctorHire = async (doctorId) => {

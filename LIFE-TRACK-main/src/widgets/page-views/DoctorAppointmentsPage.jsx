@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   approveAppointment,
@@ -67,6 +68,36 @@ function StatusBadge({ status }) {
   return <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${meta.className}`}>{meta.label}</span>;
 }
 
+function PatientContextActions({ navigate, patientId }) {
+  if (!patientId) return null;
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => navigate(`/doctor/messages?patientId=${patientId}`)}
+        className="rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-700 hover:bg-white"
+      >
+        Nhắn tin
+      </button>
+      <button
+        type="button"
+        onClick={() => navigate(`/doctor/live?patientId=${patientId}`)}
+        className="rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-700 hover:bg-white"
+      >
+        Monitor
+      </button>
+      <button
+        type="button"
+        onClick={() => navigate(`/doctor/emr?patientId=${patientId}`)}
+        className="rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-700 hover:bg-white"
+      >
+        EMR
+      </button>
+    </div>
+  );
+}
+
 /**
  * Tạo một dòng lịch rảnh mặc định cho form cấu hình.
  * Hàm dùng khi bác sĩ bấm thêm khung giờ.
@@ -87,6 +118,7 @@ function createAvailabilityDraft() {
  * Trang hiển thị lịch thật từ backend, yêu cầu chờ duyệt và công cụ cấu hình lịch rảnh.
  */
 export function DoctorAppointmentsPage() {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [availability, setAvailability] = useState([]);
   const [timeOffs, setTimeOffs] = useState([]);
@@ -324,6 +356,10 @@ export function DoctorAppointmentsPage() {
                     {formatTimeRange(appointment)} · {appointment.type === "ONLINE" ? "Online" : "Trực tiếp"}
                   </div>
                   <p className="mt-3 line-clamp-2 text-xs text-slate-500">{appointment.reason}</p>
+                  <PatientContextActions
+                    navigate={navigate}
+                    patientId={appointment.patient?.user_id}
+                  />
                   {appointment.status === "APPROVED" && (
                     <button
                       type="button"
@@ -389,6 +425,10 @@ export function DoctorAppointmentsPage() {
                       Từ chối
                     </button>
                   </div>
+                  <PatientContextActions
+                    navigate={navigate}
+                    patientId={appointment.patient?.user_id}
+                  />
                 </article>
               ))
             )}

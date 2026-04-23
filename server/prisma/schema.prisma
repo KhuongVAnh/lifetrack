@@ -116,6 +116,8 @@ model User {
   doctorProfile          DoctorProfile?           @relation("DoctorProfile")
   doctorHiresAsPatient   DoctorHire[]             @relation("PatientDoctorHires")
   doctorHiresAsDoctor    DoctorHire[]             @relation("DoctorDoctorHires")
+  writtenDoctorReviews   DoctorReview[]           @relation("DoctorReviewAuthor")
+  receivedDoctorReviews  DoctorReview[]           @relation("DoctorReviewDoctor")
 
   @@map("users")
 }
@@ -227,23 +229,97 @@ model AccessPermission {
 }
 
 model DoctorProfile {
-  profile_id   Int      @id @default(autoincrement())
-  doctor_id    Int      @unique
-  specialty    String?  @db.VarChar(255)
-  title        String?  @db.VarChar(255)
-  hospital     String?  @db.VarChar(255)
-  location     String?  @db.VarChar(255)
-  bio          String?  @db.Text
-  avatar_url   String?  @db.VarChar(500)
-  hire_price   Int      @default(0)
-  is_listed    Boolean  @default(true)
-  created_at   DateTime @default(now()) @map("created_at")
-  updated_at   DateTime @updatedAt @map("updated_at")
+  profile_id            Int                       @id @default(autoincrement())
+  doctor_id             Int                       @unique
+  specialty             String?                   @db.VarChar(255)
+  title                 String?                   @db.VarChar(255)
+  hospital              String?                   @db.VarChar(255)
+  location              String?                   @db.VarChar(255)
+  bio                   String?                   @db.Text
+  avatar_url            String?                   @db.VarChar(500)
+  experience_years      Int?
+  public_contact_email  String?                   @db.VarChar(255)
+  hire_price            Int                       @default(0)
+  is_listed             Boolean                   @default(true)
+  created_at            DateTime                  @default(now()) @map("created_at")
+  updated_at            DateTime                  @updatedAt @map("updated_at")
 
-  doctor User @relation("DoctorProfile", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+  doctor                User                      @relation("DoctorProfile", fields: [doctor_id], references: [user_id], onDelete: Cascade)
+  educations            DoctorProfileEducation[]
+  researches            DoctorProfileResearch[]
+  experiences           DoctorProfileExperience[]
 
-  @@index([is_listed])
+  @@index([is_listed, specialty, doctor_id])
   @@map("doctor_profiles")
+}
+
+model DoctorProfileEducation {
+  education_id   Int      @id @default(autoincrement())
+  profile_id     Int
+  title          String   @db.VarChar(255)
+  organization   String   @db.VarChar(255)
+  year_label     String?  @db.VarChar(100)
+  display_order  Int      @default(0)
+  created_at     DateTime @default(now()) @map("created_at")
+  updated_at     DateTime @updatedAt @map("updated_at")
+
+  profile DoctorProfile @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profile_id, display_order])
+  @@map("doctor_profile_educations")
+}
+
+model DoctorProfileResearch {
+  research_id    Int      @id @default(autoincrement())
+  profile_id     Int
+  title          String   @db.VarChar(255)
+  source         String   @db.VarChar(255)
+  published_year Int?
+  display_order  Int      @default(0)
+  created_at     DateTime @default(now()) @map("created_at")
+  updated_at     DateTime @updatedAt @map("updated_at")
+
+  profile DoctorProfile @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profile_id, display_order])
+  @@map("doctor_profile_researches")
+}
+
+model DoctorProfileExperience {
+  experience_id  Int      @id @default(autoincrement())
+  profile_id     Int
+  title          String   @db.VarChar(255)
+  organization   String   @db.VarChar(255)
+  time_label     String?  @db.VarChar(100)
+  display_order  Int      @default(0)
+  created_at     DateTime @default(now()) @map("created_at")
+  updated_at     DateTime @updatedAt @map("updated_at")
+
+  profile DoctorProfile @relation(fields: [profile_id], references: [profile_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([profile_id, display_order])
+  @@map("doctor_profile_experiences")
+}
+
+model DoctorReview {
+  review_id              Int      @id @default(autoincrement())
+  doctor_id              Int
+  patient_id             Int
+  source_hire_id         Int?
+  source_appointment_id  Int?
+  rating                 Int
+  comment                String?  @db.Text
+  is_visible             Boolean  @default(true)
+  created_at             DateTime @default(now()) @map("created_at")
+  updated_at             DateTime @updatedAt @map("updated_at")
+
+  doctor  User @relation("DoctorReviewDoctor", fields: [doctor_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  patient User @relation("DoctorReviewAuthor", fields: [patient_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([doctor_id, patient_id])
+  @@index([doctor_id, is_visible, created_at, review_id])
+  @@index([patient_id, doctor_id])
+  @@map("doctor_reviews")
 }
 
 model DoctorHire {
@@ -267,6 +343,7 @@ model DoctorHire {
 
   @@unique([patient_id, doctor_id])
   @@index([doctor_id, status])
+  @@index([doctor_id, patient_id, status])
   @@index([patient_id, status])
   @@map("doctor_hires")
 }
@@ -390,6 +467,7 @@ model Appointment {
   doctor  User @relation("DoctorAppointments", fields: [doctor_id], references: [user_id], onDelete: Cascade)
 
   @@index([doctor_id, start_time, end_time])
+  @@index([doctor_id, patient_id, status, start_time])
   @@index([patient_id, start_time])
   @@index([status, start_time])
   @@map("appointments")
