@@ -190,6 +190,26 @@ export function DoctorDashboardPage() {
         </div>
       )}
 
+      <section className="mb-8 overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-600 to-teal-600 p-6 text-white shadow-[0_8px_30px_rgb(16,185,129,0.18)]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-emerald-100">Hồ sơ công khai</p>
+            <h2 className="mt-2 text-2xl font-black">Cập nhật profile bác sĩ</h2>
+            <p className="mt-1 max-w-2xl text-sm font-medium text-emerald-50">
+              Hồ sơ đầy đủ giúp bệnh nhân hiểu chuyên môn, phí tư vấn và trạng thái nhận bệnh nhân của bạn.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/doctor/profile")}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-emerald-700 shadow-lg transition-transform hover:scale-[1.02]"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit_square</span>
+            Sửa hồ sơ
+          </button>
+        </div>
+      </section>
+
       <section className="mb-8 rounded-2xl border border-sky-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>

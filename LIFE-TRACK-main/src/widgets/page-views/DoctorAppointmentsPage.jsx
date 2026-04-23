@@ -113,6 +113,24 @@ function createAvailabilityDraft() {
   };
 }
 
+function createAvailabilityDraftForDay(dayOfWeek, overrides = {}) {
+  return {
+    ...createAvailabilityDraft(),
+    day_of_week: dayOfWeek,
+    ...overrides,
+  };
+}
+
+const AVAILABILITY_PRESETS = {
+  morning: [{ start_time: "08:00", end_time: "12:00", slot_minutes: 30 }],
+  afternoon: [{ start_time: "13:30", end_time: "17:00", slot_minutes: 30 }],
+  full: [{ start_time: "08:00", end_time: "12:00", slot_minutes: 30 }, { start_time: "13:30", end_time: "17:00", slot_minutes: 30 }],
+};
+
+function isValidTimeRange(startTime, endTime) {
+  return Boolean(startTime && endTime && startTime < endTime);
+}
+
 /**
  * Trang lịch hẹn của bác sĩ.
  * Trang hiển thị lịch thật từ backend, yêu cầu chờ duyệt và công cụ cấu hình lịch rảnh.
@@ -187,6 +205,76 @@ export function DoctorAppointmentsPage() {
     );
   };
 
+  const getAvailabilityRowsForDay = (dayOfWeek) =>
+    availability
+      .map((item, index) => ({ ...item, __index: index }))
+      .filter((item) => Number(item.day_of_week) === Number(dayOfWeek));
+
+  const addAvailabilityForDay = (dayOfWeek) => {
+    setAvailability((current) => [
+      ...current,
+      createAvailabilityDraftForDay(dayOfWeek),
+    ]);
+  };
+
+  const removeAvailabilityRow = (index) => {
+    setAvailability((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const setDayPreset = (dayOfWeek, presetKey) => {
+    const preset = AVAILABILITY_PRESETS[presetKey] || [];
+    setAvailability((current) => [
+      ...current.filter((item) => Number(item.day_of_week) !== Number(dayOfWeek)),
+      ...preset.map((item) => createAvailabilityDraftForDay(dayOfWeek, item)),
+    ]);
+  };
+
+  const toggleDayActive = (dayOfWeek, active) => {
+    const rows = getAvailabilityRowsForDay(dayOfWeek);
+    if (!active) {
+      setAvailability((current) => current.filter((item) => Number(item.day_of_week) !== Number(dayOfWeek)));
+      return;
+    }
+
+    if (!rows.length) {
+      addAvailabilityForDay(dayOfWeek);
+      return;
+    }
+
+    setAvailability((current) =>
+      current.map((item) =>
+        Number(item.day_of_week) === Number(dayOfWeek) ? { ...item, is_active: true } : item,
+      ),
+    );
+  };
+
+  const copyDaySchedule = (sourceDay, targetMode) => {
+    const sourceRows = getAvailabilityRowsForDay(sourceDay).filter((item) => item.is_active !== false);
+    if (!sourceRows.length) {
+      toast.warn("Ngày nguồn chưa có khung giờ để sao chép.");
+      return;
+    }
+
+    const targetDays =
+      targetMode === "weekdays"
+        ? [1, 2, 3, 4, 5]
+        : WEEKDAYS.map((day) => day.id).filter((dayId) => dayId !== sourceDay);
+
+    setAvailability((current) => [
+      ...current.filter((item) => !targetDays.includes(Number(item.day_of_week))),
+      ...targetDays.flatMap((dayOfWeek) =>
+        sourceRows.map((row) =>
+          createAvailabilityDraftForDay(dayOfWeek, {
+            start_time: row.start_time,
+            end_time: row.end_time,
+            slot_minutes: row.slot_minutes,
+            is_active: true,
+          }),
+        ),
+      ),
+    ]);
+  };
+
   /**
    * Lưu cấu hình lịch rảnh lên backend.
    * Backend dùng replace-all nên payload là toàn bộ danh sách hiện tại.
@@ -195,13 +283,26 @@ export function DoctorAppointmentsPage() {
     setSavingAvailability(true);
     try {
       // Chuẩn hóa slot_minutes về số trước khi gửi API.
-      const payload = availability.map((item) => ({
-        day_of_week: Number(item.day_of_week),
-        start_time: item.start_time,
-        end_time: item.end_time,
-        slot_minutes: Number(item.slot_minutes || 30),
-        is_active: item.is_active !== false,
-      }));
+      const payload = availability
+        .filter((item) => item.is_active !== false)
+        .map((item) => ({
+          day_of_week: Number(item.day_of_week),
+          start_time: item.start_time,
+          end_time: item.end_time,
+          slot_minutes: Number(item.slot_minutes || 30),
+          is_active: true,
+        }));
+
+      const invalidRow = payload.find(
+        (item) =>
+          !isValidTimeRange(item.start_time, item.end_time) ||
+          ![15, 20, 30, 45, 60].includes(Number(item.slot_minutes)),
+      );
+
+      if (invalidRow) {
+        toast.warn("Vui lòng kiểm tra lại khung giờ: giờ bắt đầu phải nhỏ hơn giờ kết thúc và slot phải hợp lệ.");
+        return;
+      }
 
       // Lưu và cập nhật lại state bằng dữ liệu backend trả về.
       const saved = await saveDoctorAvailability(payload);
@@ -441,61 +542,115 @@ export function DoctorAppointmentsPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch rảnh</p>
-              <h2 className="text-lg font-black text-slate-800">Khung giờ nhận lịch</h2>
+              <h2 className="text-lg font-black text-slate-800">Lịch làm việc lặp lại</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setAvailability((current) => [...current, createAvailabilityDraft()])}
-              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-200"
-            >
-              + Thêm
-            </button>
           </div>
 
-          <div className="space-y-3">
-            {availability.map((item, index) => (
-              <div key={item.availability_id ?? index} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={item.day_of_week}
-                    onChange={(event) => updateAvailabilityRow(index, "day_of_week", Number(event.target.value))}
-                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                  >
-                    {WEEKDAYS.map((day) => (
-                      <option key={day.id} value={day.id}>{day.label}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={item.slot_minutes}
-                    onChange={(event) => updateAvailabilityRow(index, "slot_minutes", Number(event.target.value))}
-                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                  >
-                    {[15, 20, 30, 45, 60].map((minute) => (
-                      <option key={minute} value={minute}>{minute} phút</option>
-                    ))}
-                  </select>
-                  <input
-                    type="time"
-                    value={item.start_time}
-                    onChange={(event) => updateAvailabilityRow(index, "start_time", event.target.value)}
-                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                  />
-                  <input
-                    type="time"
-                    value={item.end_time}
-                    onChange={(event) => updateAvailabilityRow(index, "end_time", event.target.value)}
-                    className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                  />
+          <div className="mb-4 rounded-xl bg-sky-50 p-3 text-xs font-medium text-sky-800">
+            Chọn ngày làm việc, áp preset sáng/chiều/cả ngày, rồi chỉnh slot nếu cần. Lịch nghỉ/chặn slot cụ thể nằm ở khối bên dưới.
+          </div>
+
+          <div className="space-y-4">
+            {WEEKDAYS.map((day) => {
+              const rows = getAvailabilityRowsForDay(day.id);
+              const enabled = rows.some((row) => row.is_active !== false);
+
+              return (
+                <div key={day.id} className={enabled ? "rounded-2xl border border-primary/20 bg-primary/5 p-4" : "rounded-2xl border border-slate-100 bg-slate-50 p-4"}>
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(event) => toggleDayActive(day.id, event.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                      <span className="font-black text-slate-800">{day.label}</span>
+                    </label>
+                    {enabled && (
+                      <button
+                        type="button"
+                        onClick={() => addAvailabilityForDay(day.id)}
+                        className="rounded-lg bg-white px-2 py-1 text-[11px] font-black text-primary shadow-sm"
+                      >
+                        + Khung
+                      </button>
+                    )}
+                  </div>
+
+                  {enabled && (
+                    <>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {[
+                          ["morning", "Sáng"],
+                          ["afternoon", "Chiều"],
+                          ["full", "Cả ngày"],
+                        ].map(([presetKey, label]) => (
+                          <button
+                            key={presetKey}
+                            type="button"
+                            onClick={() => setDayPreset(day.id, presetKey)}
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black text-slate-600 hover:border-primary hover:text-primary"
+                          >
+                            {label}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => copyDaySchedule(day.id, "weekdays")}
+                          className="rounded-lg border border-emerald-100 bg-white px-2.5 py-1.5 text-[11px] font-black text-emerald-700 hover:bg-emerald-50"
+                        >
+                          Copy T2-T6
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyDaySchedule(day.id, "all")}
+                          className="rounded-lg border border-sky-100 bg-white px-2.5 py-1.5 text-[11px] font-black text-sky-700 hover:bg-sky-50"
+                        >
+                          Copy tất cả
+                        </button>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        {rows.map((item) => (
+                          <div key={item.availability_id ?? item.__index} className="grid grid-cols-[1fr_1fr_86px_28px] gap-2">
+                            <input
+                              type="time"
+                              value={item.start_time}
+                              onChange={(event) => updateAvailabilityRow(item.__index, "start_time", event.target.value)}
+                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                            />
+                            <input
+                              type="time"
+                              value={item.end_time}
+                              onChange={(event) => updateAvailabilityRow(item.__index, "end_time", event.target.value)}
+                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                            />
+                            <select
+                              value={item.slot_minutes}
+                              onChange={(event) => updateAvailabilityRow(item.__index, "slot_minutes", Number(event.target.value))}
+                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
+                            >
+                              {[15, 20, 30, 45, 60].map((minute) => (
+                                <option key={minute} value={minute}>{minute}p</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => removeAvailabilityRow(item.__index)}
+                              className="rounded-lg text-rose-500 hover:bg-rose-50"
+                              aria-label="Xóa khung giờ"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setAvailability((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                  className="mt-2 text-xs font-black text-rose-500 hover:underline"
-                >
-                  Xóa khung này
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <button

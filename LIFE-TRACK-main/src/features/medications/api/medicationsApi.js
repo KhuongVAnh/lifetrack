@@ -10,9 +10,9 @@ import httpClient from '@/shared/api/httpClient';
  * Mỗi đơn sẽ kèm theo danh sách các loại thuốc bên trong.
  * @returns {Promise<Array>} plans - Danh sách đơn thuốc
  */
-export const getMedicationPlans = async () => {
+export const getMedicationPlans = async (params = {}) => {
   // Backend trả tất cả đơn thuốc của user hiện tại kèm thuốc con và bác sĩ kê đơn nếu có.
-  const { data } = await httpClient.get('/medications/plans');
+  const { data } = await httpClient.get('/medications/plans', { params });
   return data.plans ?? [];
 };
 
@@ -67,9 +67,10 @@ export const getMedicationLogs = async (params = {}) => {
  * @param {number} logId - ID của MedicationLog cần xác nhận
  * @returns {Promise<Object>}
  */
-export const markMedicationTaken = async (logId) => {
+export const markMedicationTaken = async (logId, params = {}) => {
   // Backend kiểm tra log thuộc user hiện tại trước khi cập nhật.
-  const { data } = await httpClient.patch(`/medications/logs/${logId}/take`);
+  // Tránh gửi JSON literal `null` vì backend đang strict JSON object/array.
+  const { data } = await httpClient.patch(`/medications/logs/${logId}/take`, {}, { params });
   return data;
 };
 
@@ -77,8 +78,9 @@ export const markMedicationTaken = async (logId) => {
  * Bệnh nhân bỏ qua một lượt uống thuốc.
  * Trạng thái SKIPPED khác với MISSED do hệ thống tự đánh dấu quá hạn.
  */
-export const skipMedicationLog = async (logId) => {
+export const skipMedicationLog = async (logId, params = {}) => {
   // Gọi endpoint skip để giữ lịch sử tuân thủ thuốc rõ ràng.
-  const { data } = await httpClient.patch(`/medications/logs/${logId}/skip`);
+  // Tránh gửi JSON literal `null` vì backend đang strict JSON object/array.
+  const { data } = await httpClient.patch(`/medications/logs/${logId}/skip`, {}, { params });
   return data;
 };

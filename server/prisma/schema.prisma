@@ -100,6 +100,8 @@ model User {
   receivedDirectMessages DirectMessage[]         @relation("DirectReceiver")
   sharedPatients         AccessPermission[]      @relation("SharedPatients")
   sharedViewers          AccessPermission[]      @relation("SharedViewers")
+  ownedFamilyRelations   FamilyRelation[]        @relation("FamilyRelationOwner")
+  memberFamilyRelations  FamilyRelation[]        @relation("FamilyRelationMember")
   phrOverview            PhrOverview?
   patientVisits          MedicalVisit[]          @relation("PatientVisits")
   doctorVisits           MedicalVisit[]          @relation("DoctorVisits")
@@ -226,6 +228,25 @@ model AccessPermission {
   viewer  User @relation("SharedViewers", fields: [viewer_id], references: [user_id], onDelete: Cascade)
 
   @@map("access_permissions")
+}
+
+model FamilyRelation {
+  relation_id    Int      @id @default(autoincrement())
+  owner_user_id  Int
+  member_user_id Int
+  relation_label String?  @db.VarChar(100)
+  display_order  Int      @default(0)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now()) @map("created_at")
+  updated_at     DateTime @updatedAt @map("updated_at")
+
+  owner  User @relation("FamilyRelationOwner", fields: [owner_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  member User @relation("FamilyRelationMember", fields: [member_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([owner_user_id, member_user_id])
+  @@index([owner_user_id, display_order])
+  @@index([member_user_id])
+  @@map("family_relations")
 }
 
 model DoctorProfile {

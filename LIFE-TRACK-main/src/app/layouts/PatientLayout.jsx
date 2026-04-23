@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { getUserAvatar, getUserDisplayName } from "@/entities/user";
+import { FloatingAiChatWidget } from "@/features/ai-chat";
 import { useAuth } from "@/features/auth";
 import { ImageWithFallback } from "@/shared/ui";
 import { BottomNav, PrimarySidebar, primaryNav } from "@/widgets/navigation";
@@ -63,6 +64,8 @@ export function PatientShell() {
           <Outlet />
         </main>
       </div>
+
+      {!isConsultPage && <FloatingAiChatWidget />}
 
       {/* Bottom navigation — mobile only */}
       <BottomNav items={primaryNav} onHamburgerClick={() => setSidebarOpen(true)} />

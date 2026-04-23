@@ -14,6 +14,47 @@ const prisma = new PrismaClient()
 
 const toDate = (value) => new Date(value)
 
+const MEDICATION_METADATA = {
+  Amlodipine: {
+    type: "Thuốc hạ huyết áp",
+    description: "Giảm huyết áp bằng cách làm giãn mạch máu, giúp tim bơm máu dễ dàng hơn",
+  },
+  Bisoprolol: {
+    type: "Thuốc chẹn beta",
+    description: "Giảm nhịp tim và sức co bóp của tim, giúp kiểm soát huyết áp và ngăn ngừa đau tim",
+  },
+  Omeprazole: {
+    type: "Thuốc ức chế bơm proton",
+    description: "Giảm sản xuất axit dạ dày, giúp chữa lành vết loét và giảm triệu chứng ợ nóng",
+  },
+  Clarithromycin: {
+    type: "Thuốc kháng sinh",
+    description: "Tiêu diệt vi khuẩn Helicobacter pylori gây loét dạ dày",
+  },
+  Amoxicillin: {
+    type: "Thuốc kháng sinh",
+    description: "Tiêu diệt vi khuẩn gây nhiễm trùng, thường dùng kết hợp trong điều trị loét dạ dày",
+  },
+  Rosuvastatin: {
+    type: "Thuốc statin",
+    description: "Giảm cholesterol xấu (LDL) và triglyceride, tăng cholesterol tốt (HDL) trong máu",
+  },
+  Fenofibrate: {
+    type: "Thuốc giảm triglyceride",
+    description: "Giảm mức triglyceride và cholesterol xấu, giúp cải thiện hồ sơ lipid máu",
+  },
+  Aspirin: {
+    type: "Thuốc chống đông máu",
+    description: "Ngăn ngừa hình thành cục máu đông, giảm nguy cơ đột quỵ và nhồi máu cơ tim",
+  },
+  Atorvastatin: {
+    type: "Thuốc statin",
+    description: "Giảm cholesterol và triglyceride, bảo vệ mạch máu và tim mạch",
+  },
+}
+
+const getMedicationMetadata = (name) => MEDICATION_METADATA[name] || {}
+
 const buildConversationKey = (leftUserId, rightUserId) => {
   const left = Number(leftUserId)
   const right = Number(rightUserId)
@@ -40,6 +81,7 @@ async function main() {
   await prisma.doctorProfileResearch.deleteMany()
   await prisma.doctorProfileEducation.deleteMany()
   await prisma.doctorProfile.deleteMany()
+  await prisma.familyRelation.deleteMany()
   await prisma.accessPermission.deleteMany()
   await prisma.medicationLog.deleteMany()
   await prisma.medication.deleteMany()
@@ -942,6 +984,53 @@ async function main() {
     ],
   })
 
+  await prisma.familyRelation.createMany({
+    data: [
+      {
+        owner_user_id: patient.user_id,
+        member_user_id: spouse.user_id,
+        relation_label: "Vợ",
+        display_order: 0,
+      },
+      {
+        owner_user_id: patient.user_id,
+        member_user_id: child.user_id,
+        relation_label: "Con",
+        display_order: 1,
+      },
+      {
+        owner_user_id: spouse.user_id,
+        member_user_id: patient.user_id,
+        relation_label: "Chồng",
+        display_order: 0,
+      },
+      {
+        owner_user_id: spouse.user_id,
+        member_user_id: child.user_id,
+        relation_label: "Con",
+        display_order: 1,
+      },
+      {
+        owner_user_id: family.user_id,
+        member_user_id: patient.user_id,
+        relation_label: "Anh",
+        display_order: 0,
+      },
+      {
+        owner_user_id: family.user_id,
+        member_user_id: spouse.user_id,
+        relation_label: "Chị",
+        display_order: 1,
+      },
+      {
+        owner_user_id: family.user_id,
+        member_user_id: child.user_id,
+        relation_label: "Cháu",
+        display_order: 2,
+      },
+    ],
+  })
+
   // ========== Gia đình thuê 2 bác sĩ ==========
   // Bác sĩ 1 - Tim mạch (được thuê bởi patient chính)
   const patientDoctor1Hire = await prisma.doctorHire.create({
@@ -1425,8 +1514,7 @@ async function main() {
       name: "Amlodipine",
       dosage: "5mg",
       times: ["08:00"],
-      type: "Thuốc hạ huyết áp",
-      description: "Giảm huyết áp bằng cách làm giãn mạch máu, giúp tim bơm máu dễ dàng hơn",
+      ...getMedicationMetadata("Amlodipine"),
     },
   })
 
@@ -1436,8 +1524,7 @@ async function main() {
       name: "Bisoprolol",
       dosage: "2.5mg",
       times: ["08:00"],
-      type: "Thuốc chẹn beta",
-      description: "Giảm nhịp tim và sức co bóp của tim, giúp kiểm soát huyết áp và ngăn ngừa đau tim",
+      ...getMedicationMetadata("Bisoprolol"),
     },
   })
 
@@ -1448,8 +1535,7 @@ async function main() {
       name: "Omeprazole",
       dosage: "20mg",
       times: ["07:30"],
-      type: "Thuốc ức chế bơm proton",
-      description: "Giảm sản xuất axit dạ dày, giúp chữa lành vết loét và giảm triệu chứng ợ nóng",
+      ...getMedicationMetadata("Omeprazole"),
     },
   })
 
@@ -1459,8 +1545,7 @@ async function main() {
       name: "Clarithromycin",
       dosage: "500mg",
       times: ["08:00", "20:00"],
-      type: "Thuốc kháng sinh",
-      description: "Tiêu diệt vi khuẩn Helicobacter pylori gây loét dạ dày",
+      ...getMedicationMetadata("Clarithromycin"),
     },
   })
 
@@ -1470,8 +1555,7 @@ async function main() {
       name: "Amoxicillin",
       dosage: "1g",
       times: ["08:00", "20:00"],
-      type: "Thuốc kháng sinh",
-      description: "Tiêu diệt vi khuẩn gây nhiễm trùng, thường dùng kết hợp trong điều trị loét dạ dày",
+      ...getMedicationMetadata("Amoxicillin"),
     },
   })
 
@@ -1482,8 +1566,7 @@ async function main() {
       name: "Rosuvastatin",
       dosage: "10mg",
       times: ["21:00"],
-      type: "Thuốc statin",
-      description: "Giảm cholesterol xấu (LDL) và triglyceride, tăng cholesterol tốt (HDL) trong máu",
+      ...getMedicationMetadata("Rosuvastatin"),
     },
   })
 
@@ -1493,8 +1576,7 @@ async function main() {
       name: "Fenofibrate",
       dosage: "160mg",
       times: ["08:00"],
-      type: "Thuốc giảm triglyceride",
-      description: "Giảm mức triglyceride và cholesterol xấu, giúp cải thiện hồ sơ lipid máu",
+      ...getMedicationMetadata("Fenofibrate"),
     },
   })
 
@@ -1505,8 +1587,7 @@ async function main() {
       name: "Aspirin",
       dosage: "75mg",
       times: ["08:00"],
-      type: "Thuốc chống đông máu",
-      description: "Ngăn ngừa hình thành cục máu đông, giảm nguy cơ đột quỵ và nhồi máu cơ tim",
+      ...getMedicationMetadata("Aspirin"),
     },
   })
 
@@ -1516,8 +1597,7 @@ async function main() {
       name: "Atorvastatin",
       dosage: "10mg",
       times: ["21:00"],
-      type: "Thuốc statin",
-      description: "Giảm cholesterol và triglyceride, bảo vệ mạch máu và tim mạch",
+      ...getMedicationMetadata("Atorvastatin"),
     },
   })
 
@@ -1584,15 +1664,163 @@ async function main() {
     skipDuplicates: true,
   })
 
-  // PhrOverview giả lập chung
-  await prisma.phrOverview.create({
-    data: {
-      user_id: patient.user_id,
-      personal_info: { fullName: "Nguyễn Văn An", dob: "1990-01-01", gender: "Nam", bloodType: "O+", phone: "0901234567" },
-      vitals: { height: 170, weight: 65, bmi: 22.5, heartRate: 75, bloodPressure: "120/80" },
-      medical_history: { personal: ["Viêm loét dạ dày"], family: [], allergies: ["Hải sản"], lifestyle: { smoking: "Không", alcohol: "Thỉnh thoảng", exercise: "Ít" } },
-      clinical_results: { conclusion: { healthClass: "Loại II", advice: "Ăn uống điều độ, tránh thức khuya." } }
-    }
+  // PHR overview thật cho các hồ sơ đang xuất hiện trong doctor/family flow
+  await prisma.phrOverview.createMany({
+    data: [
+      {
+        user_id: patient.user_id,
+        personal_info: {
+          fullName: "Nguyễn Văn An",
+          dob: "1990-01-01",
+          gender: "Nam",
+          idCard: "079080012345",
+          bloodType: "O+",
+          phone: "0901234567",
+          address: "Quận 1, TP. Hồ Chí Minh",
+          emergencyContact: {
+            name: "Nguyễn Thị Linh",
+            relation: "Vợ",
+            phone: "0912345678",
+          },
+        },
+        vitals: {
+          height: 170,
+          weight: 65,
+          bmi: 22.5,
+          heartRate: 75,
+          bloodPressure: "120/80",
+        },
+        medical_history: {
+          personal: ["Viêm loét dạ dày", "Rối loạn lipid máu", "Tăng huyết áp độ 1"],
+          family: ["Bố tăng huyết áp", "Mẹ rối loạn mỡ máu"],
+          allergies: ["Hải sản"],
+          lifestyle: {
+            smoking: "Không",
+            alcohol: "Thỉnh thoảng 1-2 lần/tuần",
+            exercise: "Đi bộ nhanh 30 phút, 4 buổi/tuần",
+          },
+        },
+        clinical_results: {
+          clinical: {
+            internal: "Tim mạch ổn định, phổi trong, còn cảm giác hồi hộp khi thiếu ngủ.",
+            surgical: "Chưa ghi nhận bất thường ngoại khoa.",
+            eyes: "Thị lực 10/10 khi đeo kính nhẹ.",
+            ent: "Tai mũi họng chưa ghi nhận bất thường cần điều trị.",
+          },
+          subclinical: {
+            bloodTest: "Đường huyết ổn định, cholesterol và triglyceride tăng nhẹ, chức năng gan thận bình thường.",
+            imaging: "Nội soi dạ dày ghi nhận viêm loét hang vị mức độ vừa. Siêu âm bụng có gan nhiễm mỡ độ 1.",
+            functional: "ECG nhịp xoang đều, tần số 72 l/p, có ngoại tâm thu thất rải rác.",
+          },
+          conclusion: {
+            healthClass: "Loại II",
+            advice: "Kiểm soát ăn mặn và dầu mỡ, ngủ đúng giờ, tái khám tim mạch và tiêu hóa đúng hẹn.",
+          },
+        },
+      },
+      {
+        user_id: spouse.user_id,
+        personal_info: {
+          fullName: "Nguyễn Thị Linh",
+          dob: "1992-06-12",
+          gender: "Nữ",
+          idCard: "079120045678",
+          bloodType: "A+",
+          phone: "0912345678",
+          address: "Quận 1, TP. Hồ Chí Minh",
+          emergencyContact: {
+            name: "Nguyễn Văn An",
+            relation: "Chồng",
+            phone: "0901234567",
+          },
+        },
+        vitals: {
+          height: 160,
+          weight: 55,
+          bmi: 21.5,
+          heartRate: 72,
+          bloodPressure: "118/76",
+        },
+        medical_history: {
+          personal: ["Rối loạn lipid máu nhẹ", "Theo dõi dự phòng tim mạch"],
+          family: ["Mẹ tăng huyết áp", "Ông ngoại đột quỵ sau tuổi 70"],
+          allergies: ["Phấn hoa theo mùa"],
+          lifestyle: {
+            smoking: "Không",
+            alcohol: "Hiếm khi",
+            exercise: "Yoga và đi bộ 5 buổi/tuần",
+          },
+        },
+        clinical_results: {
+          clinical: {
+            internal: "Tim đều, huyết áp ổn định, chưa ghi nhận triệu chứng gắng sức.",
+            surgical: "Chưa ghi nhận bất thường ngoại khoa.",
+            eyes: "Thị lực 9/10 hai mắt.",
+            ent: "Tai mũi họng bình thường.",
+          },
+          subclinical: {
+            bloodTest: "Mỡ máu hơi cao, đường huyết và chức năng gan thận trong giới hạn cho phép.",
+            imaging: "Siêu âm tim và X-quang tim phổi chưa ghi nhận bất thường cấu trúc.",
+            functional: "ECG nhịp xoang, không ghi nhận cơn nguy hiểm kéo dài.",
+          },
+          conclusion: {
+            healthClass: "Loại I",
+            advice: "Duy trì vận động đều, tiếp tục aspirin/statin theo chỉ định và theo dõi lipid máu định kỳ.",
+          },
+        },
+      },
+      {
+        user_id: child.user_id,
+        personal_info: {
+          fullName: "Nguyễn Minh Anh",
+          dob: "2016-09-18",
+          gender: "Nữ",
+          idCard: "079216001234",
+          bloodType: "B+",
+          phone: "0908123456",
+          address: "Quận 1, TP. Hồ Chí Minh",
+          emergencyContact: {
+            name: "Nguyễn Thị Linh",
+            relation: "Mẹ",
+            phone: "0912345678",
+          },
+        },
+        vitals: {
+          height: 137,
+          weight: 31,
+          bmi: 16.5,
+          heartRate: 88,
+          bloodPressure: "100/65",
+        },
+        medical_history: {
+          personal: ["Viêm mũi dị ứng theo mùa"],
+          family: ["Bố tăng huyết áp", "Mẹ rối loạn lipid máu"],
+          allergies: ["Bụi nhà"],
+          lifestyle: {
+            smoking: "Không",
+            alcohol: "Không",
+            exercise: "Đạp xe và bơi 4 buổi/tuần",
+          },
+        },
+        clinical_results: {
+          clinical: {
+            internal: "Thể trạng tốt, tim phổi bình thường theo lứa tuổi.",
+            surgical: "Không ghi nhận bất thường ngoại khoa.",
+            eyes: "Thị lực 10/10 hai mắt.",
+            ent: "Viêm mũi dị ứng theo mùa, chưa có dấu hiệu bội nhiễm.",
+          },
+          subclinical: {
+            bloodTest: "Công thức máu và vi chất trong giới hạn tuổi, chưa ghi nhận thiếu máu.",
+            imaging: "Không có chỉ định chẩn đoán hình ảnh bất thường gần đây.",
+            functional: "Không có chỉ định ECG chức năng, nhịp tim lâm sàng đều.",
+          },
+          conclusion: {
+            healthClass: "Loại I",
+            advice: "Giữ lịch ngủ đều, hạn chế dị nguyên trong nhà và tái khám khi viêm mũi kéo dài.",
+          },
+        },
+      },
+    ],
   })
 
   // Bệnh sử theo đúng chuẩn Hồ sơ Sức khỏe (PHR) với các lần khám thực tế tại cơ sở y tế

@@ -121,6 +121,23 @@ app.use("/api/family", require("./routes/familyRoutes"))
 app.use("/api/appointments", require("./routes/appointments"))
 app.use("/api/medications", require("./routes/medications"))
 
+// Chuẩn hóa phản hồi khi client gửi JSON body không hợp lệ (ví dụ gửi literal `null`).
+app.use((error, req, res, next) => {
+  const isJsonSyntaxError =
+    error?.type === "entity.parse.failed" &&
+    typeof error?.status === "number" &&
+    error.status === 400 &&
+    typeof error?.message === "string"
+
+  if (isJsonSyntaxError) {
+    return res.status(400).json({
+      message: "JSON body khong hop le. Vui long gui object hoac array hop le.",
+    })
+  }
+
+  return next(error)
+})
+
 
 socketService.init(io)
 app.set("io", io)

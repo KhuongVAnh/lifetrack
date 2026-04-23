@@ -50,6 +50,59 @@ function formatFee(value) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(fee);
 }
 
+function toDateKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildDateStrip(days = 14) {
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + index);
+    return {
+      key: toDateKey(date),
+      dayName: date.toLocaleDateString("vi-VN", { weekday: "short" }),
+      dayNumber: date.getDate(),
+      month: date.toLocaleDateString("vi-VN", { month: "2-digit" }),
+      isToday: index === 0,
+    };
+  });
+}
+
+function getSlotPeriod(slot) {
+  const hour = new Date(slot.start_time).getHours();
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
+}
+
+function getUnavailableReason(slot) {
+  const reason = slot.unavailable_reason || slot.reason || "";
+  const normalized = reason.toLowerCase();
+  if (normalized.includes("past") || normalized.includes("qua")) return "Đã qua";
+  if (normalized.includes("time_off") || normalized.includes("ngh")) return "Bác sĩ nghỉ";
+  if (normalized.includes("book") || normalized.includes("đặt")) return "Đã đặt";
+  return reason || "Không khả dụng";
+}
+
+function getDoctorSearchText(doctor) {
+  return [
+    doctor?.name,
+    doctor?.email,
+    doctor?.specialty,
+    doctor?.doctorProfile?.specialty,
+    doctor?.profile?.specialty,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
 /**
  * Badge trạng thái lịch hẹn.
  * Component nhỏ này giúp danh sách lịch hẹn và summary dùng chung visual.
@@ -143,10 +196,15 @@ export function AppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [slots, setSlots] = useState([]);
   const [doctorId, setDoctorId] = useState(null);
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [doctorFilter, setDoctorFilter] = useState("all");
   const [selectedSlotKey, setSelectedSlotKey] = useState("");
+  const [selectedDateKey, setSelectedDateKey] = useState(toDateKey(new Date()));
+  const [showUnavailableSlots, setShowUnavailableSlots] = useState(false);
   const [appointmentType, setAppointmentType] = useState("ONLINE");
   const [reason, setReason] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [highlightedAppointmentId, setHighlightedAppointmentId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -202,6 +260,12 @@ export function AppointmentsPage() {
 
       // Reset slot đang chọn nếu slot cũ không còn trong danh sách mới.
       setSlots(slotData);
+      setSelectedDateKey((current) => {
+        if (slotData.some((slot) => toDateKey(slot.start_time) === current)) return current;
+        return slotData.find((slot) => slot.available)?.start_time
+          ? toDateKey(slotData.find((slot) => slot.available).start_time)
+          : toDateKey(new Date());
+      });
       setSelectedSlotKey((current) => {
         const stillExists = slotData.some((slot) => `${slot.start_time}|${slot.end_time}` === current && slot.available);
         return stillExists ? current : "";
@@ -229,13 +293,36 @@ export function AppointmentsPage() {
     [doctors, doctorId],
   );
 
-  const hiredDoctors = useMemo(
-    () => doctors.filter((doctor) => isHiredDoctor(doctor)),
-    [doctors],
-  );
+  const filteredDoctors = useMemo(() => {
+    const search = doctorSearch.trim().toLowerCase();
+    return doctors.filter((doctor) => {
+      const hired = isHiredDoctor(doctor);
+      const fee = getDoctorBookingFee(doctor);
+      const profileSpecialty = doctor?.specialty || doctor?.doctorProfile?.specialty || doctor?.profile?.specialty || "";
+      const matchSearch = !search || getDoctorSearchText(doctor).includes(search);
+      const matchFilter =
+        doctorFilter === "all" ||
+        (doctorFilter === "hired" && hired) ||
+        (doctorFilter === "external" && !hired) ||
+        (doctorFilter === "free" && fee <= 0) ||
+        (doctorFilter === "paid" && fee > 0) ||
+        (doctorFilter !== "all" &&
+          !["hired", "external", "free", "paid"].includes(doctorFilter) &&
+          profileSpecialty === doctorFilter);
 
-  const suggestedDoctors = useMemo(
-    () => doctors.filter((doctor) => !isHiredDoctor(doctor)),
+      return matchSearch && matchFilter;
+    });
+  }, [doctorFilter, doctorSearch, doctors]);
+
+  const specialtyOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          doctors
+            .map((doctor) => doctor?.specialty || doctor?.doctorProfile?.specialty || doctor?.profile?.specialty)
+            .filter(Boolean),
+        ),
+      ),
     [doctors],
   );
 
@@ -251,6 +338,25 @@ export function AppointmentsPage() {
         .sort((left, right) => new Date(left.start_time) - new Date(right.start_time)),
     [appointments],
   );
+
+  const dateStrip = useMemo(() => buildDateStrip(14), []);
+
+  const selectedDateSlots = useMemo(
+    () =>
+      slots
+        .filter((slot) => toDateKey(slot.start_time) === selectedDateKey)
+        .filter((slot) => showUnavailableSlots || slot.available)
+        .sort((left, right) => new Date(left.start_time) - new Date(right.start_time)),
+    [selectedDateKey, showUnavailableSlots, slots],
+  );
+
+  const groupedSlots = useMemo(() => {
+    const groups = { morning: [], afternoon: [], evening: [] };
+    selectedDateSlots.forEach((slot) => {
+      groups[getSlotPeriod(slot)].push(slot);
+    });
+    return groups;
+  }, [selectedDateSlots]);
 
   const canSubmit = Boolean(selectedDoctor && selectedSlot && reason.trim() && !submitting);
 
@@ -276,6 +382,7 @@ export function AppointmentsPage() {
 
       // Cập nhật UI local để người dùng thấy lịch vừa đặt ngay.
       setAppointments((current) => [appointment, ...current]);
+      setHighlightedAppointmentId(appointment.appointment_id);
       setReason("");
       setAttachmentUrl("");
       setSelectedSlotKey("");
@@ -283,6 +390,12 @@ export function AppointmentsPage() {
       // Tải lại slot để slot vừa đặt chuyển sang trạng thái bận.
       await fetchSlots(selectedDoctor.user_id);
       toast.success("Đặt lịch khám thành công, đang chờ bác sĩ xác nhận.");
+      window.setTimeout(() => {
+        document.getElementById(`appointment-${appointment.appointment_id}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể đặt lịch, vui lòng thử lại.");
     } finally {
@@ -296,17 +409,12 @@ export function AppointmentsPage() {
    */
   const handleCancelAppointment = async (appointmentId) => {
     try {
-      // Gửi lý do ngắn để bác sĩ nhận notification có ngữ cảnh.
       const result = await updateAppointmentStatus(appointmentId, "CANCELLED", "Bệnh nhân hủy lịch từ ứng dụng.");
-
-      // Cập nhật chính lịch hẹn vừa hủy trong danh sách hiện tại.
       setAppointments((current) =>
         current.map((appointment) =>
           appointment.appointment_id === appointmentId ? result.appointment : appointment,
         ),
       );
-
-      // Tải lại slot để slot đã hủy có thể mở lại nếu backend cho phép.
       if (doctorId) await fetchSlots(doctorId);
       toast.success("Đã hủy lịch hẹn.");
     } catch (error) {
@@ -348,70 +456,116 @@ export function AppointmentsPage() {
                 Chưa có bác sĩ hoạt động trong hệ thống.
               </div>
             ) : (
-              <div className="space-y-6">
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-black text-slate-800">Bác sĩ đang đồng hành</p>
-                      <p className="text-xs font-medium text-slate-500">Đặt lịch với bác sĩ đã thuê sẽ được tính miễn phí.</p>
-                    </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
-                      Miễn phí
-                    </span>
+              <div className="space-y-5">
+                {/* Search & filter */}
+                <div className="grid gap-3 md:grid-cols-[1fr_220px]">
+                  <div className="relative">
+                    <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
+                    <input
+                      value={doctorSearch}
+                      onChange={(event) => setDoctorSearch(event.target.value)}
+                      className="w-full rounded-xl border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
+                      placeholder="Tìm theo tên, email hoặc chuyên khoa"
+                    />
                   </div>
-
-                  {hiredDoctors.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-emerald-100 bg-emerald-50/40 p-5 text-sm text-emerald-800">
-                      <p className="font-black">Bạn chưa có bác sĩ đang đồng hành.</p>
-                      <p className="mt-1 text-xs font-medium">Bạn vẫn có thể đặt lịch với bác sĩ ngoài ở phần gợi ý bên dưới.</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {hiredDoctors.map((doctor) => (
-                        <DoctorChoiceCard
-                          key={doctor.user_id}
-                          doctor={doctor}
-                          selected={doctor.user_id === doctorId}
-                          variant="hired"
-                          onSelect={setDoctorId}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <select
+                    value={doctorFilter}
+                    onChange={(event) => setDoctorFilter(event.target.value)}
+                    className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 outline-none focus:border-primary"
+                  >
+                    <option value="all">Tất cả bác sĩ</option>
+                    <option value="hired">Đã thuê</option>
+                    <option value="external">Bác sĩ ngoài</option>
+                    <option value="free">Miễn phí</option>
+                    <option value="paid">Có phí</option>
+                    {specialtyOptions.map((specialty) => (
+                      <option key={specialty} value={specialty}>{specialty}</option>
+                    ))}
+                  </select>
                 </div>
 
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                {/* ── Bác sĩ đang đồng hành (đã thuê) ── */}
+                {(() => {
+                  const hiredDoctors = filteredDoctors.filter((d) => isHiredDoctor(d));
+                  return (
                     <div>
-                      <p className="text-sm font-black text-slate-800">Gợi ý các bác sĩ phù hợp</p>
-                      <p className="text-xs font-medium text-slate-500">Bác sĩ ngoài có phí theo mức bác sĩ đã thiết lập.</p>
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                          <span className="material-symbols-outlined text-[16px]">verified</span>
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-700">Bác sĩ đang đồng hành</h3>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                          {hiredDoctors.length}
+                        </span>
+                      </div>
+                      {hiredDoctors.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-emerald-100 bg-emerald-50/30 p-5 text-center text-sm text-slate-400">
+                          <span className="material-symbols-outlined mb-1 block text-[24px] text-emerald-300">group_off</span>
+                          Chưa có bác sĩ đồng hành. Bạn có thể thuê bác sĩ từ danh sách gợi ý bên dưới.
+                        </div>
+                      ) : (
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {hiredDoctors.map((doctor) => (
+                            <DoctorChoiceCard
+                              key={doctor.user_id}
+                              doctor={doctor}
+                              selected={doctor.user_id === doctorId}
+                              variant="hired"
+                              onSelect={setDoctorId}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-black text-primary">
-                      Có phí
-                    </span>
-                  </div>
+                  );
+                })()}
 
-                  {suggestedDoctors.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-sm font-bold text-slate-400">
-                      Chưa có bác sĩ ngoài phù hợp để gợi ý.
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {suggestedDoctors.map((doctor) => (
-                        <DoctorChoiceCard
-                          key={doctor.user_id}
-                          doctor={doctor}
-                          selected={doctor.user_id === doctorId}
-                          variant="external"
-                          onSelect={setDoctorId}
-                        />
-                      ))}
-                    </div>
-                  )}
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-slate-100" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">hoặc</span>
+                  <div className="h-px flex-1 bg-slate-100" />
                 </div>
+
+                {/* ── Bác sĩ gợi ý ── */}
+                {(() => {
+                  const suggestedDoctors = filteredDoctors.filter((d) => !isHiredDoctor(d));
+                  return (
+                    <div>
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-primary">
+                          <span className="material-symbols-outlined text-[16px]">stethoscope</span>
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-700">Bác sĩ gợi ý</h3>
+                        <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-primary">
+                          {suggestedDoctors.length}
+                        </span>
+                      </div>
+                      {suggestedDoctors.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-sky-100 bg-sky-50/30 p-5 text-center text-sm text-slate-400">
+                          <span className="material-symbols-outlined mb-1 block text-[24px] text-sky-300">person_search</span>
+                          Không tìm thấy bác sĩ gợi ý phù hợp bộ lọc.
+                        </div>
+                      ) : (
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {suggestedDoctors.map((doctor) => (
+                            <DoctorChoiceCard
+                              key={doctor.user_id}
+                              doctor={doctor}
+                              selected={doctor.user_id === doctorId}
+                              variant="external"
+                              onSelect={setDoctorId}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </section>
+
 
           <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -422,37 +576,97 @@ export function AppointmentsPage() {
               {slotsLoading && <span className="text-xs font-bold text-slate-400">Đang tải slot...</span>}
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+              {dateStrip.map((date) => {
+                const availableCount = slots.filter((slot) => toDateKey(slot.start_time) === date.key && slot.available).length;
+                const selected = selectedDateKey === date.key;
+                return (
+                  <button
+                    key={date.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDateKey(date.key);
+                      setSelectedSlotKey("");
+                    }}
+                    className={[
+                      "min-w-[92px] rounded-2xl border px-3 py-3 text-center transition-all",
+                      selected ? "border-primary bg-primary text-white shadow-md" : "border-slate-100 bg-slate-50 text-slate-600 hover:border-primary/30",
+                    ].join(" ")}
+                  >
+                    <p className="text-[11px] font-black uppercase">{date.isToday ? "Hôm nay" : date.dayName}</p>
+                    <p className="mt-1 text-2xl font-black">{date.dayNumber}</p>
+                    <p className={selected ? "text-[10px] font-bold text-white/75" : "text-[10px] font-bold text-slate-400"}>Tháng {date.month}</p>
+                    <p className={selected ? "mt-1 text-[10px] font-bold text-white/80" : "mt-1 text-[10px] font-bold text-emerald-600"}>{availableCount} giờ trống</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <label className="mb-4 flex items-center justify-end gap-2 text-xs font-bold text-slate-500">
+              <input
+                type="checkbox"
+                checked={showUnavailableSlots}
+                onChange={(event) => setShowUnavailableSlots(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              Hiện giờ bận
+            </label>
+
+            <div className="space-y-4">
               {slots.length === 0 && !slotsLoading ? (
-                <div className="col-span-full rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
                   Bác sĩ chưa cấu hình lịch rảnh trong 14 ngày tới.
                 </div>
               ) : (
-                slots.slice(0, 42).map((slot) => {
-                  const key = `${slot.start_time}|${slot.end_time}`;
-                  const selected = key === selectedSlotKey;
+                [
+                  { key: "morning", label: "Sáng", icon: "wb_sunny" },
+                  { key: "afternoon", label: "Chiều", icon: "partly_cloudy_day" },
+                  { key: "evening", label: "Tối", icon: "bedtime" },
+                ].map((period) => (
+                  <div key={period.key} className="rounded-2xl bg-slate-50 p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-primary">{period.icon}</span>
+                      <p className="text-sm font-black text-slate-800">{period.label}</p>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-slate-400">
+                        {groupedSlots[period.key].length}
+                      </span>
+                    </div>
+                    {groupedSlots[period.key].length === 0 ? (
+                      <p className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-center text-xs font-bold text-slate-400">
+                        Không có slot {period.label.toLowerCase()} cho ngày này.
+                      </p>
+                    ) : (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {groupedSlots[period.key].map((slot) => {
+                          const key = `${slot.start_time}|${slot.end_time}`;
+                          const selected = key === selectedSlotKey;
+                          const start = new Date(slot.start_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+                          const end = new Date(slot.end_time).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      disabled={!slot.available}
-                      onClick={() => setSelectedSlotKey(key)}
-                      className={[
-                        "rounded-xl border p-3 text-left transition-all",
-                        selected
-                          ? "border-primary bg-primary text-white shadow-md"
-                          : slot.available
-                            ? "border-slate-100 bg-white hover:border-primary/40 hover:bg-sky-50"
-                            : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300",
-                      ].join(" ")}
-                    >
-                      <p className="text-xs font-black">{formatDateTime(slot.start_time, { dateStyle: "medium", timeStyle: "short" })}</p>
-                      <p className={selected ? "mt-1 text-xs text-white/80" : "mt-1 text-xs text-slate-500"}>{slot.label}</p>
-                      {!slot.available && <p className="mt-1 text-[10px] font-bold uppercase">{slot.unavailable_reason}</p>}
-                    </button>
-                  );
-                })
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              disabled={!slot.available}
+                              onClick={() => setSelectedSlotKey(key)}
+                              className={[
+                                "rounded-xl border p-3 text-left transition-all",
+                                selected
+                                  ? "border-primary bg-primary text-white shadow-md"
+                                  : slot.available
+                                    ? "border-slate-100 bg-white hover:border-primary/40 hover:bg-sky-50"
+                                    : "cursor-not-allowed border-slate-100 bg-white/60 text-slate-300",
+                              ].join(" ")}
+                            >
+                              <p className="text-sm font-black">{start} - {end}</p>
+                              <p className={selected ? "mt-1 text-xs text-white/80" : "mt-1 text-xs text-slate-500"}>{slot.available ? slot.label : getUnavailableReason(slot)}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </section>
@@ -524,7 +738,7 @@ export function AppointmentsPage() {
         </div>
 
         <aside className="space-y-6 lg:col-span-4">
-          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <section className="sticky top-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <p className="text-[11px] font-black uppercase tracking-widest text-primary">Tóm tắt</p>
             <h2 className="mt-1 text-xl font-black text-slate-900">Lịch đang chọn</h2>
             <div className="mt-4 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
@@ -532,7 +746,20 @@ export function AppointmentsPage() {
               <p><span className="font-bold text-slate-500">Thời gian:</span> {selectedSlot ? formatDateTime(selectedSlot.start_time) : "Chưa chọn"}</p>
               <p><span className="font-bold text-slate-500">Hình thức:</span> {appointmentType === "ONLINE" ? "Online" : "Trực tiếp"}</p>
               <p><span className="font-bold text-slate-500">Phí:</span> {formatFee(getDoctorBookingFee(selectedDoctor))}</p>
+              <p><span className="font-bold text-slate-500">Lý do:</span> {reason.trim() || "Chưa nhập"}</p>
             </div>
+            <button
+              type="button"
+              disabled={!canSubmit}
+              onClick={handleCreateAppointment}
+              className={[
+                "mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black text-white transition-colors",
+                canSubmit ? "bg-primary hover:bg-primary/90" : "cursor-not-allowed bg-slate-300",
+              ].join(" ")}
+            >
+              <span className="material-symbols-outlined text-[18px]">event_available</span>
+              {submitting ? "Đang đặt lịch..." : "Đặt lịch"}
+            </button>
           </section>
 
           <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -548,7 +775,16 @@ export function AppointmentsPage() {
                 </div>
               ) : (
                 upcomingAppointments.slice(0, 6).map((appointment) => (
-                  <div key={appointment.appointment_id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <div
+                    key={appointment.appointment_id}
+                    id={`appointment-${appointment.appointment_id}`}
+                    className={[
+                      "rounded-xl border p-4 transition-all",
+                      highlightedAppointmentId === appointment.appointment_id
+                        ? "border-primary bg-primary/5 shadow-md"
+                        : "border-slate-100 bg-slate-50",
+                    ].join(" ")}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate font-black text-slate-800">{appointment.doctor?.name || "Bác sĩ"}</p>

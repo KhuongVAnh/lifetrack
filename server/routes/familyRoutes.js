@@ -1,11 +1,14 @@
 const express = require("express")
-const router = express.Router()
 const familyController = require("../controllers/familyController")
+const { authenticateToken } = require("../middleware/auth")
 
-// Danh sách bệnh nhân được phép xem
+const router = express.Router()
+
+router.get("/patients/me", authenticateToken, familyController.getMyAccessiblePatients)
+router.get("/patients/:patientId/summary", authenticateToken, familyController.getFamilyPatientSummary)
+
+// Legacy routes kept for compatibility with older clients.
 router.get("/patients/:viewer_id", familyController.getAccessiblePatients)
-
-// Xem bệnh sử bệnh nhân
 router.get("/history/:patient_id", familyController.getPatientHistory)
 
 module.exports = router

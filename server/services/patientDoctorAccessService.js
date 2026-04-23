@@ -61,18 +61,34 @@ const hasActiveDoctorHire = async ({ patientId, doctorId }) => {
  * Kiểm tra người thân có quyền xem hồ sơ bệnh nhân qua AccessPermission cũ hay không.
  */
 const hasAcceptedFamilyAccess = async ({ patientId, viewerId }) => {
-  // Người thân vẫn dùng bảng AccessPermission, không bị ảnh hưởng bởi nghiệp vụ thuê bác sĩ.
+  const normalizedPatientId = parseId(patientId)
+  const normalizedViewerId = parseId(viewerId)
+
+  if (!normalizedPatientId || !normalizedViewerId) return false
+
+  // Ưu tiên nguồn dữ liệu mới family_relations cho dashboard/member detail.
+  const relation = await prisma.familyRelation.findFirst({
+    where: {
+      owner_user_id: normalizedViewerId,
+      member_user_id: normalizedPatientId,
+      is_active: true,
+    },
+    select: { relation_id: true },
+  })
+
+  if (relation) return true
+
+  // Fallback cho dữ liệu legacy còn đang dùng AccessPermission.
   const access = await prisma.accessPermission.findFirst({
     where: {
-      patient_id: parseId(patientId) || -1,
-      viewer_id: parseId(viewerId) || -1,
+      patient_id: normalizedPatientId,
+      viewer_id: normalizedViewerId,
       role: AccessRole.GIA_DINH,
       status: AccessStatus.accepted,
     },
     select: { permission_id: true },
   })
 
-  // Có record accepted nghĩa là được xem các nhóm hồ sơ như logic cũ.
   return Boolean(access)
 }
 
@@ -93,8 +109,8 @@ const canViewPatientDomain = async ({ patientId, viewerId, domain }) => {
   })
   if (!viewer?.is_active) return false
 
-  // Người thân giữ nguyên quyền accepted từ AccessPermission.
-  if (viewer.role === UserRole.GIA_DINH) {
+  // Family relation cho phép cả tài khoản gia đình lẫn bệnh nhân xem thành viên khác trong gia đình.
+  if (viewer.role === UserRole.GIA_DINH || viewer.role === UserRole.BENH_NHAN) {
     return hasAcceptedFamilyAccess({ patientId: normalizedPatientId, viewerId: normalizedViewerId })
   }
 
@@ -131,7 +147,14 @@ const getTelemetryRecipientIds = async (patientId) => {
   if (!normalizedPatientId) return []
 
   // Lấy người thân còn quyền chia sẻ và bác sĩ thuê đang được bật quyền ECG song song.
-  const [familyAccesses, doctorHires] = await Promise.all([
+  const [familyRelations, legacyFamilyAccesses, doctorHires] = await Promise.all([
+    prisma.familyRelation.findMany({
+      where: {
+        member_user_id: normalizedPatientId,
+        is_active: true,
+      },
+      select: { owner_user_id: true },
+    }),
     prisma.accessPermission.findMany({
       where: {
         patient_id: normalizedPatientId,
@@ -154,7 +177,8 @@ const getTelemetryRecipientIds = async (patientId) => {
   return [
     ...new Set([
       normalizedPatientId,
-      ...familyAccesses.map((item) => item.viewer_id),
+      ...familyRelations.map((item) => item.owner_user_id),
+      ...legacyFamilyAccesses.map((item) => item.viewer_id),
       ...doctorHires.map((item) => item.doctor_id),
     ]),
   ]

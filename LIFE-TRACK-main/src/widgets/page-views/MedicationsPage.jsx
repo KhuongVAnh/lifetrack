@@ -88,6 +88,17 @@ function TodayMedCard({ log, onTake, onSkip }) {
             {loading ? "..." : "Đã uống"}
           </button>
         </div>
+      ) : log.status === "MISSED" ? (
+        <div className="flex shrink-0 items-center justify-end gap-2 sm:justify-start">
+          <StatusBadge status={log.status} />
+          <button
+            onClick={handleTake}
+            disabled={loading}
+            className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-colors hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {loading ? "..." : "Đã uống trễ"}
+          </button>
+        </div>
       ) : (
         <div className="flex justify-end sm:justify-start">
           <StatusBadge status={log.status} />
@@ -276,6 +287,125 @@ function AddMedicationModal({ onClose, onSave }) {
   );
 }
 
+function startOfTodayIso() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date.toISOString();
+}
+
+function endOfTodayIso() {
+  const date = new Date();
+  date.setHours(23, 59, 59, 999);
+  return date.toISOString();
+}
+
+function buildMedicationStats(logs, plans) {
+  const counts = logs.reduce(
+    (acc, log) => {
+      acc.total += 1;
+      acc[log.status] = (acc[log.status] || 0) + 1;
+      return acc;
+    },
+    { total: 0, TAKEN: 0, PENDING: 0, MISSED: 0, SKIPPED: 0 },
+  );
+
+  const completionRate = counts.total
+    ? Math.round(((counts.TAKEN + counts.SKIPPED) / counts.total) * 100)
+    : 0;
+
+  const planTitleById = new Map(
+    plans.map((plan) => [Number(plan.plan_id), plan.title || `Đơn #${plan.plan_id}`]),
+  );
+
+  const byPlan = logs.reduce((acc, log) => {
+    const planId = Number(log.medication?.plan_id || log.medication?.plan?.plan_id || 0);
+    const key = planId || `med-${log.medication?.medication_id || log.log_id}`;
+    const current = acc.get(key) || {
+      key,
+      title:
+        planTitleById.get(planId) ||
+        log.medication?.plan?.title ||
+        log.medication?.name ||
+        "Đơn thuốc",
+      total: 0,
+      taken: 0,
+      pending: 0,
+      missed: 0,
+      skipped: 0,
+    };
+
+    current.total += 1;
+    if (log.status === "TAKEN") current.taken += 1;
+    if (log.status === "PENDING") current.pending += 1;
+    if (log.status === "MISSED") current.missed += 1;
+    if (log.status === "SKIPPED") current.skipped += 1;
+    acc.set(key, current);
+    return acc;
+  }, new Map());
+
+  return {
+    ...counts,
+    completionRate,
+    byPlan: Array.from(byPlan.values()),
+  };
+}
+
+function MedicationStatsPanel({ stats }) {
+  const summary = [
+    { label: "Tổng lượt", value: stats.total, className: "bg-slate-50 text-slate-700" },
+    { label: "Đã uống", value: stats.TAKEN, className: "bg-emerald-50 text-emerald-700" },
+    { label: "Chờ uống", value: stats.PENDING, className: "bg-amber-50 text-amber-700" },
+    { label: "Bỏ lỡ", value: stats.MISSED, className: "bg-rose-50 text-rose-700" },
+    { label: "Bỏ qua", value: stats.SKIPPED, className: "bg-slate-100 text-slate-500" },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Thống kê hôm nay</p>
+          <h2 className="mt-1 text-lg font-black text-slate-800">Tỷ lệ hoàn thành {stats.completionRate}%</h2>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-slate-100 sm:w-48">
+          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${stats.completionRate}%` }} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-5">
+        {summary.map((item) => (
+          <div key={item.label} className={`rounded-xl px-3 py-3 text-center ${item.className}`}>
+            <p className="text-xl font-black">{item.value}</p>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest">{item.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {!!stats.byPlan.length && (
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-100">
+          <div className="grid grid-cols-[1.3fr_repeat(5,minmax(44px,1fr))] bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <span>Đơn thuốc</span>
+            <span className="text-center">Tổng</span>
+            <span className="text-center">Uống</span>
+            <span className="text-center">Chờ</span>
+            <span className="text-center">Lỡ</span>
+            <span className="text-center">Bỏ</span>
+          </div>
+          {stats.byPlan.map((plan) => (
+            <div key={plan.key} className="grid grid-cols-[1.3fr_repeat(5,minmax(44px,1fr))] border-t border-slate-100 px-3 py-2 text-xs font-bold text-slate-600">
+              <span className="truncate">{plan.title}</span>
+              <span className="text-center">{plan.total}</span>
+              <span className="text-center text-emerald-600">{plan.taken}</span>
+              <span className="text-center text-amber-600">{plan.pending}</span>
+              <span className="text-center text-rose-600">{plan.missed}</span>
+              <span className="text-center text-slate-400">{plan.skipped}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 /**
@@ -292,9 +422,8 @@ export function MedicationsPage() {
 
   /** Tải dữ liệu đơn thuốc và lịch sử uống thuốc từ API */
   const fetchData = async () => {
-    const from = new Date();
-    const to = new Date();
-    to.setDate(to.getDate() + 7);
+    const from = startOfTodayIso();
+    const to = endOfTodayIso();
 
     let loadedPlans = [];
     let loadedLogs = [];
@@ -309,7 +438,7 @@ export function MedicationsPage() {
     }
 
     try {
-      loadedLogs = await getMedicationLogs({ from: from.toISOString(), to: to.toISOString() });
+      loadedLogs = await getMedicationLogs({ from, to });
       setLogs(loadedLogs);
     } catch (error) {
       hasError = true;
@@ -397,6 +526,7 @@ export function MedicationsPage() {
   const todayLogs = logs.filter((l) => new Date(l.scheduled_time).toDateString() === todayStr);
   const pendingCount = todayLogs.filter((l) => l.status === "PENDING").length;
   const activePlans = plans.filter((p) => p.is_active);
+  const medicationStats = buildMedicationStats(todayLogs, plans);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-10">
@@ -468,6 +598,7 @@ export function MedicationsPage() {
       ) : activeTab === "today" ? (
         // Tab lịch hôm nay
         <div className="space-y-4">
+          <MedicationStatsPanel stats={medicationStats} />
           {todayLogs.length === 0 ? (
             <div className="rounded-2xl border-2 border-dashed border-slate-200 py-16 text-center">
               <span className="material-symbols-outlined text-5xl text-slate-300">medication</span>

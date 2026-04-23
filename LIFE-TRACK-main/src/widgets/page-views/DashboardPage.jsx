@@ -3,13 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   communityArticles,
   communityQuestions,
-  familyMembers,
 } from "@/shared/mocks/appFixtures";
 import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { getUserDisplayName } from "@/entities/user";
+import { getUserAvatar, getUserDisplayName, normalizeRole } from "@/entities/user";
 import { getAppointments } from "@/features/appointments/api/appointmentsApi";
 import { getMedicationLogs, markMedicationTaken } from "@/features/medications/api/medicationsApi";
+import { getMyFamilyPatients } from "@/features/family";
 
 /**
  * Vẽ sparkline nhỏ cho các chỉ số sức khỏe trên dashboard.
@@ -171,6 +171,8 @@ export function DashboardPage() {
   const userName = getUserDisplayName(user, "Bệnh nhân");
   const [appointmentItems, setAppointmentItems] = useState([]);
   const [medicationLogs, setMedicationLogs] = useState([]);
+  const [familyPatients, setFamilyPatients] = useState([]);
+  const isFamilyViewer = normalizeRole(user?.normalizedRole ?? user?.role) === "family";
 
   /**
    * Tải dữ liệu agenda thật cho dashboard.
@@ -203,6 +205,25 @@ export function DashboardPage() {
   // Tải dữ liệu agenda khi dashboard mount.
   useEffect(() => {
     fetchDashboardAgenda();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getMyFamilyPatients()
+      .then((items) => {
+        if (mounted) {
+          setFamilyPatients(Array.isArray(items) ? items : []);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setFamilyPatients([]);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const nextAppointment = useMemo(
@@ -436,32 +457,47 @@ export function DashboardPage() {
              <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-6 w-1 rounded-full bg-secondary" />
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Thành viên gia đình</h2>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">
+                  {isFamilyViewer ? "Bệnh nhân gia đình" : "Thành viên gia đình"}
+                </h2>
               </div>
               <Link className="text-xs font-bold text-primary uppercase tracking-widest hover:underline" to="/patient/health-records">Tất cả</Link>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {familyMembers.slice(0, 4).map((member) => (
+              {familyPatients.slice(0, 4).map((member) => (
                 <Link
-                  key={member.id}
+                  key={member.relation_id || member.patient_id}
                   className="group flex items-center gap-4 rounded-3xl bg-white p-4 border border-slate-100 hover:border-primary/20 hover:shadow-xl hover:shadow-slate-200/50 transition-all"
-                  to={`/patient/health-records/${member.id}`}
+                  to={`/patient/health-records/${member.patient_id}`}
                 >
                   <div className="relative">
-                    <ImageWithFallback alt={member.name} className="h-16 w-16 rounded-[1.25rem] object-cover group-hover:scale-105 transition-transform" src={member.avatar} />
+                    <ImageWithFallback
+                      alt={member.patient?.name || "Thành viên"}
+                      className="h-16 w-16 rounded-[1.25rem] object-cover group-hover:scale-105 transition-transform"
+                      src={getUserAvatar(member.patient)}
+                    />
                     <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{member.relation}</p>
-                    <h3 className="font-bold text-slate-800 truncate">{member.name}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      {member.relation_label || "Thành viên"}
+                    </p>
+                    <h3 className="font-bold text-slate-800 truncate">{member.patient?.name || "Bệnh nhân"}</h3>
                     <div className="mt-1 flex items-center gap-2">
-                       <span className="text-[11px] font-bold text-primary">{member.shortStatus}</span>
+                       <span className="text-[11px] font-bold text-primary">
+                        {member.patient?.email || "Mở hồ sơ"}
+                       </span>
                     </div>
                   </div>
                   <span className="material-symbols-outlined text-slate-200 group-hover:text-primary transition-colors">chevron_right</span>
                 </Link>
               ))}
+              {!familyPatients.length && (
+                <div className="sm:col-span-2 rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-sm font-bold text-slate-400">
+                  Chưa có thành viên gia đình nào được cấu hình.
+                </div>
+              )}
             </div>
           </section>
 

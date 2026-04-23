@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
 import { ReadingDetailModal } from "@/features/realtime-monitor/ui/ReadingDetailModal";
@@ -8,7 +8,9 @@ import { familyMembers, patientProfiles } from "@/shared/mocks/appFixtures";
 import { useRealtimeEcgStream } from "@/features/realtime-monitor/model/useRealtimeEcgStream";
 import { useWarningReadings } from "@/features/warning-readings/model/useWarningReadings";
 import { formatDateTime, getStatusTone } from "@/features/realtime-monitor/lib/ecgMonitor";
-import { getUserAvatar, getUserDisplayName } from "@/entities/user";
+import { getUserAvatar, getUserDisplayName, normalizeRole } from "@/entities/user";
+import { getFamilyPatientSummary, getMyFamilyPatients } from "@/features/family";
+import { FamilyEmrWorkspace } from "@/widgets/page-views/family/FamilyEmrWorkspace";
 
 const LIVE_TABS = [
   { id: "patients", label: "Thành viên", icon: "group" },
@@ -266,12 +268,236 @@ function renderFamilyView(activeMember, mobileTab, setMobileTab, navigate) {
   );
 }
 
+function FamilyHealthRecordsView({ memberId }) {
+  const [patients, setPatients] = useState([]);
+  const [selectedPatientId, setSelectedPatientId] = useState(Number(memberId) || null);
+  const [summary, setSummary] = useState(null);
+  const [loadingPatients, setLoadingPatients] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    setLoadingPatients(true);
+    getMyFamilyPatients()
+      .then((items) => {
+        if (!mounted) return;
+        setPatients(items);
+        const routePatientId = Number(memberId) || null;
+        const hasRoutePatient = items.some((item) => item.patient_id === routePatientId);
+        setSelectedPatientId(hasRoutePatient ? routePatientId : items[0]?.patient_id ?? null);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err.response?.data?.message || "Không thể tải danh sách thành viên gia đình.");
+      })
+      .finally(() => {
+        if (mounted) setLoadingPatients(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [memberId]);
+
+  useEffect(() => {
+    if (!selectedPatientId) {
+      setSummary(null);
+      return;
+    }
+
+    let mounted = true;
+    setLoadingSummary(true);
+    setError("");
+    getFamilyPatientSummary(selectedPatientId)
+      .then((data) => {
+        if (mounted) setSummary(data);
+      })
+      .catch((err) => {
+        if (mounted) setError(err.response?.data?.message || "Không thể tải hồ sơ thành viên.");
+      })
+      .finally(() => {
+        if (mounted) setLoadingSummary(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedPatientId]);
+
+  const patient = summary?.patient || patients.find((item) => item.patient_id === selectedPatientId)?.patient;
+
+  return (
+    <div className="mx-auto mt-4 w-full max-w-7xl space-y-6 px-4 py-4">
+      <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-primary">Family view</p>
+        <h1 className="mt-2 text-3xl font-black text-slate-900">Hồ sơ sức khỏe thành viên gia đình</h1>
+        <p className="mt-2 max-w-3xl text-sm text-slate-500">
+          Người nhà xem mặc định toàn bộ EHR, thuốc, bệnh sử và lịch sử khám của các quyền đã được chấp nhận.
+        </p>
+      </section>
+
+      {error && (
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-bold text-rose-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <aside className="space-y-3">
+          {loadingPatients ? (
+            <div className="rounded-2xl bg-white p-5 text-sm font-bold text-slate-400 shadow-sm">Đang tải thành viên...</div>
+          ) : patients.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm font-bold text-slate-400">
+              Chưa có bệnh nhân nào cấp quyền gia đình.
+            </div>
+          ) : (
+            patients.map((item) => {
+              const selected = selectedPatientId === item.patient_id;
+              return (
+                <button
+                  key={item.access_id || item.patient_id}
+                  type="button"
+                  onClick={() => setSelectedPatientId(item.patient_id)}
+                  className={[
+                    "flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-all",
+                    selected ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-primary/30",
+                  ].join(" ")}
+                >
+                  <ImageWithFallback
+                    alt={item.patient?.name || "Bệnh nhân"}
+                    className="h-12 w-12 rounded-2xl object-cover"
+                    src={getUserAvatar(item.patient)}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-black text-slate-800">{item.patient?.name || "Bệnh nhân"}</p>
+                    <p className="truncate text-xs text-slate-500">{item.patient?.email || item.relationship || "Thành viên"}</p>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </aside>
+
+        <main className="space-y-6">
+          {loadingSummary ? (
+            <div className="rounded-2xl bg-white p-8 text-center text-sm font-bold text-slate-400 shadow-sm">Đang tải hồ sơ...</div>
+          ) : patient ? (
+            <>
+              <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <ImageWithFallback alt={patient.name} className="h-16 w-16 rounded-2xl object-cover" src={getUserAvatar(patient)} />
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900">{patient.name}</h2>
+                      <p className="text-sm text-slate-500">{patient.email}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-xl bg-sky-50 px-4 py-3">
+                      <p className="text-xl font-black text-primary">{summary?.visits?.length || 0}</p>
+                      <p className="text-[10px] font-black uppercase text-primary">Lần khám</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-50 px-4 py-3">
+                      <p className="text-xl font-black text-emerald-700">{summary?.medication_plans?.length || 0}</p>
+                      <p className="text-[10px] font-black uppercase text-emerald-700">Đơn thuốc</p>
+                    </div>
+                    <div className="rounded-xl bg-amber-50 px-4 py-3">
+                      <p className="text-xl font-black text-amber-700">{summary?.alerts?.length || 0}</p>
+                      <p className="text-[10px] font-black uppercase text-amber-700">Cảnh báo</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-2">
+                <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900">Lịch sử khám / bệnh sử</h3>
+                  <div className="mt-4 space-y-3">
+                    {(summary?.visits || []).map((visit) => (
+                      <article key={visit.visit_id || visit.history_id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="font-black text-slate-800">{visit.doctor_diagnosis || visit.diagnosis || "Bản ghi khám"}</p>
+                        <p className="mt-1 text-xs font-bold text-slate-400">{formatDateTime(visit.visit_date || visit.created_at)}</p>
+                        <p className="mt-2 text-sm text-slate-600">{visit.notes || visit.condition || visit.reason || visit.diagnosis_details || visit.advice || "Không có mô tả"}</p>
+                      </article>
+                    ))}
+                    {!(summary?.visits || []).length && <p className="text-sm font-bold text-slate-400">Chưa có lịch sử khám.</p>}
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900">Tủ thuốc</h3>
+                  <div className="mt-4 space-y-3">
+                    {(summary?.medication_plans || []).map((plan) => (
+                      <article key={plan.plan_id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="font-black text-slate-800">{plan.title || `Đơn thuốc #${plan.plan_id}`}</p>
+                        <div className="mt-2 space-y-1">
+                          {(plan.medications || []).map((med) => (
+                            <p key={med.medication_id} className="text-sm text-slate-600">
+                              <span className="font-bold">{med.name}</span> · {med.dosage} · {(med.times || []).join(", ")}
+                            </p>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                    {!(summary?.medication_plans || []).length && <p className="text-sm font-bold text-slate-400">Chưa có đơn thuốc.</p>}
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-2">
+                <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900">Báo cáo</h3>
+                  <div className="mt-4 space-y-3">
+                    {(summary?.reports || []).map((report) => (
+                      <article key={report.report_id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="font-black text-slate-800">{report.title || `Báo cáo #${report.report_id}`}</p>
+                        <p className="mt-2 text-sm text-slate-600">
+                          {typeof report.summary === "string" ? report.summary : report.summary?.tom_tat || "Báo cáo y khoa"}
+                        </p>
+                      </article>
+                    ))}
+                    {!(summary?.reports || []).length && <p className="text-sm font-bold text-slate-400">Chưa có báo cáo.</p>}
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900">Lịch thuốc hôm nay</h3>
+                  <div className="mt-4 space-y-3">
+                    {(summary?.medication_logs_today || []).map((log) => (
+                      <div key={log.log_id} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4">
+                        <div>
+                          <p className="font-bold text-slate-800">{log.medication?.name || "Thuốc"}</p>
+                          <p className="text-xs text-slate-500">{formatDateTime(log.scheduled_time)}</p>
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase text-slate-500">{log.status}</span>
+                      </div>
+                    ))}
+                    {!(summary?.medication_logs_today || []).length && <p className="text-sm font-bold text-slate-400">Hôm nay chưa có lịch thuốc.</p>}
+                  </div>
+                </div>
+              </section>
+            </>
+          ) : (
+            <div className="rounded-2xl bg-white p-8 text-center text-sm font-bold text-slate-400 shadow-sm">
+              Chọn một thành viên để xem hồ sơ.
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export function HealthRecordDetailPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const [mobileTab, setMobileTab] = useState("monitor");
   const [selectedReadingId, setSelectedReadingId] = useState(null);
   const { user, socket } = useAuth();
+  const isFamilyRole = normalizeRole(user?.normalizedRole ?? user?.role) === "family";
+  const numericMemberId = Number(memberId);
+  const hasNumericMemberId = Number.isInteger(numericMemberId) && numericMemberId > 0;
   const isSelfView = !memberId;
   const activeMember = memberId ? familyMembers.find((member) => member.id === memberId) || familyMembers[0] : null;
 
@@ -300,6 +526,10 @@ export function HealthRecordDetailPage() {
     pollIntervalMs: 8000,
     limit: 5,
   });
+
+  if (isFamilyRole || hasNumericMemberId) {
+    return <FamilyEmrWorkspace memberId={hasNumericMemberId ? memberId : null} isFamilyRole={isFamilyRole} />;
+  }
 
   if (!isSelfView) {
     return renderFamilyView(activeMember, mobileTab, setMobileTab, navigate);

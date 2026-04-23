@@ -1,16 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
 import { useAuth } from "@/app/providers/AuthProvider";
 import {
-  createDoctorPortalConsultation,
   getDoctorPortalEmrWorkspace,
   getDoctorPortalPatients,
+  createDoctorPortalConsultation,
 } from "@/features/doctor-portal";
-import { getUserAvatar } from "@/entities/user";
+import { getPhrOverview, getPhrVisits } from "@/features/phr/api/phrApi";
+import {
+  archiveMedicationPlan,
+  createMedicationPlan,
+  getMedicationLogs,
+  getMedicationPlans,
+  updateMedicationPlan,
+} from "@/features/medications/api/medicationsApi";
+import {
+  EmrHistoryPreviewPanel,
+  EmrMedicationsPanel,
+  EmrOverviewPanel,
+  EmrPatientHeaderCard,
+  EmrSubnav,
+  EmrVisitsPanel,
+} from "@/features/emr/ui/SharedEmrPanels";
+import { extractSoapText, normalizeMedicationEntries } from "@/features/emr/lib/emrViewModel";
 
-const yLenhMau = [
+const ORDER_TEMPLATES = [
   "Điện tâm đồ 12 chuyển đạo",
   "Xét nghiệm công thức máu",
   "Sinh hóa máu cơ bản",
@@ -18,490 +33,652 @@ const yLenhMau = [
   "Hẹn tái khám sau 4 tuần",
 ];
 
-function KhungPhan({ icon, tieuDe, moTa, children, hanhDongPhai }) {
-  return (
-    <section className="rounded-[1.75rem] bg-surface-container-lowest p-6 shadow-soft md:p-8">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold text-on-surface">
-            <span className="material-symbols-outlined text-primary">{icon}</span>
-            {tieuDe}
-          </h2>
-          <p className="mt-1 text-sm text-on-surface-variant">{moTa}</p>
-        </div>
-        {hanhDongPhai}
-      </div>
-      {children}
-    </section>
-  );
+const EMPTY_MEDICATION_DRAFT = {
+  plan_id: null,
+  title: "",
+  start_date: new Date().toISOString().slice(0, 10),
+  end_date: "",
+  notes: "",
+  medications: [{ name: "", dosage: "1 viên", timesText: "08:00" }],
+};
+
+function startOfTodayIso() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date.toISOString();
 }
 
-function formatDateTime(value) {
-  if (!value) return "";
+function endOfTodayIso() {
+  const date = new Date();
+  date.setHours(23, 59, 59, 999);
+  return date.toISOString();
+}
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+function normalizeOrderList(orderInput) {
+  if (!Array.isArray(orderInput)) return [];
+  return orderInput.map((item) => String(item).trim()).filter(Boolean);
+}
 
-  return date.toLocaleString("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+function formatMedicationForTextarea(value) {
+  const entries = normalizeMedicationEntries(value);
+  if (!entries.length) return String(value || "");
+
+  return entries
+    .map((item) => {
+      const parts = [item.name, item.dosage, item.usage, item.quantity ? `SL ${item.quantity}` : ""].filter(Boolean);
+      return `- ${parts.join(" · ")}`;
+    })
+    .join("\n");
+}
+
+function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onSave, saving, disabled }) {
+  return (
+    <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-black text-slate-900">
+            {draft.plan_id ? "Sửa kế hoạch thuốc" : "Kê kế hoạch thuốc"}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Nhập giờ uống cách nhau bằng dấu phẩy, ví dụ: `08:00, 20:00`.
+          </p>
+        </div>
+        {draft.plan_id && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600"
+          >
+            Tạo mới
+          </button>
+        )}
+      </div>
+
+      <fieldset disabled={disabled || saving} className="space-y-4 disabled:opacity-60">
+        <input
+          value={draft.title}
+          onChange={(event) => onChange("title", event.target.value)}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          placeholder="Tên đơn thuốc"
+        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            type="date"
+            value={draft.start_date}
+            onChange={(event) => onChange("start_date", event.target.value)}
+            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          />
+          <input
+            type="date"
+            value={draft.end_date}
+            onChange={(event) => onChange("end_date", event.target.value)}
+            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          />
+        </div>
+        {draft.medications.map((medication, index) => (
+          <div key={index} className="rounded-[1.5rem] bg-slate-50 p-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <input
+                value={medication.name}
+                onChange={(event) => onMedChange(index, "name", event.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                placeholder="Tên thuốc"
+              />
+              <input
+                value={medication.dosage}
+                onChange={(event) => onMedChange(index, "dosage", event.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                placeholder="Liều lượng"
+              />
+            </div>
+            <input
+              value={medication.timesText}
+              onChange={(event) => onMedChange(index, "timesText", event.target.value)}
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+              placeholder="08:00, 20:00"
+            />
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={onAddMed}
+          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-slate-700"
+        >
+          + Thêm thuốc
+        </button>
+        <textarea
+          value={draft.notes}
+          onChange={(event) => onChange("notes", event.target.value)}
+          className="min-h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          placeholder="Ghi chú cho bệnh nhân"
+        />
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={disabled || saving}
+          className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+        >
+          {saving ? "Đang lưu..." : draft.plan_id ? "Lưu thay đổi" : "Kê thuốc"}
+        </button>
+      </fieldset>
+    </section>
+  );
 }
 
 export function DoctorEmrPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const preselectedPatientId = Number(searchParams.get("patientId")) || null;
-  const [dangTaiBenhNhan, setDangTaiBenhNhan] = useState(true);
-  const [dangTaiWorkspace, setDangTaiWorkspace] = useState(false);
-  const [dangLuuHoSo, setDangLuuHoSo] = useState(false);
-  const [loiBenhNhan, setLoiBenhNhan] = useState("");
-  const [loiWorkspace, setLoiWorkspace] = useState("");
-  const [danhSachBenhNhan, setDanhSachBenhNhan] = useState([]);
-  const [benhNhanDangChon, setBenhNhanDangChon] = useState(null);
-  const [workspace, setWorkspace] = useState(null);
 
-  const [ghiChuLamSang, setGhiChuLamSang] = useState("");
-  const [chanDoan, setChanDoan] = useState("");
-  const [thuocKeDon, setThuocKeDon] = useState("");
-  const [tinhTrang, setTinhTrang] = useState("");
-  const [yLenhDaChon, setYLenhDaChon] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [loadingPatients, setLoadingPatients] = useState(true);
+  const [loadingWorkspace, setLoadingWorkspace] = useState(false);
+  const [error, setError] = useState("");
+  const [savingConsultation, setSavingConsultation] = useState(false);
+  const [savingMedication, setSavingMedication] = useState(false);
 
-  const resetConsultationForm = (ws) => {
-    const banGhiGanNhat = ws?.histories?.[0] || null;
+  const [overview, setOverview] = useState(null);
+  const [visits, setVisits] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [medicationDraft, setMedicationDraft] = useState(EMPTY_MEDICATION_DRAFT);
 
-    setGhiChuLamSang(
-      String(banGhiGanNhat?.notes || "")
-        .replace("[SOAP]", "")
-        .replace("[CPOE]", "")
-        .trim(),
-    );
-    setChanDoan(banGhiGanNhat?.doctor_diagnosis || "");
-    setThuocKeDon(banGhiGanNhat?.medication || "");
-    setTinhTrang(banGhiGanNhat?.condition || "");
-    setYLenhDaChon(Array.isArray(banGhiGanNhat?.y_lenh) ? banGhiGanNhat.y_lenh : []);
+  const [clinicalNote, setClinicalNote] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [prescription, setPrescription] = useState("");
+  const [condition, setCondition] = useState("");
+  const [selectedOrders, setSelectedOrders] = useState([]);
+
+  const selectedPatientAccess = useMemo(
+    () => patients.find((item) => item.patientId === Number(selectedPatientId)) || null,
+    [patients, selectedPatientId],
+  );
+
+  const selectedPatient = selectedPatientAccess?.patient || null;
+  const canViewEhr = Boolean(selectedPatientAccess?.canViewEhr);
+  const canViewMedications = Boolean(selectedPatientAccess?.canViewMedications);
+
+  const availableTabs = useMemo(() => {
+    const tabs = [];
+    if (canViewEhr) {
+      tabs.push(
+        { id: "overview", label: "Tổng quát", icon: "dashboard" },
+        { id: "history", label: "Lịch sử khám", icon: "history" },
+      );
+    }
+    if (canViewMedications) {
+      tabs.push({ id: "medications", label: "Nhắc thuốc", icon: "medication" });
+    }
+    if (canViewEhr) {
+      tabs.push({ id: "consultation", label: "Ghi chú khám", icon: "note_add" });
+    }
+    return tabs;
+  }, [canViewEhr, canViewMedications]);
+
+  const resetMedicationDraft = () => {
+    setMedicationDraft({
+      ...EMPTY_MEDICATION_DRAFT,
+      medications: [{ name: "", dosage: "1 viên", timesText: "08:00" }],
+    });
   };
 
-  const taiDanhSachBenhNhan = async () => {
-    setDangTaiBenhNhan(true);
+  const hydrateConsultationForm = (workspace) => {
+    const latestVisit = workspace?.histories?.[0] || null;
+    setClinicalNote(extractSoapText(latestVisit?.reason || latestVisit?.notes));
+    setDiagnosis(latestVisit?.diagnosis || latestVisit?.doctor_diagnosis || "");
+    setPrescription(formatMedicationForTextarea(latestVisit?.prescription || latestVisit?.medication));
+    setCondition(latestVisit?.condition || "");
+    setSelectedOrders(normalizeOrderList(latestVisit?.tests || latestVisit?.y_lenh));
+  };
+
+  const loadPatients = async () => {
+    setLoadingPatients(true);
     try {
-      setLoiBenhNhan("");
-      const data = await getDoctorPortalPatients({ domain: "ehr" });
-      setDanhSachBenhNhan(Array.isArray(data) ? data : []);
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Không thể tải danh sách bệnh nhân EMR";
-      setLoiBenhNhan(message);
-      setDanhSachBenhNhan([]);
+      setError("");
+      const data = await getDoctorPortalPatients({ domain: "all" });
+      const filtered = (Array.isArray(data) ? data : []).filter(
+        (item) => item.canViewEhr || item.canViewMedications,
+      );
+      setPatients(filtered);
+    } catch (requestError) {
+      const message = requestError.response?.data?.message || "Không thể tải danh sách bệnh nhân EMR";
+      setError(message);
+      setPatients([]);
       toast.error(message);
     } finally {
-      setDangTaiBenhNhan(false);
+      setLoadingPatients(false);
     }
   };
 
-  const taiWorkspace = async (patientId) => {
-    if (!patientId) {
-      setWorkspace(null);
-      resetConsultationForm(null);
+  const loadWorkspace = async (patientId) => {
+    if (!patientId || !selectedPatientAccess) {
+      setOverview(null);
+      setVisits([]);
+      setPlans([]);
+      setLogs([]);
+      setDocuments([]);
       return;
     }
 
-    setDangTaiWorkspace(true);
+    setLoadingWorkspace(true);
     try {
-      setLoiWorkspace("");
-      const data = await getDoctorPortalEmrWorkspace(patientId);
-      setWorkspace(data || null);
-      resetConsultationForm(data);
-    } catch (error) {
-      const status = error.response?.status;
-      const fallbackMessage =
-        status === 403
-          ? "Bạn không có quyền xem EMR của bệnh nhân này"
-          : status === 404
-            ? "Không tìm thấy hồ sơ bệnh nhân"
-            : "Không thể tải Consultation Workspace";
-      setLoiWorkspace(error.response?.data?.message || fallbackMessage);
-      setWorkspace(null);
-      resetConsultationForm(null);
-      toast.error(error.response?.data?.message || fallbackMessage);
+      setError("");
+      const requests = [];
+      if (selectedPatientAccess.canViewEhr) {
+        requests.push(getPhrOverview(patientId));
+        requests.push(getPhrVisits(patientId));
+        requests.push(getDoctorPortalEmrWorkspace(patientId));
+      } else {
+        requests.push(Promise.resolve(null), Promise.resolve([]), Promise.resolve(null));
+      }
+
+      if (selectedPatientAccess.canViewMedications) {
+        requests.push(getMedicationPlans({ user_id: patientId }));
+        requests.push(
+          getMedicationLogs({
+            user_id: patientId,
+            from: startOfTodayIso(),
+            to: endOfTodayIso(),
+          }),
+        );
+      } else {
+        requests.push(Promise.resolve([]), Promise.resolve([]));
+      }
+
+      const [nextOverview, nextVisits, workspace, nextPlans, nextLogs] = await Promise.all(requests);
+
+      setOverview(nextOverview);
+      setVisits(nextVisits || []);
+      setDocuments(workspace?.documents || []);
+      setPlans(nextPlans || []);
+      setLogs(nextLogs || []);
+      hydrateConsultationForm(workspace);
+    } catch (requestError) {
+      const status = requestError.response?.status;
+      const message =
+        requestError.response?.data?.message ||
+        (status === 403
+          ? "Bạn không có quyền xem bệnh án điện tử của bệnh nhân này"
+          : "Không thể tải dữ liệu bệnh án điện tử");
+      setError(message);
+      setOverview(null);
+      setVisits([]);
+      setPlans([]);
+      setLogs([]);
+      setDocuments([]);
+      toast.error(message);
     } finally {
-      setDangTaiWorkspace(false);
+      setLoadingWorkspace(false);
     }
   };
 
   useEffect(() => {
-    void taiDanhSachBenhNhan();
+    void loadPatients();
   }, []);
 
-  useEffect(() => {
-    if (!danhSachBenhNhan.length) {
-      setBenhNhanDangChon(null);
-      return;
-    }
-
-    const hasPreselected = danhSachBenhNhan.some(
-      (item) => item.patientId === preselectedPatientId,
-    );
-    const hasCurrent = danhSachBenhNhan.some(
-      (item) => item.patientId === Number(benhNhanDangChon),
-    );
-
-    if (hasPreselected) {
-      setBenhNhanDangChon(preselectedPatientId);
-      return;
-    }
-
-    if (!hasCurrent) {
-      setBenhNhanDangChon(danhSachBenhNhan[0].patientId);
-    }
-  }, [benhNhanDangChon, danhSachBenhNhan, preselectedPatientId]);
+  const preselectedAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (benhNhanDangChon) {
-      void taiWorkspace(benhNhanDangChon);
+    if (!patients.length) {
+      setSelectedPatientId(null);
+      preselectedAppliedRef.current = false;
       return;
     }
 
-    setWorkspace(null);
-    resetConsultationForm(null);
-  }, [benhNhanDangChon]);
+    // Apply URL preselection only once on initial load
+    if (preselectedPatientId && !preselectedAppliedRef.current) {
+      const hasPreselected = patients.some((item) => item.patientId === preselectedPatientId);
+      if (hasPreselected) {
+        setSelectedPatientId(preselectedPatientId);
+        preselectedAppliedRef.current = true;
+        return;
+      }
+    }
 
-  const thongTinBenhNhan = useMemo(
-    () =>
-      workspace?.patient ||
-      danhSachBenhNhan.find((item) => item.patientId === Number(benhNhanDangChon))
-        ?.patient ||
-      null,
-    [benhNhanDangChon, danhSachBenhNhan, workspace],
-  );
+    // Auto-select first patient only when current selection is invalid
+    setSelectedPatientId((currentId) => {
+      const hasCurrent = patients.some((item) => item.patientId === Number(currentId));
+      if (hasCurrent) return currentId;
+      return patients[0].patientId;
+    });
+  }, [patients, preselectedPatientId]);
 
-  const tongQuanWorkspace = useMemo(
-    () => ({
-      historyCount: workspace?.histories?.length || 0,
-      documentCount: workspace?.documents?.length || 0,
-      medicationPlanCount: workspace?.medicationPlans?.length || 0,
-    }),
-    [workspace],
-  );
+  useEffect(() => {
+    if (!selectedPatientAccess) return;
 
-  const chuyenTrangThaiYLenh = (tenYLenh) => {
-    setYLenhDaChon((cu) =>
-      cu.includes(tenYLenh) ? cu.filter((x) => x !== tenYLenh) : [...cu, tenYLenh],
+    const nextDefaultTab = selectedPatientAccess.canViewEhr ? "overview" : "medications";
+    const activeStillAllowed = availableTabs.some((tab) => tab.id === activeTab);
+    if (!activeStillAllowed) {
+      setActiveTab(nextDefaultTab);
+    }
+  }, [activeTab, availableTabs, selectedPatientAccess]);
+
+  useEffect(() => {
+    if (selectedPatientId && selectedPatientAccess) {
+      resetMedicationDraft();
+      void loadWorkspace(selectedPatientId);
+    }
+  }, [selectedPatientAccess, selectedPatientId]);
+
+  const handleToggleOrder = (order) => {
+    setSelectedOrders((current) =>
+      current.includes(order) ? current.filter((item) => item !== order) : [...current, order],
     );
   };
 
-  const luuHoSoKham = async () => {
-    if (!benhNhanDangChon) {
-      toast.warn("Vui lòng chọn bệnh nhân trước khi lưu hồ sơ");
+  const handleSaveConsultation = async () => {
+    if (!selectedPatientId || !canViewEhr) {
+      toast.warn("Bệnh nhân này chưa cấp quyền EHR.");
       return;
     }
 
-    setDangLuuHoSo(true);
+    setSavingConsultation(true);
     try {
       await createDoctorPortalConsultation({
-        patient_id: benhNhanDangChon,
-        ghi_chu_lam_sang: ghiChuLamSang,
-        chan_doan: chanDoan,
-        thuoc_ke_don: thuocKeDon,
-        tinh_trang: tinhTrang,
-        y_lenh: yLenhDaChon,
+        patient_id: selectedPatientId,
+        ghi_chu_lam_sang: clinicalNote,
+        chan_doan: diagnosis,
+        thuoc_ke_don: prescription,
+        tinh_trang: condition,
+        y_lenh: selectedOrders,
       });
-
-      toast.success("Đã lưu hồ sơ khám EMR");
-      await taiWorkspace(benhNhanDangChon);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Lưu hồ sơ khám thất bại");
+      toast.success("Đã lưu ghi chú khám.");
+      await loadWorkspace(selectedPatientId);
+      setActiveTab("history");
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.message || "Không thể lưu ghi chú khám.");
     } finally {
-      setDangLuuHoSo(false);
+      setSavingConsultation(false);
+    }
+  };
+
+  const handleMedicationDraftChange = (field, value) => {
+    setMedicationDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleMedicationLineChange = (index, field, value) => {
+    setMedicationDraft((current) => ({
+      ...current,
+      medications: current.medications.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
+      ),
+    }));
+  };
+
+  const handleEditPlan = (plan) => {
+    setActiveTab("medications");
+    setMedicationDraft({
+      plan_id: plan.plan_id,
+      title: plan.title || `Kế hoạch thuốc #${plan.plan_id}`,
+      start_date: plan.start_date ? new Date(plan.start_date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      end_date: plan.end_date ? new Date(plan.end_date).toISOString().slice(0, 10) : "",
+      notes: plan.notes || "",
+      medications: (plan.medications?.length ? plan.medications : [{ name: "", dosage: "1 viên", times: ["08:00"] }]).map((medication) => ({
+        name: medication.name || "",
+        dosage: medication.dosage || "1 viên",
+        timesText: (medication.times || ["08:00"]).join(", "),
+      })),
+    });
+  };
+
+  const buildMedicationPayload = () => ({
+    user_id: selectedPatientId,
+    title: medicationDraft.title.trim(),
+    start_date: medicationDraft.start_date,
+    end_date: medicationDraft.end_date || null,
+    notes: medicationDraft.notes,
+    medications: medicationDraft.medications
+      .map((item) => ({
+        name: item.name.trim(),
+        dosage: item.dosage.trim() || "Theo chỉ định",
+        times: item.timesText
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      }))
+      .filter((item) => item.name && item.times.length),
+  });
+
+  const handleSaveMedicationPlan = async () => {
+    if (!selectedPatientId || !canViewMedications) {
+      toast.warn("Bệnh nhân này chưa cấp quyền thuốc.");
+      return;
+    }
+
+    const payload = buildMedicationPayload();
+    if (!payload.title || !payload.medications.length) {
+      toast.warn("Vui lòng nhập tên đơn thuốc và ít nhất một thuốc có giờ uống.");
+      return;
+    }
+
+    setSavingMedication(true);
+    try {
+      if (medicationDraft.plan_id) {
+        await updateMedicationPlan(medicationDraft.plan_id, payload);
+        toast.success("Đã cập nhật kế hoạch thuốc.");
+      } else {
+        await createMedicationPlan(payload);
+        toast.success("Đã kê đơn thuốc cho bệnh nhân.");
+      }
+      resetMedicationDraft();
+      await loadWorkspace(selectedPatientId);
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.message || "Không thể lưu kế hoạch thuốc.");
+    } finally {
+      setSavingMedication(false);
+    }
+  };
+
+  const handleArchivePlan = async (planId) => {
+    try {
+      await archiveMedicationPlan(planId);
+      toast.success("Đã ngưng kế hoạch thuốc.");
+      await loadWorkspace(selectedPatientId);
+    } catch (requestError) {
+      toast.error(requestError.response?.data?.message || "Không thể ngưng kế hoạch thuốc.");
     }
   };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <section className="rounded-[2rem] bg-primary-container p-6 text-white shadow-soft md:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-fixed-dim">
-              Cổng bác sĩ
-            </p>
-            <h1 className="mt-2 text-3xl font-black md:text-4xl">
-              Bệnh án điện tử (EMR)
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-white/90 md:text-base">
-              Không gian khám bệnh tập trung để xem hồ sơ bệnh nhân, ghi chú lâm sàng
-              (SOAP) và chỉ định y lệnh (CPOE).
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/10 p-4 text-sm">
-            <p className="text-xs uppercase tracking-[0.18em] text-primary-fixed-dim">
-              Bác sĩ đăng nhập
-            </p>
-            <p className="mt-1 font-bold">{user?.name || "Bác sĩ"}</p>
-            <p className="text-white/85">{user?.email || "Tài khoản hệ thống"}</p>
-          </div>
+      <section className="rounded-[2rem] bg-slate-900 p-8 text-white shadow-2xl">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">Doctor portal</p>
+        <h1 className="mt-2 text-3xl font-black md:text-4xl">Bệnh án điện tử</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">
+          Xem hồ sơ sức khỏe, lịch sử khám, nhắc thuốc và ghi chú khám trong một workspace thống nhất.
+        </p>
+        <div className="mt-5 rounded-2xl bg-white/5 p-4 text-sm text-slate-300">
+          <p className="font-bold text-white">{user?.name || "Bác sĩ"}</p>
+          <p>{user?.email || "Tài khoản hệ thống"}</p>
         </div>
       </section>
 
-      <section className="rounded-[1.75rem] border border-surface-variant bg-surface-container-lowest p-4">
-        <label
-          className="text-sm font-semibold text-on-surface"
-          htmlFor="chon-benh-nhan"
-        >
-          Bệnh nhân đang khám
+      <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+        <label htmlFor="doctor-emr-patient" className="text-sm font-black text-slate-800">
+          Chọn bệnh nhân
         </label>
         <select
-          id="chon-benh-nhan"
-          className="mt-2 w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm md:max-w-md"
-          disabled={dangTaiBenhNhan}
-          onChange={(event) => setBenhNhanDangChon(Number(event.target.value))}
-          value={benhNhanDangChon || ""}
+          id="doctor-emr-patient"
+          value={selectedPatientId || ""}
+          onChange={(event) => setSelectedPatientId(Number(event.target.value))}
+          disabled={loadingPatients}
+          className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm md:max-w-lg"
         >
-          {!danhSachBenhNhan.length && (
-            <option value="">Không có bệnh nhân khả dụng</option>
-          )}
-          {danhSachBenhNhan.map((bn) => (
-            <option key={bn.patientId} value={bn.patientId}>
-              {bn.patient?.name || "Bệnh nhân"} - {bn.patient?.email || ""}
+          {!patients.length && <option value="">Không có bệnh nhân khả dụng</option>}
+          {patients.map((item) => (
+            <option key={item.patientId} value={item.patientId}>
+              {item.patient?.name || "Bệnh nhân"} ·
+              {item.canViewEhr ? " EHR" : ""}
+              {item.canViewMedications ? " Thuốc" : ""}
             </option>
           ))}
         </select>
-        {loiBenhNhan && (
-          <p className="mt-3 text-sm font-medium text-error">{loiBenhNhan}</p>
-        )}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)]">
-        <div className="space-y-6">
-          <KhungPhan
-            icon="clinical_notes"
-            tieuDe="Ghi chú lâm sàng (Clinical / SOAP Notes)"
-            moTa="Ghi nhận diễn biến khám bệnh, đánh giá và kế hoạch xử trí của bác sĩ."
-            hanhDongPhai={
-              <button
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={dangLuuHoSo || !benhNhanDangChon}
-                onClick={() => void luuHoSoKham()}
-                type="button"
-              >
-                {dangLuuHoSo ? "Đang lưu..." : "Lưu hồ sơ"}
-              </button>
-            }
-          >
-            <textarea
-              className="min-h-56 w-full rounded-2xl border border-surface-variant bg-white p-4 text-sm leading-7"
-              onChange={(event) => setGhiChuLamSang(event.target.value)}
-              placeholder="Ví dụ: S/O/A/P..."
-              value={ghiChuLamSang}
+      {selectedPatient && (
+        <EmrPatientHeaderCard
+          patient={selectedPatient}
+          helperText="Bệnh án điện tử của bệnh nhân đang được chia sẻ cho bác sĩ."
+          rightContent={
+            <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+              <div className="rounded-xl bg-sky-50 px-4 py-3">
+                <p className="text-lg font-black text-primary">{visits.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Lịch sử</p>
+              </div>
+              <div className="rounded-xl bg-emerald-50 px-4 py-3">
+                <p className="text-lg font-black text-emerald-700">{documents.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Báo cáo</p>
+              </div>
+              <div className="rounded-xl bg-amber-50 px-4 py-3">
+                <p className="text-lg font-black text-amber-700">{plans.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Đơn thuốc</p>
+              </div>
+              <div className="rounded-xl bg-slate-100 px-4 py-3">
+                <p className="text-lg font-black text-slate-700">{logs.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Lịch hôm nay</p>
+              </div>
+            </div>
+          }
+        />
+      )}
+
+      {!!availableTabs.length && (
+        <EmrSubnav tabs={availableTabs} activeTab={activeTab} onChange={setActiveTab} />
+      )}
+
+      {error && (
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-bold text-rose-700">
+          {error}
+        </div>
+      )}
+
+      {loadingPatients || loadingWorkspace ? (
+        <div className="rounded-2xl bg-white p-8 text-center text-sm font-bold text-slate-400 shadow-sm">
+          Đang tải dữ liệu bệnh án điện tử...
+        </div>
+      ) : null}
+
+      {!loadingPatients && !patients.length ? (
+        <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white p-10 text-center text-sm font-bold text-slate-400 shadow-sm">
+          Chưa có bệnh nhân nào cấp quyền EHR hoặc thuốc cho bạn.
+        </div>
+      ) : null}
+
+      {!loadingWorkspace && selectedPatient && activeTab === "overview" && canViewEhr && (
+        <EmrOverviewPanel overview={overview} patient={selectedPatient} />
+      )}
+
+      {!loadingWorkspace && selectedPatient && activeTab === "history" && canViewEhr && (
+        <EmrVisitsPanel visits={visits} documents={documents} />
+      )}
+
+      {!loadingWorkspace && selectedPatient && activeTab === "medications" && canViewMedications && (
+        <EmrMedicationsPanel
+          plans={plans}
+          logs={logs}
+          allowPlanActions
+          onEditPlan={handleEditPlan}
+          onArchivePlan={handleArchivePlan}
+          editor={
+            <MedicationEditor
+              draft={medicationDraft}
+              onChange={handleMedicationDraftChange}
+              onMedChange={handleMedicationLineChange}
+              onAddMed={() =>
+                setMedicationDraft((current) => ({
+                  ...current,
+                  medications: [...current.medications, { name: "", dosage: "1 viên", timesText: "08:00" }],
+                }))
+              }
+              onReset={resetMedicationDraft}
+              onSave={handleSaveMedicationPlan}
+              saving={savingMedication}
+              disabled={!canViewMedications}
             />
+          }
+        />
+      )}
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-on-surface">
-                  Chẩn đoán
-                </span>
-                <input
-                  className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm"
-                  onChange={(event) => setChanDoan(event.target.value)}
-                  value={chanDoan}
-                />
-              </label>
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-on-surface">
-                  Tình trạng
-                </span>
-                <input
-                  className="w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm"
-                  onChange={(event) => setTinhTrang(event.target.value)}
-                  value={tinhTrang}
-                />
-              </label>
-              <label className="space-y-2 md:col-span-2">
-                <span className="text-sm font-semibold text-on-surface">
-                  Thuốc kê đơn
-                </span>
-                <textarea
-                  className="min-h-20 w-full rounded-xl border border-surface-variant bg-white px-4 py-3 text-sm"
-                  onChange={(event) => setThuocKeDon(event.target.value)}
-                  value={thuocKeDon}
-                />
-              </label>
+      {!loadingWorkspace && selectedPatient && activeTab === "consultation" && canViewEhr && (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-black text-slate-900">
+                  <span className="material-symbols-outlined text-primary">clinical_notes</span>
+                  Ghi chú khám
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Form được prefill từ lần khám gần nhất nếu có. Sau khi lưu, lịch sử khám và báo cáo sẽ được làm mới.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveConsultation}
+                disabled={savingConsultation || !selectedPatientId}
+                className="rounded-2xl bg-primary px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+              >
+                {savingConsultation ? "Đang lưu..." : "Lưu hồ sơ"}
+              </button>
             </div>
-          </KhungPhan>
 
-          <KhungPhan
-            icon="medication"
-            tieuDe="Chỉ định và kê đơn (CPOE)"
-            moTa="Chọn y lệnh xét nghiệm, cận lâm sàng và điều trị cho bệnh nhân."
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              {yLenhMau.map((yLenh) => {
-                const daChon = yLenhDaChon.includes(yLenh);
-                return (
-                  <button
-                    key={yLenh}
-                    className={[
-                      "rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
-                      daChon
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-surface-variant bg-white text-on-surface-variant hover:border-primary/40",
-                    ].join(" ")}
-                    onClick={() => chuyenTrangThaiYLenh(yLenh)}
-                    type="button"
-                  >
-                    {yLenh}
-                  </button>
-                );
-              })}
-            </div>
-          </KhungPhan>
-        </div>
-
-        <div className="space-y-6">
-          <KhungPhan
-            icon="folder_shared"
-            tieuDe="Hồ sơ bệnh nhân / Lịch sử khám"
-            moTa="Xem lại bệnh sử, báo cáo và dữ liệu cũ để đối chiếu trước khi kết luận."
-          >
-            {thongTinBenhNhan ? (
-              <div className="rounded-2xl bg-surface-container-low p-4">
-                <div className="flex items-center gap-3">
-                  <ImageWithFallback
-                    alt={thongTinBenhNhan.name}
-                    className="h-12 w-12 rounded-xl object-cover"
-                    src={getUserAvatar(thongTinBenhNhan)}
-                  />
-                  <div>
-                    <p className="font-bold text-on-surface">{thongTinBenhNhan.name}</p>
-                    <p className="text-xs text-on-surface-variant">
-                      {thongTinBenhNhan.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-white px-3 py-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-outline">
-                      Lịch sử khám
-                    </p>
-                    <p className="mt-1 text-lg font-black text-on-surface">
-                      {tongQuanWorkspace.historyCount}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white px-3 py-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-outline">
-                      Báo cáo
-                    </p>
-                    <p className="mt-1 text-lg font-black text-on-surface">
-                      {tongQuanWorkspace.documentCount}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white px-3 py-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-outline">
-                      Kế hoạch thuốc
-                    </p>
-                    <p className="mt-1 text-lg font-black text-on-surface">
-                      {tongQuanWorkspace.medicationPlanCount}
-                    </p>
-                  </div>
+            <div className="space-y-4">
+              <textarea
+                value={clinicalNote}
+                onChange={(event) => setClinicalNote(event.target.value)}
+                className="min-h-56 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7"
+                placeholder="Ghi chú lâm sàng / SOAP"
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <input
+                  value={diagnosis}
+                  onChange={(event) => setDiagnosis(event.target.value)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                  placeholder="Chẩn đoán"
+                />
+                <input
+                  value={condition}
+                  onChange={(event) => setCondition(event.target.value)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                  placeholder="Tình trạng"
+                />
+              </div>
+              <textarea
+                value={prescription}
+                onChange={(event) => setPrescription(event.target.value)}
+                className="min-h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7"
+                placeholder="- Omeprazole · 20mg · Sáng trước ăn"
+              />
+              <div>
+                <p className="mb-3 text-sm font-black text-slate-800">Y lệnh / chỉ định</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {ORDER_TEMPLATES.map((order) => {
+                    const selected = selectedOrders.includes(order);
+                    return (
+                      <button
+                        key={order}
+                        type="button"
+                        onClick={() => handleToggleOrder(order)}
+                        className={[
+                          "rounded-xl border px-4 py-3 text-left text-sm font-bold transition-colors",
+                          selected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-primary/40",
+                        ].join(" ")}
+                      >
+                        {order}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ) : (
-              <div className="rounded-2xl bg-surface-container-low p-4 text-sm text-on-surface-variant">
-                Chọn bệnh nhân để xem hồ sơ.
-              </div>
-            )}
-
-            {loiWorkspace && (
-              <div className="mt-4 rounded-xl border border-error/20 bg-error/5 p-4 text-sm text-error">
-                {loiWorkspace}
-              </div>
-            )}
-
-            <div className="mt-4 space-y-3">
-              {(workspace?.histories || []).map((muc) => (
-                <article
-                  key={muc.history_id}
-                  className="rounded-xl border border-surface-variant bg-white p-4"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-on-surface">
-                      {muc.doctor_diagnosis || "Bản ghi khám"}
-                    </p>
-                    <span className="text-xs text-outline">
-                      {formatDateTime(muc.created_at)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-on-surface-variant">
-                    {muc.notes || muc.condition || "Không có mô tả"}
-                  </p>
-                  {muc.medication && (
-                    <p className="mt-2 text-xs text-on-surface-variant">
-                      Thuốc: {muc.medication}
-                    </p>
-                  )}
-                  {!!muc.y_lenh?.length && (
-                    <p className="mt-2 text-xs text-on-surface-variant">
-                      Y lệnh: {muc.y_lenh.join(", ")}
-                    </p>
-                  )}
-                </article>
-              ))}
-
-              {(workspace?.documents || []).map((taiLieu) => (
-                <article
-                  key={taiLieu.document_id}
-                  className="rounded-xl border border-surface-variant bg-white p-4"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-on-surface">
-                      {taiLieu.title}
-                    </p>
-                    <span className="rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold text-on-secondary-container">
-                      REPORT
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-on-surface-variant">
-                    {taiLieu.summary?.tom_tat || "Đã có báo cáo y khoa"}
-                  </p>
-                </article>
-              ))}
-
-              {(workspace?.medicationPlans || []).map((plan) => (
-                <article
-                  key={plan.plan_id}
-                  className="rounded-xl border border-surface-variant bg-white p-4"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-on-surface">
-                      Kế hoạch thuốc #{plan.plan_id}
-                    </p>
-                    <span className="text-xs text-outline">
-                      {formatDateTime(plan.created_at)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-on-surface-variant">
-                    {(plan.medications || []).length
-                      ? `${plan.medications.length} mục thuốc đã được lên kế hoạch`
-                      : "Chưa có mục thuốc chi tiết"}
-                  </p>
-                </article>
-              ))}
-
-              {!dangTaiWorkspace &&
-                !(workspace?.histories || []).length &&
-                !(workspace?.documents || []).length &&
-                !(workspace?.medicationPlans || []).length && (
-                  <div className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">
-                    Chưa có dữ liệu hồ sơ cho bệnh nhân này.
-                  </div>
-                )}
             </div>
-          </KhungPhan>
-        </div>
-      </div>
+          </section>
 
-      {(dangTaiBenhNhan || dangTaiWorkspace) && (
-        <div className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">
-          Đang tải dữ liệu EMR...
+          <EmrHistoryPreviewPanel visits={visits} documents={documents} />
         </div>
       )}
     </div>

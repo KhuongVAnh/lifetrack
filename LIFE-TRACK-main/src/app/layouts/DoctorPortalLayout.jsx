@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { FloatingAiChatWidget } from "@/features/ai-chat";
 import { BottomNav, DoctorHeader, DoctorSidebar, doctorNav } from "@/widgets/navigation";
 
 export function DoctorPortalShell() {
@@ -18,6 +19,8 @@ export function DoctorPortalShell() {
           <Outlet />
         </div>
       </main>
+
+      {!isMessagesPage && <FloatingAiChatWidget />}
 
       {/* Bottom nav — mobile only */}
       <BottomNav items={doctorNav} onHamburgerClick={() => setSidebarOpen(true)} />
