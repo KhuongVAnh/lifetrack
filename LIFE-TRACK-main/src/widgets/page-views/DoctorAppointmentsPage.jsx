@@ -29,6 +29,25 @@ const STATUS_META = {
   COMPLETED: { label: "Hoàn tất", className: "bg-sky-100 text-sky-700" },
 };
 
+const CALENDAR_START_HOUR = 7;
+const CALENDAR_END_HOUR = 20;
+const HOURS = Array.from({ length: CALENDAR_END_HOUR - CALENDAR_START_HOUR + 1 }, (_, i) => i + CALENDAR_START_HOUR);
+
+function getStartOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 /**
  * Format ngày giờ lịch khám theo tiếng Việt.
  * Hàm trả chuỗi ngắn để dùng trong card và lịch tuần.
@@ -149,6 +168,17 @@ export function DoctorAppointmentsPage() {
     reason: "",
   });
 
+  const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+  const previousWeek = () => setCurrentWeekStart(addDays(currentWeekStart, -7));
+  const nextWeek = () => setCurrentWeekStart(addDays(currentWeekStart, 7));
+  const todayWeek = () => setCurrentWeekStart(getStartOfWeek(new Date()));
+
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+  }, [currentWeekStart]);
+
   /**
    * Tải toàn bộ dữ liệu cần cho màn lịch bác sĩ.
    * Hàm lấy lịch hẹn, lịch rảnh và lịch nghỉ trong cùng một lần refresh.
@@ -187,7 +217,7 @@ export function DoctorAppointmentsPage() {
   const activeAppointments = useMemo(
     () =>
       appointments
-        .filter((appointment) => ["PENDING", "APPROVED"].includes(appointment.status))
+        .filter((appointment) => ["PENDING", "APPROVED", "COMPLETED", "REJECTED"].includes(appointment.status))
         .sort((left, right) => new Date(left.start_time) - new Date(right.start_time)),
     [appointments],
   );
@@ -407,8 +437,8 @@ export function DoctorAppointmentsPage() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-12">
-      <section className="space-y-6 lg:col-span-8">
+    <div className="space-y-6">
+      <section className="space-y-6">
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -432,240 +462,217 @@ export function DoctorAppointmentsPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-800">Lịch sắp tới</h2>
-            <span className="text-xs font-bold text-slate-400">{activeAppointments.length} lịch</span>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {activeAppointments.length === 0 ? (
-              <div className="col-span-full rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm font-bold text-slate-400">
-                Chưa có lịch hẹn đang hoạt động.
-              </div>
-            ) : (
-              activeAppointments.map((appointment) => (
-                <article key={appointment.appointment_id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-black text-slate-800">{appointment.patient?.name || "Bệnh nhân"}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(appointment.start_time)}</p>
-                    </div>
-                    <StatusBadge status={appointment.status} />
-                  </div>
-                  <div className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">
-                    {formatTimeRange(appointment)} · {appointment.type === "ONLINE" ? "Online" : "Trực tiếp"}
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-xs text-slate-500">{appointment.reason}</p>
-                  <PatientContextActions
-                    navigate={navigate}
-                    patientId={appointment.patient?.user_id}
-                  />
-                  {appointment.status === "APPROVED" && (
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(appointment.appointment_id, "COMPLETED")}
-                      className="mt-3 rounded-lg bg-primary px-3 py-2 text-xs font-black text-white hover:bg-primary/90"
-                    >
-                      Đánh dấu hoàn tất
-                    </button>
-                  )}
-                </article>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-800">Yêu cầu chờ duyệt</h2>
-            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-700">{pendingAppointments.length}</span>
-          </div>
-
-          <div className="space-y-3">
-            {pendingAppointments.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
-                Chưa có yêu cầu đặt lịch mới.
-              </div>
-            ) : (
-              pendingAppointments.map((appointment) => (
-                <article key={appointment.appointment_id} className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <p className="font-black text-slate-800">{appointment.patient?.name || "Bệnh nhân"}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(appointment.start_time)}</p>
-                      <p className="mt-2 text-sm text-slate-600">{appointment.reason}</p>
-                    </div>
-                    <StatusBadge status={appointment.status} />
-                  </div>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
-                    <input
-                      value={meetingUrls[appointment.appointment_id] || ""}
-                      onChange={(event) =>
-                        setMeetingUrls((current) => ({
-                          ...current,
-                          [appointment.appointment_id]: event.target.value,
-                        }))
-                      }
-                      className="rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm outline-none focus:border-primary"
-                      placeholder="Link meeting nếu khám online"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleApprove(appointment.appointment_id)}
-                      className="rounded-xl bg-primary px-4 py-2 text-sm font-black text-white hover:bg-primary/90"
-                    >
-                      Xác nhận
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(appointment.appointment_id, "REJECTED")}
-                      className="rounded-xl border border-rose-100 px-4 py-2 text-sm font-black text-rose-600 hover:bg-rose-50"
-                    >
-                      Từ chối
-                    </button>
-                  </div>
-                  <PatientContextActions
-                    navigate={navigate}
-                    patientId={appointment.patient?.user_id}
-                  />
-                </article>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      <aside className="space-y-6 lg:col-span-4">
-        <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="rounded-2xl border border-slate-100 bg-white p-0 shadow-sm overflow-hidden flex flex-col h-auto min-h-[500px]">
+          <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-50/40">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch rảnh</p>
-              <h2 className="text-lg font-black text-slate-800">Lịch làm việc lặp lại</h2>
+              <h2 className="text-lg font-black text-slate-800">Lịch tuần này</h2>
+              <p className="text-xs font-medium text-slate-500 mt-1">
+                {currentWeekStart.toLocaleDateString("vi-VN")} - {addDays(currentWeekStart, 6).toLocaleDateString("vi-VN")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={previousWeek} 
+                className="flex items-center justify-center p-2 hover:bg-slate-100 rounded-lg border border-transparent hover:border-slate-200 transition-all text-slate-600"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_left</span>
+              </button>
+              <button 
+                type="button" 
+                onClick={todayWeek} 
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold hover:bg-slate-50 text-slate-700 transition-colors shadow-sm"
+              >
+                Hôm nay
+              </button>
+              <button 
+                type="button" 
+                onClick={nextWeek} 
+                className="flex items-center justify-center p-2 hover:bg-slate-100 rounded-lg border border-transparent hover:border-slate-200 transition-all text-slate-600"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </button>
             </div>
           </div>
 
-          <div className="mb-4 rounded-xl bg-sky-50 p-3 text-xs font-medium text-sky-800">
-            Chọn ngày làm việc, áp preset sáng/chiều/cả ngày, rồi chỉnh slot nếu cần. Lịch nghỉ/chặn slot cụ thể nằm ở khối bên dưới.
-          </div>
-
-          <div className="space-y-4">
-            {WEEKDAYS.map((day) => {
-              const rows = getAvailabilityRowsForDay(day.id);
-              const enabled = rows.some((row) => row.is_active !== false);
-
-              return (
-                <div key={day.id} className={enabled ? "rounded-2xl border border-primary/20 bg-primary/5 p-4" : "rounded-2xl border border-slate-100 bg-slate-50 p-4"}>
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={enabled}
-                        onChange={(event) => toggleDayActive(day.id, event.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                      <span className="font-black text-slate-800">{day.label}</span>
-                    </label>
-                    {enabled && (
-                      <button
-                        type="button"
-                        onClick={() => addAvailabilityForDay(day.id)}
-                        className="rounded-lg bg-white px-2 py-1 text-[11px] font-black text-primary shadow-sm"
-                      >
-                        + Khung
-                      </button>
-                    )}
+          <div className="flex-1 overflow-y-auto relative bg-white">
+            <div className="flex min-w-[700px]">
+              {/* Time Column (Y axis) */}
+              <div className="w-16 flex-shrink-0 border-r border-slate-100 bg-white sticky left-0 z-20">
+                <div className="h-12 border-b border-slate-100 bg-white sticky top-0 z-30"></div>
+                {HOURS.map(hour => (
+                  <div key={hour} className="h-[40px] relative">
+                    <span className="absolute -top-2 right-2 text-[10px] font-bold text-slate-400">{hour}:00</span>
                   </div>
+                ))}
+              </div>
 
-                  {enabled && (
-                    <>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {[
-                          ["morning", "Sáng"],
-                          ["afternoon", "Chiều"],
-                          ["full", "Cả ngày"],
-                        ].map(([presetKey, label]) => (
-                          <button
-                            key={presetKey}
-                            type="button"
-                            onClick={() => setDayPreset(day.id, presetKey)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-black text-slate-600 hover:border-primary hover:text-primary"
-                          >
-                            {label}
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => copyDaySchedule(day.id, "weekdays")}
-                          className="rounded-lg border border-emerald-100 bg-white px-2.5 py-1.5 text-[11px] font-black text-emerald-700 hover:bg-emerald-50"
-                        >
-                          Copy T2-T6
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => copyDaySchedule(day.id, "all")}
-                          className="rounded-lg border border-sky-100 bg-white px-2.5 py-1.5 text-[11px] font-black text-sky-700 hover:bg-sky-50"
-                        >
-                          Copy tất cả
-                        </button>
+              {/* Days Columns */}
+              <div className="flex-1 flex">
+                {weekDays.map(day => {
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  const dayAppointments = activeAppointments.filter(app => {
+                    const d = new Date(app.start_time);
+                    return d.toDateString() === day.toDateString();
+                  });
+
+                  return (
+                    <div key={day.toISOString()} className="flex-1 min-w-[100px] border-r border-slate-100 relative">
+                      {/* Day Header */}
+                      <div className={`h-12 flex flex-col items-center justify-center border-b border-slate-100 sticky top-0 z-10 bg-white/95 backdrop-blur ${isToday ? 'bg-primary/5' : ''}`}>
+                        <span className={`text-[10px] font-black uppercase ${isToday ? 'text-primary' : 'text-slate-500'}`}>
+                          {day.toLocaleDateString("vi-VN", { weekday: "short" })}
+                        </span>
+                        <span className={`text-lg font-black leading-none mt-0.5 ${isToday ? 'text-primary' : 'text-slate-800'}`}>
+                          {day.getDate()}
+                        </span>
                       </div>
 
-                      <div className="mt-3 space-y-2">
-                        {rows.map((item) => (
-                          <div key={item.availability_id ?? item.__index} className="grid grid-cols-[1fr_1fr_86px_28px] gap-2">
-                            <input
-                              type="time"
-                              value={item.start_time}
-                              onChange={(event) => updateAvailabilityRow(item.__index, "start_time", event.target.value)}
-                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                            />
-                            <input
-                              type="time"
-                              value={item.end_time}
-                              onChange={(event) => updateAvailabilityRow(item.__index, "end_time", event.target.value)}
-                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                            />
-                            <select
-                              value={item.slot_minutes}
-                              onChange={(event) => updateAvailabilityRow(item.__index, "slot_minutes", Number(event.target.value))}
-                              className="rounded-lg border border-slate-100 bg-white px-2 py-2 text-xs font-bold outline-none"
-                            >
-                              {[15, 20, 30, 45, 60].map((minute) => (
-                                <option key={minute} value={minute}>{minute}p</option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => removeAvailabilityRow(item.__index)}
-                              className="rounded-lg text-rose-500 hover:bg-rose-50"
-                              aria-label="Xóa khung giờ"
-                            >
-                              <span className="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                          </div>
+                      {/* Day Cells (Background Grid) */}
+                      <div className="relative">
+                        {HOURS.map(hour => (
+                          <div key={hour} className="h-[40px] border-b border-slate-50"></div>
                         ))}
+
+                        {/* Events Overlay */}
+                        {dayAppointments.map(appointment => {
+                          const start = new Date(appointment.start_time);
+                          const end = new Date(appointment.end_time);
+                          const topMinutes = (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+                          const heightMinutes = (end.getTime() - start.getTime()) / 60000;
+                          
+                          if (start.getHours() < CALENDAR_START_HOUR || start.getHours() > CALENDAR_END_HOUR) return null;
+
+                          return (
+                            <div 
+                              key={appointment.appointment_id}
+                              onClick={() => setSelectedAppointment(appointment)}
+                              className={`absolute left-1 right-1 rounded-lg border p-1.5 cursor-pointer shadow-sm transition-all overflow-hidden animate-fade-in group ${
+                                appointment.status === 'APPROVED' ? 'bg-emerald-50/90 border-emerald-300 hover:bg-emerald-100 hover:shadow-md' : 
+                                appointment.status === 'PENDING' ? 'bg-amber-50/90 border-amber-300 hover:bg-amber-100 hover:shadow-md' :
+                                appointment.status === 'REJECTED' ? 'bg-rose-50/90 border-rose-300 hover:bg-rose-100 hover:shadow-md' :
+                                'bg-emerald-50/60 border-emerald-200 opacity-60 hover:opacity-100'
+                              }`}
+                              style={{ top: `${topMinutes * 40 / 60}px`, height: `${Math.max(20, heightMinutes * 40 / 60)}px` }}
+                            >
+                              <div className={`text-[10px] font-black uppercase tracking-wider ${
+                                appointment.status === 'APPROVED' ? 'text-emerald-700' : 
+                                appointment.status === 'PENDING' ? 'text-amber-700' :
+                                appointment.status === 'REJECTED' ? 'text-rose-700' :
+                                'text-emerald-700'
+                              }`}>
+                                {start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute:"2-digit" })}
+                              </div>
+                              <div className={`text-[11px] font-bold leading-tight truncate mt-0.5 ${
+                                appointment.status === 'COMPLETED' ? 'text-emerald-900 line-through' : 'text-slate-800'
+                              }`}>
+                                {appointment.patient?.name || "Bệnh nhân"}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="button"
-            disabled={savingAvailability}
-            onClick={handleSaveAvailability}
-            className="mt-4 w-full rounded-xl bg-primary px-4 py-3 text-sm font-black text-white hover:bg-primary/90 disabled:opacity-50"
-          >
-            {savingAvailability ? "Đang lưu..." : "Lưu lịch rảnh"}
-          </button>
-        </section>
+      </section>
 
-        <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="mb-4">
-            <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch nghỉ</p>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <aside className="space-y-6 lg:col-span-8">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch rảnh</p>
+                <h2 className="text-lg font-black text-slate-800">Lịch làm việc lặp lại</h2>
+              </div>
+              <button
+                type="button"
+                disabled={savingAvailability}
+                onClick={handleSaveAvailability}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-black text-white hover:bg-primary/90 disabled:opacity-50"
+              >
+                {savingAvailability ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
+
+            <div className="mb-4 rounded-xl bg-sky-50 p-3 text-xs font-medium text-sky-800">
+              Lịch rảnh được áp dụng tuần tự. Nhấn công tắc để mở khung giờ ngày chẵn/lẻ.
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full text-left text-sm whitespace-nowrap min-w-[600px]">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="py-3 px-4 text-slate-500 font-bold w-24 border-b border-slate-100">Ngày</th>
+                    <th className="py-3 px-4 text-slate-500 font-bold w-16 text-center border-b border-slate-100">Nghỉ / Làm</th>
+                    <th className="py-3 px-4 text-slate-500 font-bold border-b border-slate-100">Khung giờ</th>
+                    <th className="py-3 px-4 text-slate-500 font-bold text-right border-b border-slate-100">Sao chép nhanh</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {WEEKDAYS.map((day) => {
+                    const rows = getAvailabilityRowsForDay(day.id);
+                    const enabled = rows.some((row) => row.is_active !== false);
+
+                    return (
+                      <tr key={day.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 px-4 font-black text-slate-700">{day.label}</td>
+                        <td className="py-4 px-4 text-center">
+                           <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" checked={enabled} onChange={e => toggleDayActive(day.id, e.target.checked)} className="sr-only peer" />
+                              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                           </label>
+                        </td>
+                        <td className="py-4 px-4">
+                          {enabled ? (
+                            <div className="space-y-2">
+                              {rows.map(item => (
+                                <div key={item.availability_id ?? item.__index} className="flex gap-2 items-center">
+                                   <input type="time" value={item.start_time} onChange={e => updateAvailabilityRow(item.__index, "start_time", e.target.value)} className="bg-white border border-slate-200 rounded-md px-2 py-1 flex-1 min-w-[80px] text-xs font-bold shadow-sm outline-none focus:border-primary"/> 
+                                   <span className="text-slate-400 font-black">-</span>
+                                   <input type="time" value={item.end_time} onChange={e => updateAvailabilityRow(item.__index, "end_time", e.target.value)} className="bg-white border border-slate-200 rounded-md px-2 py-1 flex-1 min-w-[80px] text-xs font-bold shadow-sm outline-none focus:border-primary"/>
+                                   <select value={item.slot_minutes} onChange={e => updateAvailabilityRow(item.__index, "slot_minutes", Number(e.target.value))} className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-bold shadow-sm outline-none focus:border-primary">
+                                      {[15,20,30,45,60].map(m => <option key={m} value={m}>{m}p</option>)}
+                                   </select>
+                                   <button onClick={() => removeAvailabilityRow(item.__index)} className="text-rose-500 hover:bg-rose-50 hover:text-rose-600 border border-transparent hover:border-rose-100 rounded p-1 transition-colors"><span className="material-symbols-outlined text-[16px] block">close</span></button>
+                                </div>
+                              ))}
+                              <button onClick={() => addAvailabilityForDay(day.id)} className="text-[11px] text-primary font-bold hover:underline mt-1">+ Thêm khung giờ</button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 font-medium italic select-none">Nghỉ làm việc</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex flex-wrap gap-1 justify-end">
+                            {enabled && (
+                              <>
+                                <button onClick={() => setDayPreset(day.id, 'morning')} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 font-bold transition-colors">Sáng</button>
+                                <button onClick={() => setDayPreset(day.id, 'afternoon')} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 font-bold transition-colors">Chiều</button>
+                                <button onClick={() => setDayPreset(day.id, 'full')} className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 font-bold transition-colors">Cả ngày</button>
+                                <button onClick={() => copyDaySchedule(day.id, 'weekdays')} className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-bold hover:bg-emerald-100 transition-colors">Copy T2-T6</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </aside>
+
+        <aside className="space-y-6 lg:col-span-4">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="mb-4">
+              <p className="text-[11px] font-black uppercase tracking-widest text-primary">Lịch nghỉ</p>
             <h2 className="text-lg font-black text-slate-800">Chặn slot cụ thể</h2>
           </div>
 
@@ -716,6 +723,95 @@ export function DoctorAppointmentsPage() {
           </div>
         </section>
       </aside>
+      </div>
+
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedAppointment(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-scale-up border border-slate-100" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+               <div>
+                  <h3 className="text-xl font-black text-slate-900">{selectedAppointment.patient?.name || "Bệnh nhân"}</h3>
+                  <p className="text-sm font-bold text-slate-500 mt-1">{formatDateTime(selectedAppointment.start_time)}</p>
+               </div>
+               <StatusBadge status={selectedAppointment.status} />
+            </div>
+            
+            <div className="rounded-xl bg-slate-50 p-4 mb-5 border border-slate-100 space-y-2">
+               <p className="text-sm font-medium text-slate-700"><span className="font-bold text-slate-900">Hình thức:</span> {selectedAppointment.type === "ONLINE" ? "Trực tuyến" : "Trực tiếp"}</p>
+               <p className="text-sm font-medium text-slate-700"><span className="font-bold text-slate-900">Lý do khám:</span> {selectedAppointment.reason}</p>
+            </div>
+
+            <div className="border-t border-slate-100 pt-5">
+               <p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-widest">Hành động</p>
+               <div className="flex flex-col gap-2">
+                 <PatientContextActions navigate={navigate} patientId={selectedAppointment.patient?.user_id} />
+                 
+                 {selectedAppointment.status === "PENDING" && (
+                    <div className="mt-2 flex flex-col gap-3">
+                      <input
+                        value={meetingUrls[selectedAppointment.appointment_id] || ""}
+                        onChange={(event) =>
+                          setMeetingUrls((current) => ({
+                            ...current,
+                            [selectedAppointment.appointment_id]: event.target.value,
+                          }))
+                        }
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+                        placeholder="Thêm link meeting (nếu khám online)"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                             handleApprove(selectedAppointment.appointment_id);
+                             setSelectedAppointment(null);
+                          }}
+                          className="rounded-xl bg-primary px-4 py-2 text-sm font-black text-white hover:bg-primary/90 transition-colors"
+                        >
+                          Xác nhận
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                             handleStatusUpdate(selectedAppointment.appointment_id, "REJECTED");
+                             setSelectedAppointment(null);
+                          }}
+                          className="rounded-xl border border-rose-100 px-4 py-2 text-sm font-black text-rose-600 hover:bg-rose-50 transition-colors"
+                        >
+                          Từ chối
+                        </button>
+                      </div>
+                    </div>
+                 )}
+
+                 {selectedAppointment.status === "APPROVED" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                         handleStatusUpdate(selectedAppointment.appointment_id, "COMPLETED");
+                         setSelectedAppointment(null);
+                      }}
+                      className="mt-2 w-full rounded-xl bg-primary px-4 py-3 text-sm font-black text-white hover:bg-primary/90 transition-colors"
+                    >
+                      Đánh dấu hoàn tất
+                    </button>
+                 )}
+               </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-100 text-right">
+              <button 
+                type="button"
+                onClick={() => setSelectedAppointment(null)} 
+                className="px-5 py-2 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200 text-sm transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

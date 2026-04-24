@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { getUserAvatar, getUserDisplayName } from "@/entities/user";
 import { FloatingAiChatWidget } from "@/features/ai-chat";
 import { useAuth } from "@/features/auth";
@@ -8,9 +8,11 @@ import { BottomNav, PrimarySidebar, primaryNav } from "@/widgets/navigation";
 
 export function PatientShell() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const isConsultPage = /^\/patient\/doctors\/[^/]+\/consult$/.test(pathname);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const displayName = getUserDisplayName(user, "LifeTrack");
   const avatar = getUserAvatar(user);
 
@@ -47,15 +49,53 @@ export function PatientShell() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="relative rounded-full p-2 hover:bg-slate-100">
-              <span className="material-symbols-outlined text-slate-600">notifications</span>
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-error" />
-            </button>
-            <ImageWithFallback
-              alt={displayName}
-              className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary-fixed object-cover"
-              src={avatar}
-            />
+            {/* Notifications */}
+            <div className="relative">
+              <button className="relative rounded-full p-2 hover:bg-slate-100">
+                <span className="material-symbols-outlined text-slate-600">notifications</span>
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-error" />
+              </button>
+            </div>
+
+            {/* Profile Menu */}
+            <div
+              className="relative flex items-center gap-2 md:gap-3 cursor-pointer group"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+            >
+              <ImageWithFallback
+                alt={displayName}
+                className="h-9 w-9 md:h-10 md:w-10 rounded-full border-2 border-primary-fixed object-cover group-hover:ring-2 group-hover:ring-primary/50 transition-all hover:scale-105"
+                src={avatar}
+              />
+
+              {isProfileOpen && (
+                <div className="absolute right-0 top-14 w-52 md:w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in flex flex-col">
+                  <div className="px-4 py-3 border-b border-slate-100 flex flex-col">
+                    <span className="font-bold text-sm text-slate-800">{displayName}</span>
+                    <span className="text-[10px] font-medium text-slate-400">{user?.email || "patient@lifetrack.vn"}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate("/patient/settings");
+                    }}
+                    className="px-4 py-2 mt-2 text-left text-sm text-slate-600 hover:bg-slate-50 font-medium flex gap-3 items-center transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">person</span> Hồ sơ của tôi
+                  </button>
+                  <div className="h-px bg-slate-100 my-2"></div>
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      void logout(true, true);
+                    }}
+                    className="px-4 py-2 mb-1 text-left text-sm text-error hover:bg-error/10 font-bold flex gap-3 items-center transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span> Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
