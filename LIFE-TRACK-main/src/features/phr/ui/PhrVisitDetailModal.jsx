@@ -1,5 +1,69 @@
 import { useEffect } from "react";
 
+function normalizeAttachments(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => {
+      if (!item) return null;
+      if (typeof item === "string") {
+        return {
+          id: `attachment-${index}`,
+          name: item,
+          url: item.startsWith("http") ? item : "",
+          type: item.toLowerCase().endsWith(".pdf") ? "pdf" : "image",
+        };
+      }
+      return item;
+    })
+    .filter(Boolean);
+}
+
+function normalizePrescriptions(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item === "string") return { name: item, dosage: "", quantity: "", usage: "" };
+        if (!item || typeof item !== "object") return null;
+        return {
+          name: item.name || item.ten || "Thuốc",
+          dosage: item.dosage || item.lieu_dung || "",
+          quantity: item.quantity || item.so_luong || "",
+          usage: item.usage || item.huong_dan || item.description || "",
+        };
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      return normalizePrescriptions(parsed);
+    } catch {
+      return trimmed
+        .split(/\n+/)
+        .map((line) => line.replace(/^[-•]\s*/, "").trim())
+        .filter(Boolean)
+        .map((line) => ({ name: line, dosage: "", quantity: "", usage: "" }));
+    }
+  }
+
+  if (value.notes) {
+    return [{ name: "Lời dặn thêm", dosage: "", quantity: 1, usage: value.notes }];
+  }
+
+  if (value.morning || value.evening) {
+    return [{ name: "Đơn tự quản", dosage: "Chi tiết DB", quantity: 1, usage: JSON.stringify(value) }];
+  }
+
+  return [];
+}
+
 export function PhrVisitDetailModal({ visit, onClose, onEdit, onDelete }) {
   // Prevent scrolling on background when modal is open
   useEffect(() => {
@@ -22,18 +86,8 @@ export function PhrVisitDetailModal({ visit, onClose, onEdit, onDelete }) {
   const facilityName = visit.facility || 'Không ghi nhận CSYT';
   const doctorName = visit.doctor_name || (visit.doctor ? visit.doctor.name : 'Bác sĩ phụ trách');
 
-  const attachments = Array.isArray(visit.tests) ? visit.tests : [];
-  
-  let prescriptions = [];
-  if (Array.isArray(visit.prescription)) {
-    prescriptions = visit.prescription;
-  } else if (visit.prescription) {
-    if (visit.prescription.notes) {
-      prescriptions = [{ name: "Lời dặn thêm", dosage: "", quantity: 1, usage: visit.prescription.notes }];
-    } else if (visit.prescription.morning || visit.prescription.evening) {
-      prescriptions = [{ name: "Đơn tự quản", dosage: "Chi tiết DB", quantity: 1, usage: JSON.stringify(visit.prescription) }];
-    }
-  }
+  const attachments = normalizeAttachments(visit.tests);
+  const prescriptions = normalizePrescriptions(visit.prescription || visit.medication);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">

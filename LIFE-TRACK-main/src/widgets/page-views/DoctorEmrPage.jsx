@@ -73,13 +73,14 @@ function formatMedicationForTextarea(value) {
 
 function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onSave, saving, disabled }) {
   return (
-    <section className="rounded-[2rem] bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-slate-900">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#004976]">Kê đơn</p>
+          <h2 className="mt-1 text-xl font-black text-[#0f172a]">
             {draft.plan_id ? "Sửa kế hoạch thuốc" : "Kê kế hoạch thuốc"}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm font-semibold leading-6 text-[#475569]">
             Nhập giờ uống cách nhau bằng dấu phẩy, ví dụ: `08:00, 20:00`.
           </p>
         </div>
@@ -87,7 +88,7 @@ function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onS
           <button
             type="button"
             onClick={onReset}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600"
+            className="rounded-xl border border-[#cbd5e1] px-3 py-2 text-xs font-black text-[#334155] hover:bg-slate-50"
           >
             Tạo mới
           </button>
@@ -98,7 +99,7 @@ function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onS
         <input
           value={draft.title}
           onChange={(event) => onChange("title", event.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          className="w-full rounded-xl border border-slate-300 bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#0f172a] placeholder:text-slate-400 focus:border-[#004976] focus:ring-[#004976]"
           placeholder="Tên đơn thuốc"
         />
         <div className="grid gap-3 sm:grid-cols-2">
@@ -106,35 +107,35 @@ function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onS
             type="date"
             value={draft.start_date}
             onChange={(event) => onChange("start_date", event.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+            className="rounded-xl border border-slate-300 bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#0f172a] focus:border-[#004976] focus:ring-[#004976]"
           />
           <input
             type="date"
             value={draft.end_date}
             onChange={(event) => onChange("end_date", event.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+            className="rounded-xl border border-slate-300 bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#0f172a] focus:border-[#004976] focus:ring-[#004976]"
           />
         </div>
         {draft.medications.map((medication, index) => (
-          <div key={index} className="rounded-[1.5rem] bg-slate-50 p-4">
+          <div key={index} className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-4">
             <div className="grid gap-2 sm:grid-cols-2">
               <input
                 value={medication.name}
                 onChange={(event) => onMedChange(index, "name", event.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#0f172a] placeholder:text-slate-400 focus:border-[#004976] focus:ring-[#004976]"
                 placeholder="Tên thuốc"
               />
               <input
                 value={medication.dosage}
                 onChange={(event) => onMedChange(index, "dosage", event.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#0f172a] placeholder:text-slate-400 focus:border-[#004976] focus:ring-[#004976]"
                 placeholder="Liều lượng"
               />
             </div>
             <input
               value={medication.timesText}
               onChange={(event) => onMedChange(index, "timesText", event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#0f172a] placeholder:text-slate-400 focus:border-[#004976] focus:ring-[#004976]"
               placeholder="08:00, 20:00"
             />
           </div>
@@ -142,21 +143,21 @@ function MedicationEditor({ draft, onChange, onMedChange, onAddMed, onReset, onS
         <button
           type="button"
           onClick={onAddMed}
-          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-slate-700"
+          className="rounded-xl border border-[#cbd5e1] px-4 py-2 text-sm font-black text-[#334155] hover:bg-slate-50"
         >
           + Thêm thuốc
         </button>
         <textarea
           value={draft.notes}
           onChange={(event) => onChange("notes", event.target.value)}
-          className="min-h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+          className="min-h-24 w-full rounded-xl border border-slate-300 bg-[#f8fafc] px-4 py-3 text-sm font-semibold leading-6 text-[#0f172a] placeholder:text-slate-400 focus:border-[#004976] focus:ring-[#004976]"
           placeholder="Ghi chú cho bệnh nhân"
         />
         <button
           type="button"
           onClick={onSave}
           disabled={disabled || saving}
-          className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+          className="w-full rounded-xl bg-[#004976] px-4 py-3 text-sm font-black text-white transition-colors hover:bg-[#003d63] disabled:opacity-60"
         >
           {saving ? "Đang lưu..." : draft.plan_id ? "Lưu thay đổi" : "Kê thuốc"}
         </button>
@@ -484,10 +485,47 @@ export function DoctorEmrPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <section className="rounded-[2rem] bg-white p-6 shadow-sm">
-        <label className="mb-4 block text-lg font-black text-slate-800">
-          Danh sách bệnh nhân ủy quyền ({patients.length})
-        </label>
+      <section className="overflow-hidden rounded-2xl border border-[#0f172a] bg-[#0f172a] text-white shadow-sm">
+        <div className="grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_320px] md:p-8">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#bae6fd]">Doctor EMR Workspace</p>
+            <h1 className="mt-2 text-3xl font-black leading-tight md:text-4xl">Bệnh án điện tử</h1>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-slate-200">
+              Xem hồ sơ sức khỏe, timeline lịch sử khám, nhắc thuốc và ghi chú khám.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-sm">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Phiên làm việc</p>
+            <p className="mt-2 font-black text-white">{user?.name || "Bác sĩ"}</p>
+            <p className="mt-1 font-semibold text-slate-300">{user?.email || "Tài khoản hệ thống"}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#004976]">Bệnh nhân ủy quyền</p>
+            <h2 className="mt-1 text-xl font-black text-[#0f172a]">Danh sách bệnh nhân ({patients.length})</h2>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">
+              Chọn bệnh nhân để xem lịch sử khám, nhắc thuốc và quyền truy cập liên quan.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl border border-[#bae6fd] bg-[#e0f2fe] px-3 py-2">
+              <p className="text-lg font-black text-[#075985]">{patients.length}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#075985]">Tổng</p>
+            </div>
+            <div className="rounded-xl border border-[#86efac] bg-[#dcfce7] px-3 py-2">
+              <p className="text-lg font-black text-[#166534]">{patients.filter((item) => item.canViewEhr).length}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#166534]">EHR</p>
+            </div>
+            <div className="rounded-xl border border-[#fbbf24] bg-[#fef3c7] px-3 py-2">
+              <p className="text-lg font-black text-[#92400e]">{patients.filter((item) => item.canViewMedications).length}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#92400e]">Thuốc</p>
+            </div>
+          </div>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {patients.map((item) => {
             const isSelected = item.patientId === selectedPatientId;
@@ -495,28 +533,30 @@ export function DoctorEmrPage() {
               <div
                 key={item.patientId}
                 onClick={() => setSelectedPatientId(item.patientId)}
-                className={`cursor-pointer flex flex-col gap-2 rounded-xl border p-4 transition-all ${isSelected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-100 bg-slate-50 hover:border-primary/30"
+                className={`flex cursor-pointer flex-col gap-3 rounded-xl border p-4 transition-all ${isSelected ? "border-[#004976] bg-[#e0f2fe] ring-2 ring-[#004976]/20" : "border-[#cbd5e1] bg-[#f8fafc] hover:border-[#0ea5e9]"
                   }`}
               >
-                <p className={`font-bold ${isSelected ? "text-primary" : "text-slate-800"}`}>
+                <p className={`font-black ${isSelected ? "text-[#004976]" : "text-[#0f172a]"}`}>
                   {item.patient?.name || "Bệnh nhân"}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {item.canViewEhr && (
                     <>
-                      <span className="rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-700">EHR</span>
-                      <span className="rounded-md bg-rose-100 px-2 py-1 text-[10px] font-bold text-rose-700">ECG</span>
+                      <span className="rounded-md bg-[#dbeafe] px-2 py-1 text-[10px] font-black text-[#1d4ed8]">EHR</span>
+                      <span className="rounded-md bg-[#fee2e2] px-2 py-1 text-[10px] font-black text-[#991b1b]">ECG</span>
                     </>
                   )}
                   {item.canViewMedications && (
-                    <span className="rounded-md bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">Tủ thuốc</span>
+                    <span className="rounded-md bg-[#dcfce7] px-2 py-1 text-[10px] font-black text-[#166534]">Tủ thuốc</span>
                   )}
                 </div>
               </div>
             );
           })}
           {!patients.length && !loadingPatients && (
-            <p className="col-span-full text-sm text-slate-500">Không có bệnh nhân khả dụng</p>
+            <p className="col-span-full rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] p-5 text-sm font-bold text-[#64748b]">
+              Không có bệnh nhân khả dụng
+            </p>
           )}
         </div>
       </section>
@@ -527,21 +567,21 @@ export function DoctorEmrPage() {
           helperText="Bệnh án điện tử của bệnh nhân đang được chia sẻ cho bác sĩ."
           rightContent={
             <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-              <div className="rounded-xl bg-sky-50 px-4 py-3">
-                <p className="text-lg font-black text-primary">{visits.length}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Lịch sử</p>
+              <div className="rounded-xl border border-[#bae6fd] bg-[#e0f2fe] px-4 py-3">
+                <p className="text-lg font-black text-[#075985]">{visits.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#075985]">Lịch sử</p>
               </div>
-              <div className="rounded-xl bg-emerald-50 px-4 py-3">
-                <p className="text-lg font-black text-emerald-700">{documents.length}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Báo cáo</p>
+              <div className="rounded-xl border border-[#86efac] bg-[#dcfce7] px-4 py-3">
+                <p className="text-lg font-black text-[#166534]">{documents.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#166534]">Báo cáo</p>
               </div>
-              <div className="rounded-xl bg-amber-50 px-4 py-3">
-                <p className="text-lg font-black text-amber-700">{plans.length}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Đơn thuốc</p>
+              <div className="rounded-xl border border-[#fbbf24] bg-[#fef3c7] px-4 py-3">
+                <p className="text-lg font-black text-[#92400e]">{plans.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#92400e]">Đơn thuốc</p>
               </div>
-              <div className="rounded-xl bg-slate-100 px-4 py-3">
-                <p className="text-lg font-black text-slate-700">{logs.length}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Lịch hôm nay</p>
+              <div className="rounded-xl border border-slate-300 bg-[#f8fafc] px-4 py-3">
+                <p className="text-lg font-black text-[#0f172a]">{logs.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#475569]">Lịch hôm nay</p>
               </div>
             </div>
           }
@@ -553,19 +593,19 @@ export function DoctorEmrPage() {
       )}
 
       {error && (
-        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-bold text-rose-700">
+        <div className="rounded-2xl border-2 border-[#dc2626] bg-[#fff1f2] p-4 text-sm font-black text-[#991b1b]">
           {error}
         </div>
       )}
 
       {loadingPatients || loadingWorkspace ? (
-        <div className="rounded-2xl bg-white p-8 text-center text-sm font-bold text-slate-400 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm font-bold text-[#64748b] shadow-sm">
           Đang tải dữ liệu bệnh án điện tử...
         </div>
       ) : null}
 
       {!loadingPatients && !patients.length ? (
-        <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white p-10 text-center text-sm font-bold text-slate-400 shadow-sm">
+        <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white p-10 text-center text-sm font-bold text-[#64748b] shadow-sm">
           Chưa có bệnh nhân nào cấp quyền EHR hoặc thuốc cho bạn.
         </div>
       ) : null}

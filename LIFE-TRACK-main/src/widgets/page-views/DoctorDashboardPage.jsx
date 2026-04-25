@@ -86,28 +86,28 @@ function getSummaryCards(summary) {
       label: "Bệnh nhân đang thuê",
       value: summary.activePatientCount,
       icon: "group",
-      accentClassName: "bg-sky-50 text-primary",
+      accentClassName: "border-[#bae6fd] bg-[#e0f2fe] text-[#075985]",
     },
     {
       key: "ecgPatients",
       label: "Bệnh nhân có quyền ECG",
       value: summary.ecgAccessPatientCount,
       icon: "monitor_heart",
-      accentClassName: "bg-emerald-50 text-secondary",
+      accentClassName: "border-[#86efac] bg-[#dcfce7] text-[#166534]",
     },
     {
       key: "todayAppointments",
       label: "Lịch hẹn hôm nay",
       value: summary.todayAppointmentCount,
       icon: "event_available",
-      accentClassName: "bg-orange-50 text-orange-600",
+      accentClassName: "border-[#fbbf24] bg-[#fef3c7] text-[#92400e]",
     },
     {
       key: "unreadNotifications",
       label: "Thông báo chưa đọc",
       value: summary.unreadNotificationCount,
       icon: "notifications",
-      accentClassName: "bg-purple-50 text-purple-600",
+      accentClassName: "border-[#c4b5fd] bg-[#ede9fe] text-[#5b21b6]",
     },
   ];
 }
@@ -183,258 +183,172 @@ export function DoctorDashboardPage() {
   }, []);
 
   return (
-    <>
+    <div className="mx-auto max-w-7xl space-y-6">
       {dashboardError && (
-        <div className="mb-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+        <div className="rounded-2xl border-2 border-[#dc2626] bg-[#fff1f2] px-4 py-3 text-sm font-black text-[#991b1b]">
           {dashboardError}
         </div>
       )}
 
-      <section className="mb-8 overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-600 to-teal-600 p-6 text-white shadow-[0_8px_30px_rgb(16,185,129,0.18)]">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="overflow-hidden rounded-2xl border border-[#0f172a] bg-[#0f172a] text-white shadow-sm">
+        <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:p-8">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-emerald-100">Hồ sơ công khai</p>
-            <h2 className="mt-2 text-2xl font-black">Cập nhật profile bác sĩ</h2>
-            <p className="mt-1 max-w-2xl text-sm font-medium text-emerald-50">
-              Hồ sơ đầy đủ giúp bệnh nhân hiểu chuyên môn, phí tư vấn và trạng thái nhận bệnh nhân của bạn.
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#bae6fd]">Doctor command center</p>
+            <h1 className="mt-2 text-3xl font-black leading-tight md:text-4xl">Dashboard bác sĩ</h1>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-slate-200">
+              Ưu tiên cảnh báo khẩn cấp, lịch hẹn trong ngày và các yêu cầu cần xử lý.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate("/doctor/profile")}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-emerald-700 shadow-lg transition-transform hover:scale-[1.02]"
-          >
-            <span className="material-symbols-outlined text-[18px]">edit_square</span>
-            Sửa hồ sơ
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-[#fecaca] bg-[#fee2e2] p-4 text-[#991b1b]">
+              <p className="text-3xl font-black">{dashboard.urgentAlerts.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-widest">Cảnh báo</p>
+            </div>
+            <div className="rounded-2xl border border-[#fbbf24] bg-[#fef3c7] p-4 text-[#92400e]">
+              <p className="text-3xl font-black">{dashboard.pendingHireRequests.length}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-widest">Chờ duyệt</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-sky-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-extrabold text-primary">
-              <span className="material-symbols-outlined text-secondary">how_to_reg</span>
-              Yêu cầu thuê bác sĩ
-            </h2>
-            <p className="text-sm font-medium text-slate-500">
-              Bệnh nhân chỉ trở thành bệnh nhân đồng hành sau khi bạn duyệt.
-            </p>
+      <section className="rounded-2xl border-2 border-[#dc2626] bg-[#fff1f2] p-6 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#dc2626] text-white">
+              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+                emergency
+              </span>
+            </div>
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#991b1b]">Cảnh báo khẩn cấp</p>
+              <h2 className="mt-1 text-2xl font-black leading-tight text-[#7f1d1d]">Cần xử lý ngay</h2>
+              <p className="mt-1 text-sm font-semibold text-[#991b1b]">Dữ liệu cảnh báo thời gian thực từ bệnh nhân đang theo dõi.</p>
+            </div>
           </div>
-          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-black text-primary">
-            {dashboard.pendingHireRequests.length} chờ duyệt
+          <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-widest text-[#991b1b]">
+            {dashboard.urgentAlerts.length} cảnh báo
           </span>
         </div>
-        {loading ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">
-            Đang tải yêu cầu thuê bác sĩ...
-          </div>
-        ) : dashboard.pendingHireRequests.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">
-            Hiện không có yêu cầu thuê mới.
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {dashboard.pendingHireRequests.slice(0, 4).map((request) => (
-              <div
-                key={request.hire_id}
-                className="rounded-xl border border-slate-100 bg-surface-container-lowest p-4"
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black text-sky-900">
-                      {request.patient?.name || "Bệnh nhân"}
-                    </p>
-                    <p className="text-xs font-semibold text-slate-500">
-                      {request.patient?.email}
-                    </p>
-                    <p className="mt-2 text-[11px] font-bold text-slate-400">
-                      Gửi lúc {formatDateTime(request.requested_at)}
-                    </p>
-                  </div>
-                  <span className="rounded bg-amber-50 px-2 py-1 text-[10px] font-black uppercase text-amber-700">
-                    {getHireRequestStatusLabel(request.status)}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white disabled:bg-slate-300"
-                    disabled={processingHireId === request.hire_id}
-                    onClick={() => void handleApproveHire(request.hire_id)}
-                    type="button"
-                  >
-                    Duyệt
-                  </button>
-                  <button
-                    className="flex-1 rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-600 disabled:opacity-50"
-                    disabled={processingHireId === request.hire_id}
-                    onClick={() => void handleRejectHire(request.hire_id)}
-                    type="button"
-                  >
-                    Từ chối
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
-      <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-xl font-extrabold text-primary">
-            <span
-              className="material-symbols-outlined text-error"
-              style={{ fontVariationSettings: '"FILL" 1' }}
-            >
-              emergency
-            </span>
-            Cảnh báo khẩn cấp
-          </h2>
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Thời gian thực
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {loading ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-white p-5 text-sm font-bold text-slate-500">
+            <div className="rounded-xl border border-dashed border-[#fca5a5] bg-white p-5 text-sm font-bold text-[#991b1b]">
               Đang tải cảnh báo...
             </div>
           ) : dashboard.urgentAlerts.length === 0 ? (
-            <div className="rounded-xl border-2 border-dashed border-slate-300 bg-surface-container-high/50 p-5 text-center text-sm font-medium text-slate-500">
+            <div className="rounded-xl border border-dashed border-[#fca5a5] bg-white p-5 text-center text-sm font-bold text-[#991b1b]">
               Không có cảnh báo mới
             </div>
           ) : (
             dashboard.urgentAlerts.slice(0, 6).map((alert) => (
-              <div
-                key={alert.alert_id}
-                className="relative overflow-hidden rounded-xl border-l-4 border-error bg-error-container/30 p-5 transition-colors hover:bg-error-container/40"
-              >
+              <article key={alert.alert_id} className="rounded-xl border border-[#dc2626] bg-white p-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-error/10 text-error">
-                    <span
-                      className="material-symbols-outlined text-2xl"
-                      style={{ fontVariationSettings: '"FILL" 1' }}
-                    >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#dc2626] text-white">
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>
                       warning
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-bold leading-tight text-on-error-container">
+                    <h3 className="truncate text-base font-black leading-tight text-[#0f172a]">
                       {alert.patient?.name || "Bệnh nhân"}
                     </h3>
-                    <p className="mt-1 text-sm font-medium text-error">{alert.message}</p>
-                    <p className="mt-2 text-[11px] text-slate-500">
+                    <p className="mt-1 text-sm font-bold leading-6 text-[#991b1b]">{alert.message}</p>
+                    <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-[#64748b]">
                       {formatRelativeTime(alert.timestamp)}
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     onClick={() =>
-                      navigate(
-                        alert.user_id
-                          ? `/doctor/live?patientId=${alert.user_id}`
-                          : "/doctor/live",
-                      )
+                      navigate(alert.user_id ? `/doctor/live?patientId=${alert.user_id}` : "/doctor/live")
                     }
-                    className="rounded-lg bg-white/80 px-3 py-1.5 text-xs font-bold text-error shadow-sm transition-all hover:bg-white"
+                    className="rounded-xl bg-[#dc2626] px-3 py-2 text-xs font-black text-white transition-colors hover:bg-[#b91c1c]"
                     type="button"
                   >
                     Xem monitor
                   </button>
                   <button
                     onClick={() =>
-                      navigate(
-                        alert.user_id
-                          ? `/doctor/messages?patientId=${alert.user_id}`
-                          : "/doctor/messages",
-                      )
+                      navigate(alert.user_id ? `/doctor/messages?patientId=${alert.user_id}` : "/doctor/messages")
                     }
-                    className="rounded-lg bg-white/60 px-3 py-1.5 text-xs font-bold text-slate-700 transition-all hover:bg-white"
+                    className="rounded-xl border border-[#fecaca] px-3 py-2 text-xs font-black text-[#991b1b] transition-colors hover:bg-[#fff1f2]"
                     type="button"
                   >
                     Liên hệ
                   </button>
                 </div>
-              </div>
+              </article>
             ))
           )}
         </div>
       </section>
 
-      <section className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((card) => (
-          <div
-            key={card.key}
-            className="rounded-2xl border border-slate-100/50 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
-          >
-            <div className="mb-4 flex items-start justify-between">
-              <div className={`rounded-lg p-2 ${card.accentClassName}`}>
+          <article key={card.key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className={`rounded-xl border p-3 ${card.accentClassName}`}>
                 <span className="material-symbols-outlined">{card.icon}</span>
               </div>
+              <h4 className="text-4xl font-black leading-none text-[#0f172a]">
+                {String(card.value || 0).padStart(2, "0")}
+              </h4>
             </div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              {card.label}
-            </p>
-            <h4 className="mt-1 text-3xl font-black text-primary">
-              {String(card.value || 0).padStart(2, "0")}
-            </h4>
-          </div>
+            <p className="text-xs font-black uppercase tracking-widest text-[#475569]">{card.label}</p>
+          </article>
         ))}
       </section>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <section className="rounded-3xl bg-white p-8 shadow-[0_8px_40px_rgb(0,0,0,0.03)] lg:col-span-8">
-          <div className="mb-8 flex items-center justify-between">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-7">
+          <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-xl font-extrabold text-primary">Cuộc hẹn sắp tới</h2>
-              <p className="text-sm font-medium text-slate-500">
-                Lấy từ lịch hẹn đang chờ hoặc đã xác nhận.
-              </p>
+              <h2 className="flex items-center gap-2 text-xl font-black text-[#0f172a]">
+                <span className="material-symbols-outlined text-[#004976]">event_available</span>
+                Cuộc hẹn sắp tới
+              </h2>
+              <p className="mt-1 text-sm font-semibold text-[#475569]">Lịch hẹn đang chờ hoặc đã xác nhận.</p>
             </div>
             <button
               onClick={() => navigate("/doctor/appointments")}
-              className="text-sm font-bold text-primary hover:underline"
+              className="w-fit rounded-xl border border-[#cbd5e1] px-4 py-2 text-sm font-black text-[#004976] hover:bg-slate-50"
               type="button"
             >
               Xem tất cả
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {loading ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+              <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] p-8 text-center text-sm font-bold text-[#64748b]">
                 Đang tải lịch hẹn...
               </div>
             ) : dashboard.upcomingAppointments.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-bold text-slate-400">
+              <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] p-8 text-center text-sm font-bold text-[#64748b]">
                 Chưa có lịch hẹn sắp tới.
               </div>
             ) : (
               dashboard.upcomingAppointments.map((appointment) => (
-                <div
+                <article
                   key={appointment.appointment_id}
-                  className="group flex flex-col justify-between gap-3 rounded-2xl p-4 transition-all duration-300 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-0"
+                  className="flex flex-col justify-between gap-4 rounded-2xl border border-[#cbd5e1] bg-[#f8fafc] p-4 sm:flex-row sm:items-center"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 text-primary">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#bae6fd] bg-[#e0f2fe] text-[#075985]">
                       <span className="material-symbols-outlined">person</span>
                     </div>
                     <div>
-                      <h5 className="font-bold text-primary">
-                        {appointment.patient?.name || "Bệnh nhân"}
-                      </h5>
-                      <p className="text-xs text-slate-500">
-                        {appointment.reason || "Khám định kỳ"}
-                      </p>
+                      <h5 className="font-black text-[#0f172a]">{appointment.patient?.name || "Bệnh nhân"}</h5>
+                      <p className="mt-1 text-xs font-semibold text-[#475569]">{appointment.reason || "Khám định kỳ"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-8">
-                    <div className="text-right">
-                      <p className="text-sm font-black text-primary">
+                  <div className="flex flex-col gap-3 sm:items-end">
+                    <div className="sm:text-right">
+                      <p className="text-sm font-black text-[#004976]">
                         {formatTimeRange(appointment.start_time, appointment.end_time)}
                       </p>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-secondary">
+                      <p className="text-[11px] font-black uppercase tracking-widest text-[#166534]">
                         {getAppointmentTypeLabel(appointment.type)}
                       </p>
                     </div>
@@ -446,76 +360,153 @@ export function DoctorDashboardPage() {
                             : "/doctor/messages",
                         )
                       }
-                      className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105"
+                      className="rounded-xl bg-[#004976] px-4 py-2.5 text-sm font-black text-white hover:bg-[#003d63]"
                       type="button"
                     >
                       Vào phòng khám
                     </button>
                   </div>
-                </div>
+                </article>
               ))
             )}
           </div>
         </section>
 
-        <section className="h-full rounded-3xl bg-white p-8 shadow-[0_8px_40px_rgb(0,0,0,0.03)] lg:col-span-4">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-xl font-extrabold text-primary">Hoạt động mới nhất</h2>
-            <span className="material-symbols-outlined text-slate-400">history</span>
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-5">
+          <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-black text-[#0f172a]">
+                <span className="material-symbols-outlined text-[#004976]">how_to_reg</span>
+                Yêu cầu thuê bác sĩ
+              </h2>
+              <p className="mt-1 text-sm font-semibold text-[#475569]">Duyệt để bệnh nhân trở thành bệnh nhân đồng hành.</p>
+            </div>
+            <span className="w-fit rounded-full bg-[#fef3c7] px-3 py-1 text-xs font-black uppercase text-[#92400e]">
+              {dashboard.pendingHireRequests.length} chờ duyệt
+            </span>
           </div>
-          <div className="relative space-y-6 before:absolute before:bottom-2 before:left-[19px] before:top-2 before:w-[2px] before:bg-slate-100 before:content-['']">
+
+          <div className="space-y-3">
             {loading ? (
-              <div className="relative rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500">
-                Đang tải hoạt động...
+              <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-4 py-5 text-sm font-bold text-[#64748b]">
+                Đang tải yêu cầu thuê bác sĩ...
               </div>
-            ) : dashboard.recentNotifications.length === 0 ? (
-              <div className="relative rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500">
-                Chưa có thông báo hệ thống gần đây.
+            ) : dashboard.pendingHireRequests.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-4 py-5 text-sm font-bold text-[#64748b]">
+                Hiện không có yêu cầu thuê mới.
               </div>
             ) : (
-              dashboard.recentNotifications.map((notification) => (
-                <button
-                  key={notification.notificationId}
-                  onClick={() =>
-                    navigate(resolveDoctorNotificationLink(notification))
-                  }
-                  className="relative flex w-full items-start gap-4 text-left group"
-                  type="button"
-                >
-                  <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-primary ring-4 ring-white">
-                    <span
-                      className="material-symbols-outlined text-xl"
-                      style={{ fontVariationSettings: '"FILL" 1' }}
-                    >
-                      {getDoctorNotificationIcon(notification)}
+              dashboard.pendingHireRequests.slice(0, 4).map((request) => (
+                <article key={request.hire_id} className="rounded-xl border border-[#cbd5e1] bg-[#f8fafc] p-4">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-black text-[#0f172a]">{request.patient?.name || "Bệnh nhân"}</p>
+                      <p className="mt-1 text-xs font-semibold text-[#475569]">{request.patient?.email}</p>
+                      <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-[#64748b]">
+                        Gửi lúc {formatDateTime(request.requested_at)}
+                      </p>
+                    </div>
+                    <span className="rounded bg-[#fef3c7] px-2 py-1 text-[10px] font-black uppercase text-[#92400e]">
+                      {getHireRequestStatusLabel(request.status)}
                     </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="leading-tight text-sm font-bold text-primary">
-                      {notification.title}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {notification.message}
-                    </p>
-                    <p className="mt-1 text-[10px] font-medium text-slate-400">
-                      {formatRelativeTime(notification.createdAt)}
-                    </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      className="rounded-xl bg-[#004976] px-3 py-2 text-xs font-black text-white disabled:bg-slate-300"
+                      disabled={processingHireId === request.hire_id}
+                      onClick={() => void handleApproveHire(request.hire_id)}
+                      type="button"
+                    >
+                      Duyệt
+                    </button>
+                    <button
+                      className="rounded-xl border border-[#fecaca] bg-white px-3 py-2 text-xs font-black text-[#b91c1c] disabled:opacity-50"
+                      disabled={processingHireId === request.hire_id}
+                      onClick={() => void handleRejectHire(request.hire_id)}
+                      type="button"
+                    >
+                      Từ chối
+                    </button>
                   </div>
-                </button>
+                </article>
               ))
             )}
           </div>
-          <div className="mt-10 border-t border-slate-100 pt-6">
-            <button
-              onClick={() => navigate("/doctor/patients")}
-              className="w-full rounded-xl bg-surface-container-low py-3 text-sm font-bold text-primary transition-colors hover:bg-surface-container"
-              type="button"
-            >
-              Xem danh sách bệnh nhân
-            </button>
-          </div>
         </section>
       </div>
-    </>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-xl font-black text-[#0f172a]">
+              <span className="material-symbols-outlined text-[#004976]">history</span>
+              Hoạt động mới nhất
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">Thông báo hệ thống và thao tác gần đây.</p>
+          </div>
+          <button
+            onClick={() => navigate("/doctor/patients")}
+            className="w-fit rounded-xl border border-[#cbd5e1] px-4 py-2 text-sm font-black text-[#004976] hover:bg-slate-50"
+            type="button"
+          >
+            Xem danh sách bệnh nhân
+          </button>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {loading ? (
+            <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-4 py-3 text-sm font-bold text-[#64748b]">
+              Đang tải hoạt động...
+            </div>
+          ) : dashboard.recentNotifications.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-4 py-3 text-sm font-bold text-[#64748b]">
+              Chưa có thông báo hệ thống gần đây.
+            </div>
+          ) : (
+            dashboard.recentNotifications.map((notification) => (
+              <button
+                key={notification.notificationId}
+                onClick={() => navigate(resolveDoctorNotificationLink(notification))}
+                className="flex w-full items-start gap-4 rounded-xl border border-[#cbd5e1] bg-[#f8fafc] p-4 text-left hover:border-[#0ea5e9]"
+                type="button"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#bae6fd] bg-[#e0f2fe] text-[#075985]">
+                  <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+                    {getDoctorNotificationIcon(notification)}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="leading-tight text-sm font-black text-[#0f172a]">{notification.title}</p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-[#475569]">{notification.message}</p>
+                  <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#64748b]">
+                    {formatRelativeTime(notification.createdAt)}
+                  </p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-[#86efac] bg-[#dcfce7] p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-[#166534]">Hồ sơ công khai</p>
+            <h2 className="mt-1 text-xl font-black text-[#14532d]">Cập nhật profile bác sĩ</h2>
+            <p className="mt-1 max-w-2xl text-sm font-semibold text-[#166534]">
+              Hồ sơ đầy đủ giúp bệnh nhân hiểu chuyên môn, phí tư vấn và trạng thái nhận bệnh nhân.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/doctor/profile")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-black text-white hover:bg-[#14532d]"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit_square</span>
+            Sửa hồ sơ
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
