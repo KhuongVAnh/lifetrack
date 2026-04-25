@@ -81,30 +81,14 @@ export function PhrOverviewContent({
 
   return (
     <div className="space-y-8 pb-12">
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl md:p-12">
-        <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-primary/20 blur-[100px]" />
-        <div className="absolute -left-10 -bottom-10 h-64 w-64 rounded-full bg-secondary/10 blur-[100px]" />
+      <div className="flex items-center justify-between pb-6 pt-2">
+        <p className="text-3xl font-semibold tracking-tight text-slate-800">
+          Phân loại sức khỏe:{" "}
+          <span className="font-black text-primary">{clinicalResults.conclusion.healthClass || "Chưa cập nhật"}</span>
+        </p>
 
-        <div className="relative z-10 flex flex-col items-center justify-between gap-8 md:flex-row">
-          <div className="flex-1">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-                CCCD / CMND: {personalInfo.idCard || "Chưa cập nhật"}
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md">
-                Nhóm máu: {personalInfo.bloodType || "Chưa cập nhật"}
-              </span>
-            </div>
-            <h1 className="mb-3 text-3xl font-black md:text-5xl">Hồ sơ sức khỏe tổng quát</h1>
-            <p className="text-lg font-medium text-slate-400">
-              Phân loại sức khỏe:{" "}
-              <span className="font-bold text-secondary">{clinicalResults.conclusion.healthClass || "Chưa cập nhật"}</span>
-            </p>
-          </div>
-
-          {headerAction ? <div className="flex gap-4">{headerAction}</div> : null}
-        </div>
-      </section>
+        {headerAction ? <div>{headerAction}</div> : null}
+      </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="space-y-8 lg:col-span-12 xl:col-span-8">

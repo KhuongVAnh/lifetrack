@@ -4,7 +4,6 @@ import { useAuth } from "@/features/auth";
 const doctorNav = [
   { to: "/doctor/dashboard", icon: "dashboard", label: "Bảng điều khiển", activePrefixes: ["/doctor/dashboard"] },
   { to: "/doctor/live", icon: "monitor_heart", label: "Theo dõi trực tiếp", activePrefixes: ["/doctor/live"] },
-  { to: "/doctor/patients", icon: "receipt_long", label: "Hồ sơ bệnh nhân", activePrefixes: ["/doctor/patients"] },
   { to: "/doctor/emr", icon: "clinical_notes", label: "Bệnh án điện tử", activePrefixes: ["/doctor/emr"] },
   { to: "/doctor/appointments", icon: "calendar_today", label: "Lịch hẹn", activePrefixes: ["/doctor/appointments"] },
   { to: "/doctor/messages", icon: "chat", label: "Tin nhắn", activePrefixes: ["/doctor/messages"] },

@@ -20,17 +20,6 @@ export function PatientPhrShell() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      {/* Header Section */}
-      <section className="rounded-[2rem] bg-surface-container-lowest p-6 shadow-soft md:p-8">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="mt-2 text-3xl font-black text-on-surface md:text-4xl">Hồ sơ sức khỏe cá nhân</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-on-surface-variant md:text-base">
-              Quản lý chi tiết các chỉ số sinh tồn, tiền sử bệnh lý và cập nhật lịch sử thăm khám tại các cơ sở y tế.
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* Tabs / Navigation */}
       <section className="rounded-[2rem] border border-surface-variant bg-surface-container-lowest p-3">

@@ -484,38 +484,41 @@ export function DoctorEmrPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <section className="rounded-[2rem] bg-slate-900 p-8 text-white shadow-2xl">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">Doctor portal</p>
-        <h1 className="mt-2 text-3xl font-black md:text-4xl">Bệnh án điện tử</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">
-          Xem hồ sơ sức khỏe, lịch sử khám, nhắc thuốc và ghi chú khám trong một workspace thống nhất.
-        </p>
-        <div className="mt-5 rounded-2xl bg-white/5 p-4 text-sm text-slate-300">
-          <p className="font-bold text-white">{user?.name || "Bác sĩ"}</p>
-          <p>{user?.email || "Tài khoản hệ thống"}</p>
-        </div>
-      </section>
-
       <section className="rounded-[2rem] bg-white p-6 shadow-sm">
-        <label htmlFor="doctor-emr-patient" className="text-sm font-black text-slate-800">
-          Chọn bệnh nhân
+        <label className="mb-4 block text-lg font-black text-slate-800">
+          Danh sách bệnh nhân ủy quyền ({patients.length})
         </label>
-        <select
-          id="doctor-emr-patient"
-          value={selectedPatientId || ""}
-          onChange={(event) => setSelectedPatientId(Number(event.target.value))}
-          disabled={loadingPatients}
-          className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm md:max-w-lg"
-        >
-          {!patients.length && <option value="">Không có bệnh nhân khả dụng</option>}
-          {patients.map((item) => (
-            <option key={item.patientId} value={item.patientId}>
-              {item.patient?.name || "Bệnh nhân"} ·
-              {item.canViewEhr ? " EHR" : ""}
-              {item.canViewMedications ? " Thuốc" : ""}
-            </option>
-          ))}
-        </select>
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {patients.map((item) => {
+            const isSelected = item.patientId === selectedPatientId;
+            return (
+              <div
+                key={item.patientId}
+                onClick={() => setSelectedPatientId(item.patientId)}
+                className={`cursor-pointer flex flex-col gap-2 rounded-xl border p-4 transition-all ${isSelected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-100 bg-slate-50 hover:border-primary/30"
+                  }`}
+              >
+                <p className={`font-bold ${isSelected ? "text-primary" : "text-slate-800"}`}>
+                  {item.patient?.name || "Bệnh nhân"}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {item.canViewEhr && (
+                    <>
+                      <span className="rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-700">EHR</span>
+                      <span className="rounded-md bg-rose-100 px-2 py-1 text-[10px] font-bold text-rose-700">ECG</span>
+                    </>
+                  )}
+                  {item.canViewMedications && (
+                    <span className="rounded-md bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">Tủ thuốc</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {!patients.length && !loadingPatients && (
+            <p className="col-span-full text-sm text-slate-500">Không có bệnh nhân khả dụng</p>
+          )}
+        </div>
       </section>
 
       {selectedPatient && (
