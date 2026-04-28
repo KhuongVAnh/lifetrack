@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { ecgSignalToSvgPath, getReadingDetail } from "@/features/realtime-monitor/api/ecgApi";
+import { useEffect, useState } from "react";
+import { getReadingDetail } from "@/features/realtime-monitor/api/ecgApi";
 import { formatDateTime, getAlertOverlays, getStatusTone } from "@/features/realtime-monitor/lib/ecgMonitor";
+import { RealtimeEcgChart } from "@/features/realtime-monitor/ui/RealtimeEcgChart";
 
 export function ReadingDetailModal({ readingId, open, onClose }) {
   const [readingDetail, setReadingDetail] = useState(null);
@@ -72,10 +73,6 @@ export function ReadingDetailModal({ readingId, open, onClose }) {
   const alertOverlays = readingDetail?.ai_status === "DONE"
     ? getAlertOverlays(readingDetail.alerts, signal.length)
     : [];
-  const ecgPath = useMemo(
-    () => ecgSignalToSvgPath(signal, 1000, 220),
-    [signal],
-  );
 
   if (!open) {
     return null;
@@ -152,16 +149,12 @@ export function ReadingDetailModal({ readingId, open, onClose }) {
                       style={{ left: `${alert.left}%`, width: `${Math.max(alert.width, 1)}%` }}
                     />
                   ))}
-                  <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 1000 220">
-                    <path
-                      className="ecg-line"
-                      d={ecgPath}
-                      fill="none"
-                      stroke="#1b6d24"
-                      strokeWidth="2.5"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  </svg>
+                  <RealtimeEcgChart
+                    animateOnReceive={false}
+                    height={220}
+                    signal={signal}
+                    signalVersion={readingDetail?.reading_id ?? 0}
+                  />
                 </>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">

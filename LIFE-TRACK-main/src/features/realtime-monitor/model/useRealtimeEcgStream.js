@@ -105,6 +105,7 @@ export function useRealtimeEcgStream(
   { enabled = true, pollIntervalMs = 0 } = {},
 ) {
   const [liveSignal, setLiveSignal] = useState([]);
+  const [streamChunk, setStreamChunk] = useState([]);
   const [sampleRateHz, setSampleRateHz] = useState(DEFAULT_SAMPLE_RATE_HZ);
   const [heartRate, setHeartRate] = useState(null);
   const [aiState, setAiState] = useState({ status: "PENDING", result: null, error: null, readingId: null, timestamp: null });
@@ -126,6 +127,7 @@ export function useRealtimeEcgStream(
     visibleSignalRef.current = [];
     lastChunkAtRef.current = null;
     setLiveSignal([]);
+    setStreamChunk([]);
     setSampleRateHz(DEFAULT_SAMPLE_RATE_HZ);
     setHeartRate(null);
     setAiState({ status: "PENDING", result: null, error: null, readingId: null, timestamp: null });
@@ -150,13 +152,19 @@ export function useRealtimeEcgStream(
       : normalizedSignal.slice(-bufferLimit);
     const visibleLimit = Math.max(1, Math.round(nextSampleRateHz * LIVE_WINDOW_SECONDS));
     const nextVisibleSignal = nextBuffer.slice(-visibleLimit);
+    const nextStreamChunk = append ? normalizedSignal : nextVisibleSignal;
 
     bufferRef.current = nextBuffer;
     setSampleRateHz(nextSampleRateHz);
     setTransitionDurationMs(durationMs);
-    if (!signalsEqual(visibleSignalRef.current, nextVisibleSignal)) {
+    setStreamChunk(nextStreamChunk);
+    const visibleSignalChanged = !signalsEqual(visibleSignalRef.current, nextVisibleSignal);
+    if (visibleSignalChanged) {
       visibleSignalRef.current = nextVisibleSignal;
       setLiveSignal(nextVisibleSignal);
+    }
+
+    if (append || visibleSignalChanged) {
       setSignalVersion((currentVersion) => currentVersion + 1);
     }
 
@@ -419,6 +427,7 @@ export function useRealtimeEcgStream(
 
   return {
     liveSignal,
+    streamChunk,
     sampleRateHz,
     heartRate,
     aiState,

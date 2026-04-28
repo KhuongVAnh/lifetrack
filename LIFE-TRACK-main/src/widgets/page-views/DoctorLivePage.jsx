@@ -128,11 +128,12 @@ export function DoctorLivePage() {
 
   const {
     liveSignal,
+    streamChunk,
+    sampleRateHz,
     heartRate,
     latestReading,
     isStreaming,
     signalVersion,
-    transitionDurationMs,
     loading: loadingStream,
     error: streamError,
   } = useRealtimeEcgStream(activePatient?.user_id, socket, {
@@ -252,9 +253,9 @@ export function DoctorLivePage() {
                 </div>
               ) : liveSignal.length ? (
                 <RealtimeEcgChart
-                  durationMs={transitionDurationMs}
                   height={350}
-                  signal={liveSignal}
+                  sampleRateHz={sampleRateHz}
+                  signal={streamChunk}
                   signalVersion={signalVersion}
                 />
               ) : (
