@@ -43,6 +43,8 @@ enum NotificationType {
   DIRECT_MESSAGE
   MEDICATION_REMINDER
   APPOINTMENT_UPDATE
+  COMMUNITY_ANSWER
+  COMMUNITY_COMMENT
 }
 
 enum AppointmentStatus {
@@ -77,6 +79,23 @@ enum MedicationLogStatus {
   TAKEN
   MISSED
   SKIPPED
+}
+
+enum CommunityContentStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+enum CommunityQuestionStatus {
+  OPEN
+  ANSWERED
+  HIDDEN
+}
+
+enum CommunityReactionType {
+  LIKE
+  DISLIKE
 }
 
 model User {
@@ -120,6 +139,11 @@ model User {
   doctorHiresAsDoctor    DoctorHire[]             @relation("DoctorDoctorHires")
   writtenDoctorReviews   DoctorReview[]           @relation("DoctorReviewAuthor")
   receivedDoctorReviews  DoctorReview[]           @relation("DoctorReviewDoctor")
+  communityArticles      CommunityArticle[]        @relation("CommunityArticleAuthor")
+  communityQuestions     CommunityQuestion[]       @relation("CommunityQuestionAuthor")
+  communityAnswers       CommunityAnswer[]         @relation("CommunityAnswerAuthor")
+  communityComments      CommunityComment[]        @relation("CommunityCommentAuthor")
+  communityReactions     CommunityQuestionReaction[]
 
   @@map("users")
 }
@@ -579,4 +603,118 @@ model MedicationLog {
   @@index([user_id, scheduled_time])
   @@index([status, scheduled_time])
   @@map("medication_logs")
+}
+
+model CommunityArticle {
+  article_id      Int                    @id @default(autoincrement())
+  author_id       Int
+  slug            String                 @unique @db.VarChar(191)
+  title           String                 @db.VarChar(255)
+  category        String                 @db.VarChar(100)
+  excerpt         String                 @db.Text
+  content         String                 @db.Text
+  cover_image_url String?                @db.VarChar(500)
+  read_time       String?                @db.VarChar(50)
+  status          CommunityContentStatus @default(PUBLISHED)
+  published_at    DateTime?
+  created_at      DateTime               @default(now()) @map("created_at")
+  updated_at      DateTime               @updatedAt @map("updated_at")
+
+  author User @relation("CommunityArticleAuthor", fields: [author_id], references: [user_id], onDelete: Cascade)
+
+  @@index([status, published_at, article_id])
+  @@index([category, status, published_at])
+  @@index([author_id, status])
+  @@map("community_articles")
+}
+
+model CommunityQuestion {
+  question_id  Int                     @id @default(autoincrement())
+  author_id    Int
+  title        String                  @db.VarChar(255)
+  body         String                  @db.Text
+  tags         Json?
+  is_anonymous Boolean                 @default(false)
+  status       CommunityQuestionStatus @default(OPEN)
+  share_count  Int                     @default(0)
+  created_at   DateTime                @default(now()) @map("created_at")
+  updated_at   DateTime                @updatedAt @map("updated_at")
+
+  author      User                         @relation("CommunityQuestionAuthor", fields: [author_id], references: [user_id], onDelete: Cascade)
+  answers     CommunityAnswer[]
+  comments    CommunityComment[]
+  reactions   CommunityQuestionReaction[]
+  attachments CommunityAttachment[]
+
+  @@index([status, created_at, question_id])
+  @@index([author_id, status, created_at])
+  @@map("community_questions")
+}
+
+model CommunityAnswer {
+  answer_id    Int      @id @default(autoincrement())
+  question_id  Int
+  author_id    Int
+  body         String   @db.Text
+  is_preferred Boolean  @default(false)
+  created_at   DateTime @default(now()) @map("created_at")
+  updated_at   DateTime @updatedAt @map("updated_at")
+
+  question CommunityQuestion @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  author   User              @relation("CommunityAnswerAuthor", fields: [author_id], references: [user_id], onDelete: Cascade)
+
+  @@index([question_id, is_preferred, created_at])
+  @@index([author_id, created_at])
+  @@map("community_answers")
+}
+
+model CommunityComment {
+  comment_id  Int      @id @default(autoincrement())
+  question_id Int
+  author_id   Int
+  body        String   @db.Text
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+
+  question CommunityQuestion @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  author   User              @relation("CommunityCommentAuthor", fields: [author_id], references: [user_id], onDelete: Cascade)
+
+  @@index([question_id, created_at, comment_id])
+  @@index([author_id, created_at])
+  @@map("community_comments")
+}
+
+model CommunityQuestionReaction {
+  reaction_id Int                   @id @default(autoincrement())
+  question_id Int
+  user_id     Int
+  type        CommunityReactionType
+  created_at  DateTime              @default(now()) @map("created_at")
+  updated_at  DateTime              @updatedAt @map("updated_at")
+
+  question CommunityQuestion @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+  user     User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([question_id, user_id])
+  @@index([question_id, type])
+  @@index([user_id, created_at])
+  @@map("community_question_reactions")
+}
+
+model CommunityAttachment {
+  attachment_id Int      @id @default(autoincrement())
+  question_id   Int
+  url           String   @db.VarChar(500)
+  secure_url    String?  @db.VarChar(500)
+  public_id     String?  @db.VarChar(255)
+  resource_type String?  @db.VarChar(50)
+  format        String?  @db.VarChar(50)
+  bytes         Int?
+  original_name String?  @db.VarChar(255)
+  created_at    DateTime @default(now()) @map("created_at")
+
+  question CommunityQuestion @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+  @@index([question_id])
+  @@map("community_attachments")
 }

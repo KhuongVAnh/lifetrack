@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  communityArticles,
-  communityQuestions,
-} from "@/shared/mocks/appFixtures";
 import { ImageWithFallback } from "@/shared/ui/ImageWithFallback";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { getUserAvatar, getUserDisplayName, normalizeRole } from "@/entities/user";
 import { getAppointments } from "@/features/appointments/api/appointmentsApi";
+import { getCommunityArticles, getCommunityQuestions, mapCommunityArticleForCard, mapCommunityQuestionForCard } from "@/features/community";
 import { getMedicationLogs, markMedicationTaken } from "@/features/medications/api/medicationsApi";
 import { getMyFamilyPatients } from "@/features/family";
 
@@ -172,6 +169,8 @@ export function DashboardPage() {
   const [appointmentItems, setAppointmentItems] = useState([]);
   const [medicationLogs, setMedicationLogs] = useState([]);
   const [familyPatients, setFamilyPatients] = useState([]);
+  const [dashboardCommunityArticles, setDashboardCommunityArticles] = useState([]);
+  const [dashboardCommunityQuestions, setDashboardCommunityQuestions] = useState([]);
   const isFamilyViewer = normalizeRole(user?.normalizedRole ?? user?.role) === "family";
 
   /**
@@ -205,6 +204,29 @@ export function DashboardPage() {
   // Tải dữ liệu agenda khi dashboard mount.
   useEffect(() => {
     fetchDashboardAgenda();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.all([
+      getCommunityArticles({ limit: 2 }),
+      getCommunityQuestions({ limit: 1 }),
+    ])
+      .then(([articleResult, questionResult]) => {
+        if (!mounted) return;
+        setDashboardCommunityArticles((articleResult.articles ?? []).map(mapCommunityArticleForCard));
+        setDashboardCommunityQuestions((questionResult.questions ?? []).map(mapCommunityQuestionForCard));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setDashboardCommunityArticles([]);
+        setDashboardCommunityQuestions([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -512,7 +534,7 @@ export function DashboardPage() {
             
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
-                {communityArticles.slice(0, 2).map((article) => (
+                {dashboardCommunityArticles.map((article) => (
                   <Link key={article.id} className="flex gap-4 group" to="/patient/community/knowledge">
                     <ImageWithFallback alt={article.title} className="h-20 w-24 rounded-2xl object-cover shadow-sm group-hover:brightness-90 transition-all" src={article.image} />
                     <div className="flex flex-col justify-center">
@@ -521,6 +543,11 @@ export function DashboardPage() {
                     </div>
                   </Link>
                 ))}
+                {!dashboardCommunityArticles.length && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm font-bold text-slate-400">
+                    Chưa có bài viết cộng đồng.
+                  </div>
+                )}
               </div>
               
               {/* Q&A Spotlight */}
@@ -530,8 +557,12 @@ export function DashboardPage() {
                     <span className="material-symbols-outlined text-[18px]">forum</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest">Hỏi đáp nổi bật</span>
                   </div>
-                  <h3 className="text-lg font-bold text-sky-900 leading-tight mb-2">{communityQuestions[0].title}</h3>
-                  <p className="text-xs text-sky-800/70 line-clamp-2 italic">“{communityQuestions[0].answer}”</p>
+                  <h3 className="text-lg font-bold text-sky-900 leading-tight mb-2">
+                    {dashboardCommunityQuestions[0]?.title || "Chưa có câu hỏi nổi bật"}
+                  </h3>
+                  <p className="text-xs text-sky-800/70 line-clamp-2 italic">
+                    “{dashboardCommunityQuestions[0]?.answer || "Đặt câu hỏi để nhận phản hồi từ bác sĩ LifeTrack."}”
+                  </p>
                 </div>
                 <Link to="/patient/community/questions" className="mt-4 text-xs font-bold text-primary hover:underline flex items-center gap-1">
                   Xem chi tiết <span className="material-symbols-outlined text-xs">arrow_forward</span>

@@ -7,6 +7,7 @@ const {
   ChatRole,
   DoctorHireStatus,
   NotificationType,
+  CommunityReactionType,
 } = require("@prisma/client")
 const { hashPass } = require("../services/authService")
 
@@ -66,6 +67,12 @@ async function main() {
   await prisma.notificationRecipient.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.refreshToken.deleteMany()
+  await prisma.communityAttachment.deleteMany()
+  await prisma.communityQuestionReaction.deleteMany()
+  await prisma.communityComment.deleteMany()
+  await prisma.communityAnswer.deleteMany()
+  await prisma.communityQuestion.deleteMany()
+  await prisma.communityArticle.deleteMany()
   await prisma.directMessage.deleteMany()
   await prisma.alert.deleteMany()
   await prisma.reading.deleteMany()
@@ -2066,8 +2073,236 @@ async function main() {
     ],
   })
 
+  const communityArticles = await prisma.communityArticle.createMany({
+    data: [
+      {
+        author_id: doctor6.user_id,
+        slug: "mediterranean-diet",
+        title: 'Chế độ ăn Địa Trung Hải: "Chìa khóa vàng" cho sức khỏe tim mạch người cao tuổi',
+        category: "DINH DƯỠNG",
+        read_time: "8 phút đọc",
+        excerpt: "Chế độ ăn giàu rau xanh, ngũ cốc nguyên hạt và chất béo lành mạnh giúp giảm đáng kể nguy cơ tim mạch ở người cao tuổi.",
+        content: "Chế độ ăn Địa Trung Hải ưu tiên rau xanh, trái cây, cá, dầu ô liu, các loại hạt và ngũ cốc nguyên hạt. Với người có nguy cơ tim mạch, cách ăn này giúp kiểm soát mỡ máu, huyết áp và cân nặng tốt hơn.\n\nNgười bệnh nên bắt đầu bằng thay đổi nhỏ: tăng rau trong mỗi bữa, thay đồ chiên bằng món hấp hoặc nướng, dùng cá 2-3 bữa mỗi tuần và giảm thịt đỏ. Nếu đang dùng thuốc chống đông, hãy hỏi bác sĩ trước khi thay đổi chế độ ăn quá nhanh.",
+        cover_image_url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-01T02:00:00.000Z"),
+      },
+      {
+        author_id: doctor4.user_id,
+        slug: "yoga-sleep",
+        title: "5 bài tập Yoga nhẹ nhàng giúp cải thiện giấc ngủ",
+        category: "VẬN ĐỘNG",
+        read_time: "5 phút đọc",
+        excerpt: "Các bài tập kéo giãn chậm trước khi ngủ giúp thư giãn hệ thần kinh và giảm khó ngủ.",
+        content: "Các động tác kéo giãn nhẹ, hít thở chậm và giữ tư thế ổn định có thể giúp cơ thể chuyển sang trạng thái thư giãn trước khi ngủ.\n\nNgười mới bắt đầu nên tập 10-15 phút, tránh tư thế gây đau hoặc chóng mặt. Nếu mất ngủ kéo dài hơn 2 tuần, kèm hồi hộp, khó thở hoặc lo âu nặng, nên trao đổi với bác sĩ.",
+        cover_image_url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-03T02:00:00.000Z"),
+      },
+      {
+        author_id: doctor1.user_id,
+        slug: "blood-pressure-cold-weather",
+        title: "Lưu ý khi sử dụng thuốc huyết áp vào mùa lạnh",
+        category: "CẢNH BÁO",
+        read_time: "4 phút đọc",
+        excerpt: "Thời tiết lạnh làm thay đổi huyết áp và nguy cơ quên thuốc tăng lên nếu lịch sinh hoạt bị xáo trộn.",
+        content: "Khi trời lạnh, mạch máu co lại khiến huyết áp có thể tăng cao hơn bình thường. Người đang điều trị tăng huyết áp nên đo huyết áp đều, giữ ấm và dùng thuốc đúng giờ.\n\nKhông tự ý tăng, giảm hoặc đổi thuốc khi thấy chỉ số thay đổi. Nếu huyết áp cao kéo dài, đau ngực, khó thở, yếu liệt hoặc đau đầu dữ dội, cần đi khám ngay.",
+        cover_image_url: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-05T02:00:00.000Z"),
+      },
+      {
+        author_id: doctor5.user_id,
+        slug: "senior-hydration",
+        title: "Người lớn tuổi cần uống nước thế nào để tránh mất nước kín đáo?",
+        category: "LÃO KHOA",
+        read_time: "6 phút đọc",
+        excerpt: "Mất nước nhẹ kéo dài ở người lớn tuổi có thể làm tăng mệt mỏi, táo bón và chóng mặt.",
+        content: "Người lớn tuổi thường ít cảm thấy khát hơn, vì vậy mất nước nhẹ có thể kéo dài mà không được nhận ra. Dấu hiệu cần chú ý gồm khô miệng, tiểu ít, nước tiểu sẫm màu, chóng mặt khi đứng dậy và mệt mỏi.\n\nNên chia nước thành nhiều lần trong ngày, tăng nước khi trời nóng hoặc vận động. Người có suy tim, suy thận hoặc đang dùng thuốc lợi tiểu nên hỏi bác sĩ về lượng nước phù hợp.",
+        cover_image_url: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-07T02:00:00.000Z"),
+      },
+      {
+        author_id: doctor2.user_id,
+        slug: "child-fever-checklist",
+        title: "Checklist xử lý sốt ở trẻ tại nhà trước khi đưa đi khám",
+        category: "NHI KHOA",
+        read_time: "7 phút đọc",
+        excerpt: "Khi trẻ sốt, điều quan trọng là nhận diện dấu hiệu nguy hiểm và bù nước đủ ngay từ đầu.",
+        content: "Khi trẻ sốt, gia đình nên đo nhiệt độ đúng cách, cho trẻ mặc thoáng, uống đủ nước và theo dõi mức độ tỉnh táo. Không tự phối hợp nhiều loại thuốc hạ sốt nếu chưa được hướng dẫn.\n\nCần đưa trẻ đi khám ngay nếu trẻ li bì, khó thở, co giật, bỏ bú, nôn nhiều, phát ban bất thường hoặc sốt kéo dài.",
+        cover_image_url: "https://images.unsplash.com/photo-1504439468489-c8920d796a29?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-09T02:00:00.000Z"),
+      },
+      {
+        author_id: admin.user_id,
+        slug: "digital-health-records",
+        title: "Hồ sơ sức khỏe số giúp gia đình theo dõi bệnh nền hiệu quả hơn ra sao?",
+        category: "LIFETRACK",
+        read_time: "5 phút đọc",
+        excerpt: "Lưu trữ tập trung lịch sử khám, thuốc và kết quả xét nghiệm giúp quyết định điều trị nhanh và chính xác hơn.",
+        content: "Hồ sơ sức khỏe số giúp gia đình lưu lịch sử khám, thuốc, xét nghiệm và chỉ số theo dõi ở cùng một nơi. Khi cần tái khám hoặc hỏi ý kiến bác sĩ, dữ liệu đầy đủ giúp giảm bỏ sót thông tin.\n\nNgười dùng nên cập nhật hồ sơ sau mỗi lần khám, chụp lại tài liệu quan trọng và phân quyền xem dữ liệu cho bác sĩ hoặc người nhà phù hợp.",
+        cover_image_url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80",
+        published_at: toDate("2026-04-11T02:00:00.000Z"),
+      },
+    ],
+  })
+
+  const qChestPain = await prisma.communityQuestion.create({
+    data: {
+      author_id: patient.user_id,
+      title: "Tôi thường xuyên bị đau thắt ngực khi leo cầu thang",
+      body: "Tôi năm nay 55 tuổi. Gần đây mỗi khi leo lên tầng 2 thì cảm thấy ngực thắt lại và hơi khó thở, nghỉ 5 phút thì hết.",
+      tags: ["#TimMach", "#SucKhoeNguoiCaoTuoi"],
+      is_anonymous: true,
+      status: "ANSWERED",
+      share_count: 11,
+      created_at: toDate("2026-04-25T08:00:00.000Z"),
+    },
+  })
+
+  const qChildAppetite = await prisma.communityQuestion.create({
+    data: {
+      author_id: spouse.user_id,
+      title: "Chế độ ăn cho trẻ biếng ăn sau khi ốm dậy?",
+      body: "Bé gái 4 tuổi vừa khỏi cúm, ăn uống kém hơn bình thường. Tôi nên chia bữa như thế nào để bé phục hồi tốt hơn?",
+      tags: ["#NhiKhoa", "#DinhDuong"],
+      status: "ANSWERED",
+      share_count: 6,
+      created_at: toDate("2026-04-25T05:00:00.000Z"),
+    },
+  })
+
+  const qSkinRash = await prisma.communityQuestion.create({
+    data: {
+      author_id: spouse.user_id,
+      title: "Bé bị mẩn đỏ quanh khuỷu tay, có cần đi da liễu ngay không?",
+      body: "Mảng đỏ khô xuất hiện 3 ngày nay, bé ngứa về đêm nhưng chưa sốt.",
+      tags: ["#DaLieu", "#NhiKhoa"],
+      status: "ANSWERED",
+      share_count: 4,
+      created_at: toDate("2026-04-24T23:00:00.000Z"),
+    },
+  })
+
+  const qInsomnia = await prisma.communityQuestion.create({
+    data: {
+      author_id: familyMember.user_id,
+      title: "Mẹ tôi khó ngủ liên tục 2 tuần, có nên đổi thuốc huyết áp?",
+      body: "Mẹ 63 tuổi đang dùng thuốc huyết áp buổi tối, gần đây thức giấc nhiều lần và mệt vào sáng hôm sau.",
+      tags: ["#NoiTiet", "#TimMach"],
+      status: "ANSWERED",
+      share_count: 9,
+      created_at: toDate("2026-04-24T02:00:00.000Z"),
+    },
+  })
+
+  const qAllergySeason = await prisma.communityQuestion.create({
+    data: {
+      author_id: child.user_id,
+      title: "Dị ứng theo mùa có nên uống thuốc kháng histamin liên tục?",
+      body: "Tôi bị hắt hơi và nghẹt mũi gần như mỗi sáng, tình trạng kéo dài hơn 2 tuần.",
+      tags: ["#TaiMuiHong", "#DiUng"],
+      status: "ANSWERED",
+      share_count: 3,
+      created_at: toDate("2026-04-23T08:00:00.000Z"),
+    },
+  })
+
+  const qSeniorDizziness = await prisma.communityQuestion.create({
+    data: {
+      author_id: familyMember.user_id,
+      title: "Người lớn tuổi chóng mặt khi đứng dậy đột ngột, có nguy hiểm không?",
+      body: "Ba tôi 68 tuổi thỉnh thoảng đứng lên là hơi choáng trong vài giây rồi hết.",
+      tags: ["#LaoKhoa", "#TimMach"],
+      status: "ANSWERED",
+      share_count: 7,
+      created_at: toDate("2026-04-23T03:00:00.000Z"),
+    },
+  })
+
+  await prisma.communityAnswer.createMany({
+    data: [
+      {
+        question_id: qChestPain.question_id,
+        author_id: doctor1.user_id,
+        body: "Đây có thể là dấu hiệu của cơn đau thắt ngực ổn định. Bác nên đi khám tim mạch sớm để làm ECG và siêu âm tim, đồng thời tránh gắng sức đột ngột.",
+        is_preferred: true,
+        created_at: toDate("2026-04-25T08:20:00.000Z"),
+      },
+      {
+        question_id: qChildAppetite.question_id,
+        author_id: doctor2.user_id,
+        body: "Nên chia nhỏ 5-6 bữa, ưu tiên món mềm dễ tiêu, tăng đạm nạc và sữa chua, tránh ép ăn quá mức.",
+        is_preferred: true,
+        created_at: toDate("2026-04-25T05:25:00.000Z"),
+      },
+      {
+        question_id: qSkinRash.question_id,
+        author_id: doctor5.user_id,
+        body: "Nếu bé ngứa nhiều hoặc lan rộng, nên khám da liễu để loại trừ viêm da cơ địa bùng phát.",
+        is_preferred: true,
+        created_at: toDate("2026-04-24T23:30:00.000Z"),
+      },
+      {
+        question_id: qInsomnia.question_id,
+        author_id: doctor3.user_id,
+        body: "Không nên tự đổi thuốc. Cần đánh giá lại thời điểm dùng thuốc, caffeine, stress và huyết áp ban đêm.",
+        is_preferred: true,
+        created_at: toDate("2026-04-24T03:00:00.000Z"),
+      },
+      {
+        question_id: qAllergySeason.question_id,
+        author_id: doctor6.user_id,
+        body: "Nên khám nếu triệu chứng kéo dài. Thuốc kháng histamin có thể dùng ngắn hạn nhưng cần đánh giá nguyên nhân.",
+        is_preferred: true,
+        created_at: toDate("2026-04-23T09:00:00.000Z"),
+      },
+      {
+        question_id: qSeniorDizziness.question_id,
+        author_id: doctor4.user_id,
+        body: "Có thể liên quan tụt huyết áp tư thế, mất nước hoặc tác dụng thuốc. Nên đo huyết áp và khám sớm.",
+        is_preferred: true,
+        created_at: toDate("2026-04-23T04:00:00.000Z"),
+      },
+    ],
+  })
+
+  await prisma.communityComment.createMany({
+    data: [
+      {
+        question_id: qChestPain.question_id,
+        author_id: spouse.user_id,
+        body: "Nhà mình cũng từng gặp tình trạng tương tự, nên đi khám sớm để yên tâm.",
+        created_at: toDate("2026-04-25T09:00:00.000Z"),
+      },
+      {
+        question_id: qChildAppetite.question_id,
+        author_id: patient.user_id,
+        body: "Cảm ơn bác sĩ, thông tin rất dễ áp dụng.",
+        created_at: toDate("2026-04-25T06:00:00.000Z"),
+      },
+      {
+        question_id: qSeniorDizziness.question_id,
+        author_id: spouse.user_id,
+        body: "Mình sẽ đo huyết áp tư thế cho ba theo gợi ý này.",
+        created_at: toDate("2026-04-23T05:00:00.000Z"),
+      },
+    ],
+  })
+
+  await prisma.communityQuestionReaction.createMany({
+    data: [
+      { question_id: qChestPain.question_id, user_id: spouse.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qChestPain.question_id, user_id: familyMember.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qChestPain.question_id, user_id: doctor1.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qChildAppetite.question_id, user_id: patient.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qChildAppetite.question_id, user_id: doctor2.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qSkinRash.question_id, user_id: spouse.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qInsomnia.question_id, user_id: patient.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qAllergySeason.question_id, user_id: familyMember.user_id, type: CommunityReactionType.LIKE },
+      { question_id: qSeniorDizziness.question_id, user_id: patient.user_id, type: CommunityReactionType.LIKE },
+    ],
+  })
+
   console.log(
-    "Seed thành công: 4 người dùng gia đình, 6 bác sĩ có hồ sơ chi tiết, trong đó 4 bác sĩ chưa được thuê, 4 đánh giá bác sĩ, 1 thiết bị ECG, 8 reading ECG, 4 alert, 6 báo cáo y tế, 16 chat AI, 4 quyền truy cập gia đình, 24+ direct message, 2 notification, 3 bệnh sử, 4 kế hoạch uống thuốc, 10 loại thuốc và 100+ bản ghi nhắc thuốc, 13 lịch hẹn khám."
+    `Seed thành công: 4 người dùng gia đình, 6 bác sĩ có hồ sơ chi tiết, trong đó 4 bác sĩ chưa được thuê, 4 đánh giá bác sĩ, 1 thiết bị ECG, 8 reading ECG, 4 alert, 6 báo cáo y tế, 16 chat AI, 4 quyền truy cập gia đình, 24+ direct message, 2 notification, 3 bệnh sử, 4 kế hoạch uống thuốc, 10 loại thuốc và 100+ bản ghi nhắc thuốc, 13 lịch hẹn khám, ${communityArticles.count} bài kiến thức và 6 câu hỏi cộng đồng.`
   )
   console.log(
     `Tài khoản mẫu: ${patient.email} (bệnh nhân), ${spouse.email} (vợ), ${child.email} (con), ${family.email} (gia đình), ${doctor1.email}, ${doctor2.email}, ${doctor3.email}, ${doctor4.email}, ${doctor5.email}, ${doctor6.email} (các bác sĩ), ${admin.email} (admin) | mật khẩu chung: 123456`

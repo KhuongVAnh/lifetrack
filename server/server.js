@@ -120,6 +120,7 @@ app.use("/api/doctor-hires", require("./routes/doctorHires"))
 app.use("/api/family", require("./routes/familyRoutes"))
 app.use("/api/appointments", require("./routes/appointments"))
 app.use("/api/medications", require("./routes/medications"))
+app.use("/api/community", require("./routes/community"))
 
 // Chuẩn hóa phản hồi khi client gửi JSON body không hợp lệ (ví dụ gửi literal `null`).
 app.use((error, req, res, next) => {
