@@ -139,7 +139,7 @@ function GridSvg({ durationSeconds, height }) {
       {xLines.map((line) => (
         <line
           key={line.key}
-          stroke="rgba(0, 73, 118, 0.055)"
+          stroke="rgba(225, 29, 72, 0.08)"
           strokeWidth="1"
           vectorEffect="non-scaling-stroke"
           x1={line.x}
@@ -151,7 +151,7 @@ function GridSvg({ durationSeconds, height }) {
       {yLines.map((line) => (
         <line
           key={line.key}
-          stroke="rgba(0, 73, 118, 0.055)"
+          stroke="rgba(225, 29, 72, 0.08)"
           strokeWidth="1"
           vectorEffect="non-scaling-stroke"
           x1={plot.left}
@@ -166,7 +166,7 @@ function GridSvg({ durationSeconds, height }) {
 
 function AxisSvg({ durationSeconds, height, clipPathId }) {
   const { plot, xTicks, yTicks } = buildTicks(durationSeconds, height);
-  const axisColor = "rgba(71, 85, 105, 0.42)";
+  const axisColor = "rgba(225, 29, 72, 0.3)";
 
   return (
     <>
@@ -277,8 +277,8 @@ export function RealtimeEcgChart({
   signal,
   signalVersion = 0,
   height = 200,
-  stroke = "#1b6d24",
-  strokeWidth = 2.5,
+  stroke = "#e11d48",
+  strokeWidth = 2,
   sampleRateHz = DEFAULT_SAMPLE_RATE_HZ,
   windowSeconds = 5,
   animateOnReceive = true,
