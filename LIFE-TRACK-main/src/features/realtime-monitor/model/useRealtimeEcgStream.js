@@ -121,6 +121,7 @@ export function useRealtimeEcgStream(
   const bufferRef = useRef([]);
   const visibleSignalRef = useRef([]);
   const lastChunkAtRef = useRef(null);
+  const aiStateRef = useRef(aiState);
 
   const resetStream = useCallback(() => {
     bufferRef.current = [];
@@ -139,6 +140,11 @@ export function useRealtimeEcgStream(
     setLatestReading(getInitialReadingState());
     setError("");
   }, []);
+
+  // keep a ref in sync so socket handlers can read latest aiState synchronously
+  useEffect(() => {
+    aiStateRef.current = aiState;
+  }, [aiState]);
 
   const updateVisibleWindow = useCallback((signal, nextSampleRateHz, durationMs, { append = false } = {}) => {
     const normalizedSignal = normalizeEcgSignal(signal);
@@ -387,12 +393,44 @@ export function useRealtimeEcgStream(
         setHeartRate(nextHeartRate);
       }
 
-      setAiState({
-        status: payload.ai_status || "DONE",
-        result: payload.ai_result || null,
-        error: payload.ai_error || null,
-        readingId: payloadReadingId,
-        timestamp: payload.timestamp ?? null,
+      // Strict guard: ignore if server payload doesn't change ai_status/ai_result
+      const current = aiStateRef.current || { status: null, result: null, timestamp: null };
+      const incomingStatus = payload.ai_status || "DONE";
+      const incomingResult = payload.ai_result ?? null;
+
+      // If both status and result are identical and incoming timestamp isn't newer, ignore
+      if (current.status === incomingStatus && current.result === incomingResult) {
+        const incomingTsCheck = payload.timestamp ? new Date(payload.timestamp).getTime() : 0;
+        const currentTsCheck = current.timestamp ? new Date(current.timestamp).getTime() : 0;
+        if (incomingTsCheck <= currentTsCheck) {
+          return;
+        }
+      }
+
+      // Only update aiState when the incoming payload is newer than current state
+      // or when it represents a terminal state. This prevents flicker when
+      // intermediate or duplicate events arrive out-of-order.
+      const incomingTs = payload.timestamp ? new Date(payload.timestamp).getTime() : Date.now();
+      setAiState((current) => {
+        const currentTs = current?.timestamp ? new Date(current.timestamp).getTime() : 0;
+
+        // If payload is older or equal, ignore it
+        if (currentTs && incomingTs <= currentTs) {
+          return current;
+        }
+
+        // Preserve existing result when next status is PENDING
+        if (shouldPreserveAiState(current, payload.ai_status)) {
+          return current;
+        }
+
+        return {
+          status: payload.ai_status || "DONE",
+          result: payload.ai_result ?? null,
+          error: payload.ai_error ?? null,
+          readingId: payloadReadingId,
+          timestamp: payload.timestamp ?? new Date().toISOString(),
+        };
       });
 
       hydrateLatestReading({

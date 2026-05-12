@@ -18,6 +18,7 @@ const { getRecipientIdsByPatientCached } = require("./telemetryRuntimeCacheServi
 const attachAiQueueRealtimeBridge = ({ io, logEvent }) => {
     ecgInferenceQueueEvents.on("completed", async ({ jobId, returnvalue }) => {
         try {
+            logEvent && logEvent("AI_QUEUE_EVENT_COMPLETED", { job_id: jobId, payload: returnvalue })
             const payload = returnvalue || {}
             const recipients = Array.isArray(payload.recipients) ? payload.recipients : []
 
@@ -74,11 +75,34 @@ const attachAiQueueRealtimeBridge = ({ io, logEvent }) => {
 
     ecgInferenceQueueEvents.on("failed", async ({ jobId, failedReason }) => {
         try {
+            logEvent && logEvent("AI_QUEUE_EVENT_FAILED", { job_id: jobId, reason: failedReason })
             const job = await Job.fromId(ecgInferenceQueue, jobId)
             const data = job?.data || {}
             const recipients = Number.isInteger(Number(data.userId))
                 ? await getRecipientIdsByPatientCached(Number(data.userId))
                 : []
+
+            // If the reading has already been marked DONE in DB, skip emitting FAILED
+            const readingIdNum = Number.isInteger(Number(data.readingId)) ? Number(data.readingId) : null
+            if (readingIdNum) {
+                try {
+                    const dbReading = await prisma.reading.findUnique({
+                        where: { reading_id: readingIdNum },
+                        select: { ai_status: true, ai_completed_at: true },
+                    })
+
+                    if (dbReading && dbReading.ai_status === "DONE") {
+                        // already done, do not emit FAILED to avoid overwriting newer result
+                        return
+                    }
+                } catch (err) {
+                    // if DB check fails, continue to emit so clients aren't left waiting
+                    logEvent("AI_QUEUE_FAILED_BRIDGE_DB_CHECK_ERROR", {
+                        job_id: jobId || null,
+                        reason: err?.message || "UNKNOWN",
+                    })
+                }
+            }
 
             emitToUsers(io, recipients, "reading-ai-updated", {
                 reading_id: data.readingId || null,

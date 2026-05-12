@@ -10,6 +10,8 @@
         "worker:ai:dev": "nodemon workers/ecgInferenceWorker.js",
         "worker:dm-notify": "node workers/directMessageNotificationWorker.js",
         "worker:dm-notify:dev": "nodemon workers/directMessageNotificationWorker.js",
+        "worker-server": "node workers/worker-server.js",
+        "worker-server:dev": "nodemon workers/worker-server.js",
         "prisma:generate": "prisma generate",
         "prisma:dbpull": "prisma db pull"
     },

@@ -207,3 +207,7 @@ worker.on("failed", (job, error) => {
         reason: error?.message || "UNKNOWN",
     }))
 })
+
+module.exports = {
+    ecgInferenceWorker: worker,
+}

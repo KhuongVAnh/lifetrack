@@ -152,7 +152,8 @@ export function DoctorLivePage() {
     limit: 5,
   });
 
-  const combinedError = patientsError || streamError || warningsError;
+  const rawError = patientsError || streamError || warningsError;
+  const combinedError = rawError && /protocol error/i.test(rawError) ? "" : rawError;
   const aiSummary = latestReading?.ai_result || "Chờ kết quả AI mới nhất";
   const aiStatus = latestReading?.ai_status || "PENDING";
 
@@ -257,6 +258,7 @@ export function DoctorLivePage() {
                   sampleRateHz={sampleRateHz}
                   signal={streamChunk}
                   signalVersion={signalVersion}
+                  animateOnReceive={isStreaming}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">

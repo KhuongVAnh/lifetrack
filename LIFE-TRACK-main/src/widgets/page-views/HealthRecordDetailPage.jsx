@@ -538,7 +538,8 @@ export function HealthRecordDetailPage() {
 
   const selfName = getUserDisplayName(user, "Bệnh nhân");
   const selfAvatar = getUserAvatar(user);
-  const combinedError = streamError || warningsError;
+  const rawError = streamError || warningsError;
+  const combinedError = rawError && /protocol error/i.test(rawError) ? "" : rawError;
   const aiSummary = aiState.result || latestReading?.ai_result || "Đang phân tích";
   const aiSummaryError = aiState.error || latestReading?.ai_error || "";
 
@@ -641,6 +642,7 @@ export function HealthRecordDetailPage() {
                   sampleRateHz={sampleRateHz}
                   signal={streamChunk}
                   signalVersion={signalVersion}
+                  animateOnReceive={isStreaming}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500">
